@@ -1,7 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func main() {
-	fmt.Printf("Hello world!")
+	fmt.Println("NBusy messege server ready.")
 }
