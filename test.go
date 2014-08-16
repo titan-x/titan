@@ -3,5 +3,7 @@ package main
 import "fmt"
 
 func main() {
-	fmt.Println("Tester ready.")
+	for _, char := range "yeah this is good" {
+		fmt.Println(char.(string))
+	}
 }
