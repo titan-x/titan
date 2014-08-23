@@ -1,3 +1,5 @@
+// XMPP <message> stanza used in GCM CCS communications from and to the server.
+// https://developer.android.com/google/gcm/ccs.html#format
 package ccs
 
 import (
