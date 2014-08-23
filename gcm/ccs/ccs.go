@@ -3,11 +3,11 @@
 package ccs
 
 import (
-"errors"
-"fmt"
-json "github.com/bitly/go-simplejson"
-"github.com/specode/go-xmpp"
-"time"
+	"errors"
+	"fmt"
+	json "github.com/bitly/go-simplejson"
+	"time"
+	"github.com/soygul/nbusy-server/xmpp"
 )
 
 const (
