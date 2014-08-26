@@ -3,18 +3,21 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 	"github.com/soygul/nbusy-server/gcm/ccs"
 )
 
 const (
-	GCM_CLIENT_ID = ""
-	GCM_API_KEY   = ""
-
-	TEST_REG_ID = ""
+	GCM_CCS_ENDPOINT = "gcm.googleapis.com:5235"
+	GCM_CCS_STAGING_ENDPOINT = "gcm-staging.googleapis.com:5236"
+	GCM_SENDER_ID = ""
+	GOOGLE_API_KEY = ""
+	GCM_TEST_REG_ID = ""
 )
 
 func main() {
-	ccsClient, err := ccs.New(GCM_CLIENT_ID, GCM_API_KEY, false)
+	os.Getenv("GCM_CLIENT_ID")
+	ccsClient, err := ccs.New(GCM_SENDER_ID, GOOGLE_API_KEY, false)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -24,7 +27,7 @@ func main() {
 
 	go ccsClient.Recv(msgCh, errCh)
 
-	ccsMessage := ccs.NewMessage(TEST_REG_ID)
+	ccsMessage := ccs.NewMessage(GCM_TEST_REG_ID)
 	ccsMessage.SetData("hello", "world")
 	ccsMessage.CollapseKey = ""
 	ccsMessage.TimeToLive = 0
