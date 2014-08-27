@@ -28,15 +28,15 @@ type GCM struct {
 }
 
 // Config returns a singleton instance of the application configuration.
-func Config() Config {
-	if (&config != nil) {
+func GetConfig() Config {
+	if &config != nil {
 		return config
 	}
 
 	app := App{Env: os.Getenv("GO_ENV")}
 
 	gcm := GCM{SenderID: os.Getenv("GCM_SENDER_ID"), APIKey: os.Getenv("GOOGLE_API_KEY")}
-	if (app.Env == "development") {
+	if app.Env == "development" {
 		gcm.CCSEndpoint = gcmCcsStagingEndpoint
 	} else {
 		gcm.CCSEndpoint = gcmCcsEndpoint

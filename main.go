@@ -7,8 +7,8 @@ import (
 )
 
 func main() {
-	config := Config()
-	ccsClient, err := ccs.New(GCM_SENDER_ID, GOOGLE_API_KEY, false)
+	config := GetConfig()
+	ccsClient, err := ccs.New(config.GCM.SenderID, config.GCM.APIKey, false)
 	if err != nil {
 		log.Fatal(err)
 	}
