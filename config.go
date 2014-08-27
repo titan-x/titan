@@ -27,6 +27,7 @@ type GCM struct {
 	APIKey      string
 }
 
+// Config returns a singleton instance of the application configuration.
 func Config() Config {
 	if (&config != nil) {
 		return config

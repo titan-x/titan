@@ -7,6 +7,7 @@ import (
 )
 
 func main() {
+	config := Config()
 	ccsClient, err := ccs.New(GCM_SENDER_ID, GOOGLE_API_KEY, false)
 	if err != nil {
 		log.Fatal(err)
