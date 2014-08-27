@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
-
 	"github.com/soygul/nbusy-server/gcm/ccs"
 )
 
