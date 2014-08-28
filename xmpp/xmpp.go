@@ -134,6 +134,7 @@ func (o Options) NewClient() (*Client, error) {
 	if o.NoTLS {
 		client.conn = c
 	} else {
+		DefaultConfig.InsecureSkipVerify = true // todo: remove this and specify servername instead!
 		tlsconn := tls.Client(c, &DefaultConfig)
 		if err = tlsconn.Handshake(); err != nil {
 			return nil, err
@@ -325,8 +326,7 @@ func (c *Client) init(o *Options) error {
 	switch v := val.(type) {
 	case *saslSuccess:
 	case *saslFailure:
-		// v.Any is type of sub-element in failure,
-		// which gives a description of what failed.
+		// v.Any is type of sub-element in failure, which gives a description of what failed.
 		return errors.New("auth failure: " + v.Any.Local)
 	default:
 		return errors.New("expected <success> or <failure>, got <" + name.Local + "> in " + name.Space)
