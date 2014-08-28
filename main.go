@@ -8,10 +8,13 @@ import (
 
 func main() {
 	config := GetConfig()
+	fmt.Println(config)
 	ccsClient, err := ccs.New(config.GCM.SenderID, config.GCM.APIKey, false)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	fmt.Println("Successfully logged in to GCM.")
 
 	msgCh := make(chan map[string]interface{})
 	errCh := make(chan error)

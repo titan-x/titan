@@ -8,6 +8,7 @@ const (
 )
 
 var config Config
+var initialized bool
 
 // Config describes the global configuration for the NBusy server.
 type Config struct {
@@ -29,7 +30,7 @@ type GCM struct {
 
 // Config returns a singleton instance of the application configuration.
 func GetConfig() Config {
-	if &config != nil {
+	if initialized {
 		return config
 	}
 
@@ -43,5 +44,6 @@ func GetConfig() Config {
 	}
 
 	config = Config{App: app, GCM: gcm}
+	initialized = true
 	return config
 }
