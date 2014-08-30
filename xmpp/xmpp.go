@@ -1,3 +1,5 @@
+// todo: simplify this package in accordance with: https://developer.android.com/google/gcm/ccs.html
+
 package xmpp
 
 import (
@@ -267,7 +269,7 @@ func (c *Client) init(o *Options) error {
 				nsSASL, enc)
 			break
 		}
-		if m == "DIGEST-MD5" {
+		if m == "DIGEST-MD5" { // not used by gcm!
 			mechanism = m
 			// Digest-MD5 authentication
 			fmt.Fprintf(c.conn, "<auth xmlns='%s' mechanism='DIGEST-MD5'/>\n",
