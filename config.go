@@ -34,10 +34,14 @@ func GetConfig() Config {
 		return config
 	}
 
-	app := App{Env: os.Getenv("GO_ENV")}
+	env := os.Getenv("GO_ENV")
+	if (env == "") {
+		env = "development"
+	}
+	app := App{Env: env}
 
 	gcm := GCM{SenderID: os.Getenv("GCM_SENDER_ID"), APIKey: os.Getenv("GOOGLE_API_KEY")}
-	if app.Env == "development" {
+	if env == "development" {
 		gcm.CCSEndpoint = gcmCcsStagingEndpoint
 	} else {
 		gcm.CCSEndpoint = gcmCcsEndpoint
