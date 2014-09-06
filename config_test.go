@@ -5,6 +5,6 @@ import "testing"
 func TestConfig(t *testing.T) {
 	config := GetConfig()
 	if (config.App.Env != "development") {
-		t.Fail()
+		t.Error("Config file is not initialized.")
 	}
 }
