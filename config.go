@@ -41,7 +41,7 @@ func GetConfig() Config {
 	app := App{Env: env}
 
 	gcm := GCM{SenderID: os.Getenv("GCM_SENDER_ID"), APIKey: os.Getenv("GOOGLE_API_KEY")}
-	if env == "development" {
+	if env == "development" || env == "test" || env == "staging"  {
 		gcm.CCSEndpoint = gcmCcsStagingEndpoint
 	} else {
 		gcm.CCSEndpoint = gcmCcsEndpoint
