@@ -19,6 +19,7 @@ type Config struct {
 // App contains the global application variables.
 type App struct {
 	Env string
+	Debug bool
 }
 
 // GCM describes the Google Cloud Messaging parameters as described here: https://developer.android.com/google/gcm/gs.html
@@ -38,10 +39,11 @@ func GetConfig() Config {
 	if (env == "") {
 		env = "development"
 	}
-	app := App{Env: env}
+	debug := os.Getenv("GO_DEBUG") != ""
+	app := App{Env: env, Debug: debug}
 
 	gcm := GCM{SenderID: os.Getenv("GCM_SENDER_ID"), APIKey: os.Getenv("GOOGLE_API_KEY")}
-	if env == "development" || env == "test" || env == "staging"  {
+	if env == "development" || env == "test" || env == "staging" {
 		gcm.CCSEndpoint = gcmCcsStagingEndpoint
 	} else {
 		gcm.CCSEndpoint = gcmCcsEndpoint

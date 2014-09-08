@@ -9,7 +9,7 @@ import (
 func main() {
 	config := GetConfig()
 	fmt.Println(config)
-	ccsClient, err := ccs.New(config.GCM.SenderID, config.GCM.APIKey, config.App.Env == "development")
+	ccsClient, err := ccs.New(config.GCM.SenderID, config.GCM.APIKey, config.App.Debug)
 	if err != nil {
 		log.Fatal(err)
 	}
