@@ -1,6 +1,9 @@
 package main
 
-import "os"
+import (
+	"os"
+	"fmt"
+)
 
 const (
 	gcmCcsEndpoint        = "gcm.googleapis.com:5235"
@@ -18,7 +21,7 @@ type Config struct {
 
 // App contains the global application variables.
 type App struct {
-	Env string
+	Env string // development, test, staging, production
 	Debug bool
 }
 
@@ -43,13 +46,16 @@ func GetConfig() Config {
 	app := App{Env: env, Debug: debug}
 
 	gcm := GCM{SenderID: os.Getenv("GCM_SENDER_ID"), APIKey: os.Getenv("GOOGLE_API_KEY")}
-	if env == "development" || env == "test" || env == "staging" {
-		gcm.CCSEndpoint = gcmCcsStagingEndpoint
-	} else {
+	if env == "production" {
 		gcm.CCSEndpoint = gcmCcsEndpoint
+	} else {
+		gcm.CCSEndpoint = gcmCcsStagingEndpoint
 	}
 
 	config = Config{App: app, GCM: gcm}
 	initialized = true
+	if (debug) {
+		fmt.Printf("Config: %+v\n", config)
+	}
 	return config
 }
