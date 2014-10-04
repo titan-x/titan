@@ -28,7 +28,7 @@ func main() {
 	ccsMessage.DelayWhileIdle = true
 	ccsClient.Send(ccsMessage)
 
-	fmt.Print("NBusy messege server started.")
+	fmt.Println("NBusy messege server started.")
 
 	for {
 		select {
