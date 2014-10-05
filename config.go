@@ -6,8 +6,9 @@ import (
 )
 
 const (
+	gcmSenderID           = "218602439235"
 	gcmCcsEndpoint        = "gcm.googleapis.com:5235"
-	gcmCcsStagingEndpoint = "gcm-staging.googleapis.com:5236"
+	gcmCcsStagingEndpoint = "gcm-preprod.googleapis.com:5236"
 )
 
 var config Config
@@ -21,7 +22,7 @@ type Config struct {
 
 // App contains the global application variables.
 type App struct {
-	Env string // development, test, staging, production
+	Env   string // development, test, staging, production
 	Debug bool
 }
 
@@ -45,11 +46,9 @@ func GetConfig() Config {
 	debug := os.Getenv("GO_DEBUG") != ""
 	app := App{Env: env, Debug: debug}
 
-	gcm := GCM{SenderID: os.Getenv("GCM_SENDER_ID"), APIKey: os.Getenv("GOOGLE_API_KEY")}
-	if env == "production" {
-		gcm.CCSEndpoint = gcmCcsEndpoint
-	} else {
-		gcm.CCSEndpoint = gcmCcsStagingEndpoint
+	gcm := GCM{CCSEndpoint: gcmCcsEndpoint, SenderID: gcmSenderID, APIKey: os.Getenv("GOOGLE_API_KEY")}
+	if env != "production" {
+		// todo: use staging specific endpoint, sender ID, and API key (i.e. nbusy-test)
 	}
 
 	config = Config{App: app, GCM: gcm}
