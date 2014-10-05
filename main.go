@@ -19,12 +19,12 @@ func main() {
 
 	go ccsClient.Recv(msgCh, errCh)
 
-	ccsMessage := ccs.NewMessage("GCM_TEST_REG_ID")
-	ccsMessage.SetData("hello", "world")
-	ccsMessage.CollapseKey = ""
-	ccsMessage.TimeToLive = 0
-	ccsMessage.DelayWhileIdle = true
-	ccsClient.Send(ccsMessage)
+//	ccsMessage := ccs.NewMessage("GCM_TEST_REG_ID")
+//	ccsMessage.SetData("hello", "world")
+//	ccsMessage.CollapseKey = ""
+//	ccsMessage.TimeToLive = 0
+//	ccsMessage.DelayWhileIdle = true
+//	ccsClient.Send(ccsMessage)
 
 	fmt.Println("NBusy messege server started.")
 
