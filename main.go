@@ -8,7 +8,7 @@ import (
 
 func main() {
 	config := GetConfig()
-	ccsClient, err := ccs.New(config.GCM.SenderID, config.GCM.APIKey, config.App.Debug)
+	ccsConnection, err := ccs.New(config.GCM.SenderID, config.GCM.APIKey, config.App.Debug)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -17,7 +17,7 @@ func main() {
 	msgCh := make(chan map[string]interface{})
 	errCh := make(chan error)
 
-	go ccsClient.Recv(msgCh, errCh)
+	go ccsConnection.Receive(msgCh, errCh)
 
 //	ccsMessage := ccs.NewMessage("GCM_TEST_REG_ID")
 //	ccsMessage.SetData("hello", "world")

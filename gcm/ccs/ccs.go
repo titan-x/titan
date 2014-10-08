@@ -1,62 +1,67 @@
-// GCM Cloud Connection Server (XMPP) implementation.
+// GCM Cloud Connection Server (XMPP) client implementation.
 // https://developer.android.com/google/gcm/ccs.html
 package ccs
 
 import (
-	"errors"
-	"fmt"
-	json "github.com/bitly/go-simplejson"
-	"time"
 	"github.com/soygul/nbusy-server/xmpp"
+	"errors"
+	"encoding/json"
+	"strings"
+	"fmt"
 )
 
 const (
-	GCM_HOST = "gcm.googleapis.com:5235"
-	GCM_XML  = `<message id=""><gcm xmlns="google:mobile:data">%v</gcm></message>`
-
-	GCM_ACK = `{"to": "%v", "message_id": "%v", "message_type": "ack"}`
-
-	RESET_CONN_ERR_NUM_TIME = 60
+	gcmXML    = `<message id=""><gcm xmlns="google:mobile:data">%v</gcm></message>`
+	gcmACK    = `{"to": "%v", "message_id": "%v", "message_type": "ack"}`
+	gcmDomain = "gcm.googleapis.com"
 )
 
-// var (
-// 	ccsRateLimit int32 = 1000
-// )
-
-type Client struct {
-	ID, Key     string
-	Debug       bool
-	xmppClient  *xmpp.Client
-	isConnected bool
+type connection struct {
+	Endpoint, SenderID, APIKey string
+	Debug                      bool
+	xmppClient       *xmpp.Client
+	isConnected                bool
 }
 
-func New(id, key string, debug bool) (*Client, error) {
-	id += "@gcm.googleapis.com"
+// Connects to GCM CCS server and returns the connection object and an error, if there were any.
+// Accepts a CCS endpoint URI (production or staging) along with relevant credentials.
+// Optionally debug mode can be enabled to dump all CSS communications to stdout.
+func New(endpoint, senderID, apiKey string, debug bool) (*connection, error) {
+	if (!strings.Contains(senderID, gcmDomain)) {
+		senderID += "@" + gcmDomain
+	}
 
-	c := &Client{
-		ID:    id,
-		Key:   key,
+	conn := &connection{
+		Endpoint: endpoint,
+		SenderID: senderID,
+		APIKey:   apiKey,
 		Debug: debug,
 	}
 
-	err := c.connect()
-	return c, err
+	if (debug) {
+		fmt.Printf("Connection: %+v\n", conn)
+	}
 
+	err := conn.connect()
+	return conn, err
 }
 
-func (c *Client) connect() error {
-	xmppClient, err := xmpp.NewClient(GCM_HOST, c.ID, c.Key, c.Debug)
+func (conn *connection) connect() error {
+	xmppClient, err := xmpp.NewClient(conn.Endpoint, conn.SenderID, conn.APIKey, conn.Debug)
 	if err != nil {
 		return err
 	}
 
-	c.xmppClient = xmppClient
-	c.isConnected = true
+	conn.xmppClient = xmppClient
+	conn.isConnected = true
 	return nil
-
 }
 
-func (c *Client) recv(msgCh chan map[string]interface{}, errCh chan error) error {
+func (c *Client) Receive(msgCh chan map[string]interface{}, errCh chan error) error {
+	if !c.isConnected {
+		return errors.New("XMPP connection was closed. Cannot receive further from this channel.")
+	}
+
 	for {
 		chat, err := c.xmppClient.Recv()
 		if err != nil {
@@ -82,33 +87,6 @@ func (c *Client) recv(msgCh chan map[string]interface{}, errCh chan error) error
 	}
 }
 
-func (c *Client) Recv(msgCh chan map[string]interface{}, errCh chan error) error {
-	if !c.isConnected {
-		return errors.New("no connection")
-	}
-
-	var errNum int
-
-	go func(errNum int) {
-		// reset errNum
-		errNum = 0
-		time.Sleep(RESET_CONN_ERR_NUM_TIME * time.Second)
-	}(errNum)
-
-Recv:
-	err := c.recv(msgCh, errCh)
-	for err != nil {
-		if errNum > 3 {
-			return err
-		}
-
-		// reconnect
-		errNum++
-		c.connect()
-		goto Recv
-	}
-	panic("unreachable")
-}
 
 func (c *Client) handleRecvMessage(msg string) (isGcmMessage bool, message map[string]interface{}, err error) {
 	jsonData, err := json.NewJson([]byte(msg))
