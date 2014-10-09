@@ -16,22 +16,15 @@ const (
 	gcmDomain = "gcm.googleapis.com"
 )
 
-type connection struct {
-	Endpoint, SenderID, APIKey string
-	Debug                      bool
-	xmppClient       *xmpp.Client
-	isConnected                bool
-}
-
-// Connects to GCM CCS server and returns the connection object and an error, if there were any.
+// Connects to GCM CCS server and returns the connection object and an error (only if there were any).
 // Accepts a CCS endpoint URI (production or staging) along with relevant credentials.
 // Optionally debug mode can be enabled to dump all CSS communications to stdout.
-func New(endpoint, senderID, apiKey string, debug bool) (*connection, error) {
+func New(endpoint, senderID, apiKey string, debug bool) (connection, error) {
 	if (!strings.Contains(senderID, gcmDomain)) {
-		senderID += "@" + gcmDomain
+		senderID += "@"+gcmDomain
 	}
 
-	conn := &connection{
+	conn := connection{
 		Endpoint: endpoint,
 		SenderID: senderID,
 		APIKey:   apiKey,
@@ -46,6 +39,13 @@ func New(endpoint, senderID, apiKey string, debug bool) (*connection, error) {
 	return conn, err
 }
 
+type connection struct {
+	Endpoint, SenderID, APIKey string
+	Debug                      bool
+	xmppClient       *xmpp.Client
+	isConnected                bool
+}
+
 func (conn *connection) connect() error {
 	xmppClient, err := xmpp.NewClient(conn.Endpoint, conn.SenderID, conn.APIKey, conn.Debug)
 	if err != nil {
@@ -57,9 +57,9 @@ func (conn *connection) connect() error {
 	return nil
 }
 
-func (c *Client) Receive(msgCh chan map[string]interface{}, errCh chan error) error {
+func (c *connection) Receive(msgCh chan map[string]interface{}, errCh chan error) error {
 	if !c.isConnected {
-		return errors.New("XMPP connection was closed. Cannot receive further from this channel.")
+		return errors.New("no ccs connection")
 	}
 
 	for {
@@ -87,8 +87,7 @@ func (c *Client) Receive(msgCh chan map[string]interface{}, errCh chan error) er
 	}
 }
 
-
-func (c *Client) handleRecvMessage(msg string) (isGcmMessage bool, message map[string]interface{}, err error) {
+func (c *connection) handleRecvMessage(msg string) (isGcmMessage bool, message map[string]interface{}, err error) {
 	jsonData, err := json.NewJson([]byte(msg))
 	if err != nil {
 		return false, nil, errors.New("unknow message")
@@ -119,10 +118,9 @@ func (c *Client) handleRecvMessage(msg string) (isGcmMessage bool, message map[s
 	}
 
 	return false, nil, errors.New("unknow message")
-
 }
 
-func (c *Client) Send(message *Message) error {
+func (c *connection) Send(message *Message) error {
 	if !c.isConnected {
 		return errors.New("no connection")
 	}

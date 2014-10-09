@@ -1,7 +1,7 @@
-//// GCM Cloud Connection Server (XMPP) implementation.
-//// https://developer.android.com/google/gcm/ccs.html
-//package ccs
-//
+// GCM Cloud Connection Server (XMPP) implementation.
+// https://developer.android.com/google/gcm/ccs.html
+package ccs
+
 //import (
 //	"errors"
 //	"fmt"
@@ -30,10 +30,10 @@
 //	isConnected bool
 //}
 //
-//func New(id, key string, debug bool) (*Client, error) {
+//func New(endpoint, id, key string, debug bool) (Client, error) {
 //	id += "@gcm.googleapis.com"
 //
-//	c := &Client{
+//	c := Client{
 //		ID:    id,
 //		Key:   key,
 //		Debug: debug,
