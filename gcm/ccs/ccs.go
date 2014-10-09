@@ -19,12 +19,12 @@ const (
 // Connects to GCM CCS server and returns the connection object and an error (only if there were any).
 // Accepts a CCS endpoint URI (production or staging) along with relevant credentials.
 // Optionally debug mode can be enabled to dump all CSS communications to stdout.
-func New(endpoint, senderID, apiKey string, debug bool) (connection, error) {
+func New(endpoint, senderID, apiKey string, debug bool) (*connection, error) {
 	if (!strings.Contains(senderID, gcmDomain)) {
 		senderID += "@"+gcmDomain
 	}
 
-	conn := connection{
+	conn := &connection{
 		Endpoint: endpoint,
 		SenderID: senderID,
 		APIKey:   apiKey,
@@ -57,7 +57,8 @@ func (conn *connection) connect() error {
 	return nil
 }
 
-func (c *connection) Receive(msgCh chan map[string]interface{}, errCh chan error) error {
+// Start listening for incoming messages from the CCS connection.
+func (c *connection) Listen(msgCh chan map[string]interface{}, errCh chan error) error {
 	if !c.isConnected {
 		return errors.New("no ccs connection")
 	}

@@ -18,7 +18,7 @@ func main() {
 	msgCh := make(chan map[string]interface{})
 	errCh := make(chan error)
 
-	go ccsConnection.Receive(msgCh, errCh)
+	go ccsConnection.Listen(msgCh, errCh)
 
 //	ccsMessage := ccs.NewMessage("GCM_TEST_REG_ID")
 //	ccsMessage.SetData("hello", "world")
