@@ -4,8 +4,8 @@ package ccs
 
 import (
 	"github.com/soygul/nbusy-server/xmpp"
+	json "github.com/bitly/go-simplejson"
 	"errors"
-	"encoding/json"
 	"strings"
 	"fmt"
 )
@@ -19,12 +19,12 @@ const (
 // Connects to GCM CCS server and returns the connection object and an error (only if there were any).
 // Accepts a CCS endpoint URI (production or staging) along with relevant credentials.
 // Optionally debug mode can be enabled to dump all CSS communications to stdout.
-func New(endpoint, senderID, apiKey string, debug bool) (*connection, error) {
+func New(endpoint, senderID, apiKey string, debug bool) (*Connection, error) {
 	if (!strings.Contains(senderID, gcmDomain)) {
 		senderID += "@"+gcmDomain
 	}
 
-	conn := &connection{
+	conn := &Connection{
 		Endpoint: endpoint,
 		SenderID: senderID,
 		APIKey:   apiKey,
@@ -39,56 +39,57 @@ func New(endpoint, senderID, apiKey string, debug bool) (*connection, error) {
 	return conn, err
 }
 
-type connection struct {
+//
+type Connection struct {
 	Endpoint, SenderID, APIKey string
 	Debug                      bool
-	xmppClient       *xmpp.Client
+	xmppConn       *xmpp.Client //xmpp.Connection
 	isConnected                bool
 }
 
-func (conn *connection) connect() error {
-	xmppClient, err := xmpp.NewClient(conn.Endpoint, conn.SenderID, conn.APIKey, conn.Debug)
+func (conn *Connection) connect() error {
+	xmppConn, err := xmpp.NewClient(conn.Endpoint, conn.SenderID, conn.APIKey, conn.Debug)
 	if err != nil {
 		return err
 	}
 
-	conn.xmppClient = xmppClient
+	conn.xmppConn = xmppConn
 	conn.isConnected = true
 	return nil
 }
 
 // Start listening for incoming messages from the CCS connection.
-func (c *connection) Listen(msgCh chan map[string]interface{}, errCh chan error) error {
+func (c *Connection) Listen(msgChan chan map[string]interface{}, errChan chan error) error {
 	if !c.isConnected {
 		return errors.New("no ccs connection")
 	}
 
 	for {
-		chat, err := c.xmppClient.Recv()
+		event, err := c.xmppConn.Recv()//xmppConn.Listen
 		if err != nil {
-			c.xmppClient.Close()
+			c.xmppConn.Close()
 			c.isConnected = false
 			return err
 		}
 
-		go func(chat interface{}) {
-			switch v := chat.(type) {
-			case xmpp.Chat:
+		go func(event interface{}) {
+			switch v := event.(type) {
+			case xmpp.Chat://xmpp.Message
 				isGcmMessage, message, err := c.handleRecvMessage(v.Other[0])
 				if err != nil {
-					errCh <- err
+					errChan <- err
 					return
 				}
 				if isGcmMessage {
 					return
 				}
-			msgCh <- message
+			msgChan <- message
 			}
-		}(chat)
+		}(event)
 	}
 }
 
-func (c *connection) handleRecvMessage(msg string) (isGcmMessage bool, message map[string]interface{}, err error) {
+func (c *Connection) handleRecvMessage(msg string) (isGcmMessage bool, message map[string]interface{}, err error) {
 	jsonData, err := json.NewJson([]byte(msg))
 	if err != nil {
 		return false, nil, errors.New("unknow message")
@@ -107,10 +108,9 @@ func (c *connection) handleRecvMessage(msg string) (isGcmMessage bool, message m
 			result := fmt.Sprintf(errFormat, from, messageId, err)
 			return true, nil, errors.New(result)
 		}
-		// ccsRateLimit = atomic.AddInt32(&ccsRateLimit, 1)
 	} else {
-		ack := fmt.Sprintf(GCM_ACK, from, messageId)
-		c.xmppClient.SendOrg(fmt.Sprintf(GCM_XML, ack))
+		ack := fmt.Sprintf(gcmACK, from, messageId)
+		c.xmppConn.SendOrg(fmt.Sprintf(gcmXML, ack))//xmppConn.SendRaw -or- just .Send (and .SendMsg for the other)
 	}
 
 	if _, ok := jsonData.CheckGet("from"); ok {
@@ -121,18 +121,13 @@ func (c *connection) handleRecvMessage(msg string) (isGcmMessage bool, message m
 	return false, nil, errors.New("unknow message")
 }
 
-func (c *connection) Send(message *Message) error {
-	if !c.isConnected {
-		return errors.New("no connection")
-	}
-	// if ccsRateLimit <= 0 {
-	// 	return errors.New("ccs rate limit")
-	// }
-
-	result := fmt.Sprintf(GCM_XML, message)
-	c.xmppClient.SendOrg(result)
-
-	// ccsRateLimit = atomic.AddInt32(&ccsRateLimit, -1)
-
-	return nil
-}
+//func (c *connection) Send(message *Message) error {
+//	if !c.isConnected {
+//		return errors.New("no connection")
+//	}
+//
+//	result := fmt.Sprintf(GCM_XML, message)
+//	c.xmppConn.SendOrg(result) //xmppConn.SendRaw
+//
+//	return nil
+//}

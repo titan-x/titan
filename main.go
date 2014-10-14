@@ -8,7 +8,8 @@ import (
 
 func main() {
 	config := GetConfig()
-	ccsConnection, err := ccs.New(config.GCM.CCSEndpoint, config.GCM.SenderID, config.GCM.APIKey, /*config.App.Debug*/ true)
+	config.App.Debug = true;
+	ccsConnection, err := ccs.New(config.GCM.CCSEndpoint, config.GCM.SenderID, config.GCM.APIKey, config.App.Debug)
 	fmt.Println(ccsConnection)
 	if err != nil {
 		log.Fatal(err)
