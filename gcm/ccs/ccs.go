@@ -1,13 +1,14 @@
-// GCM Cloud Connection Server (XMPP) client implementation.
+// Package ccs provides GCM Cloud Connection Server (XMPP) client implementation.
 // https://developer.android.com/google/gcm/ccs.html
 package ccs
 
 import (
-	"github.com/soygul/nbusy-server/xmpp"
-	json "github.com/bitly/go-simplejson"
 	"errors"
-	"strings"
 	"fmt"
+	"strings"
+
+	json "github.com/bitly/go-simplejson"
+	"github.com/soygul/nbusy-server/xmpp"
 )
 
 const (
@@ -16,56 +17,56 @@ const (
 	gcmDomain = "gcm.googleapis.com"
 )
 
-// Connects to GCM CCS server and returns the connection object and an error (only if there were any).
-// Accepts a CCS endpoint URI (production or staging) along with relevant credentials.
-// Optionally debug mode can be enabled to dump all CSS communications to stdout.
-func New(endpoint, senderID, apiKey string, debug bool) (*Connection, error) {
-	if (!strings.Contains(senderID, gcmDomain)) {
-		senderID += "@"+gcmDomain
-	}
-
-	conn := &Connection{
-		Endpoint: endpoint,
-		SenderID: senderID,
-		APIKey:   apiKey,
-		Debug: debug,
-	}
-
-	if (debug) {
-		fmt.Printf("Connection: %+v\n", conn)
-	}
-
-	err := conn.connect()
-	return conn, err
-}
-
-//
-type Connection struct {
+// Conn is a GCM CCS connection.
+type Conn struct {
 	Endpoint, SenderID, APIKey string
 	Debug                      bool
-	xmppConn       *xmpp.Client //xmpp.Connection
+	xmppConn                   *xmpp.Client //xmpp.Connection
 	isConnected                bool
 }
 
-func (conn *Connection) connect() error {
-	xmppConn, err := xmpp.NewClient(conn.Endpoint, conn.SenderID, conn.APIKey, conn.Debug)
+// New function connects to GCM CCS server and returns the connection object and an error (only if there were any).
+// Accepts a CCS endpoint URI (production or staging) along with relevant credentials.
+// Optionally debug mode can be enabled to dump all CSS communications to stdout.
+func New(endpoint, senderID, apiKey string, debug bool) (*Conn, error) {
+	if !strings.Contains(senderID, gcmDomain) {
+		senderID += "@" + gcmDomain
+	}
+
+	c := &Conn{
+		Endpoint: endpoint,
+		SenderID: senderID,
+		APIKey:   apiKey,
+		Debug:    debug,
+	}
+
+	if debug {
+		fmt.Printf("New CCS connection established with parameters: %+v\n", c)
+	}
+
+	err := c.open()
+	return c, err
+}
+
+func (c *Conn) open() error {
+	xc, err := xmpp.NewClient(c.Endpoint, c.SenderID, c.APIKey, c.Debug)
 	if err != nil {
 		return err
 	}
 
-	conn.xmppConn = xmppConn
-	conn.isConnected = true
+	c.xmppConn = xc
+	c.isConnected = true
 	return nil
 }
 
-// Start listening for incoming messages from the CCS connection.
-func (c *Connection) Listen(msgChan chan map[string]interface{}, errChan chan error) error {
+// Listen starts listening for incoming messages from the CCS connection.
+func (c *Conn) Listen(msgChan chan map[string]interface{}, errChan chan error) error {
 	if !c.isConnected {
 		return errors.New("no ccs connection")
 	}
 
 	for {
-		event, err := c.xmppConn.Recv()//xmppConn.Listen
+		event, err := c.xmppConn.Recv() //xmppConn.Listen
 		if err != nil {
 			c.xmppConn.Close()
 			c.isConnected = false
@@ -74,8 +75,8 @@ func (c *Connection) Listen(msgChan chan map[string]interface{}, errChan chan er
 
 		go func(event interface{}) {
 			switch v := event.(type) {
-			case xmpp.Chat://xmpp.Message
-				isGcmMessage, message, err := c.handleRecvMessage(v.Other[0])
+			case xmpp.Chat: //xmpp.Message
+				isGcmMessage, message, err := c.handleMessage(v.Other[0])
 				if err != nil {
 					errChan <- err
 					return
@@ -83,20 +84,20 @@ func (c *Connection) Listen(msgChan chan map[string]interface{}, errChan chan er
 				if isGcmMessage {
 					return
 				}
-			msgChan <- message
+				msgChan <- message
 			}
 		}(event)
 	}
 }
 
-func (c *Connection) handleRecvMessage(msg string) (isGcmMessage bool, message map[string]interface{}, err error) {
+func (c *Conn) handleMessage(msg string) (isGcmMessage bool, message map[string]interface{}, err error) {
 	jsonData, err := json.NewJson([]byte(msg))
 	if err != nil {
 		return false, nil, errors.New("unknow message")
 	}
 
 	from, _ := jsonData.Get("from").String()
-	messageId, _ := jsonData.Get("message_id").String()
+	messageID, _ := jsonData.Get("message_id").String()
 	if _, ok := jsonData.CheckGet("message_type"); ok {
 		err, _ := jsonData.Get("error").String()
 
@@ -105,12 +106,12 @@ func (c *Connection) handleRecvMessage(msg string) (isGcmMessage bool, message m
 			return true, nil, nil
 		case "nack":
 			errFormat := "From: %v, MessageID: %v, Error: %v"
-			result := fmt.Sprintf(errFormat, from, messageId, err)
+			result := fmt.Sprintf(errFormat, from, messageID, err)
 			return true, nil, errors.New(result)
 		}
 	} else {
-		ack := fmt.Sprintf(gcmACK, from, messageId)
-		c.xmppConn.SendOrg(fmt.Sprintf(gcmXML, ack))//xmppConn.SendRaw -or- just .Send (and .SendMsg for the other)
+		ack := fmt.Sprintf(gcmACK, from, messageID)
+		c.xmppConn.SendOrg(fmt.Sprintf(gcmXML, ack)) //xmppConn.SendRaw -or- just .Send (and .SendMsg for the other)
 	}
 
 	if _, ok := jsonData.CheckGet("from"); ok {
@@ -121,13 +122,14 @@ func (c *Connection) handleRecvMessage(msg string) (isGcmMessage bool, message m
 	return false, nil, errors.New("unknow message")
 }
 
-//func (c *connection) Send(message *Message) error {
-//	if !c.isConnected {
-//		return errors.New("no connection")
-//	}
-//
-//	result := fmt.Sprintf(GCM_XML, message)
-//	c.xmppConn.SendOrg(result) //xmppConn.SendRaw
-//
-//	return nil
-//}
+// Send a GCM CCS message.
+func (c *Conn) Send(message *Message) error {
+	if !c.isConnected {
+		return errors.New("no connection")
+	}
+
+	res := fmt.Sprintf(gcmXML, message)
+	c.xmppConn.SendOrg(res) //xmppConn.SendRaw
+
+	return nil
+}
