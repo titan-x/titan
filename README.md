@@ -12,6 +12,6 @@ GCM CCS (for message delivery and retrieval from Android clients), GAE Sockets A
 Following environment variables needs to be present on any dev or production environment:
 
 ```bash
-export GCM_SENDER_ID=
 export GOOGLE_API_KEY=
+export GOOGLE_PREPROD_API_KEY=
 ```

@@ -1,14 +1,14 @@
 package main
 
 import (
-	"os"
 	"fmt"
+	"os"
 )
 
 const (
 	gcmSenderID           = "218602439235"
 	gcmCcsEndpoint        = "gcm.googleapis.com:5235"
-	gcmCcsStagingEndpoint = "gcm-preprod.googleapis.com:5236"
+	gcmCcsPreprodEndpoint = "gcm-preprod.googleapis.com:5236"
 )
 
 var config Config
@@ -33,14 +33,14 @@ type GCM struct {
 	APIKey      string
 }
 
-// Config returns a singleton instance of the application configuration.
+// GetConfig returns a singleton instance of the application configuration.
 func GetConfig() Config {
 	if initialized {
 		return config
 	}
 
 	env := os.Getenv("GO_ENV")
-	if (env == "") {
+	if env == "" {
 		env = "development"
 	}
 	debug := os.Getenv("GO_DEBUG") != ""
@@ -48,12 +48,12 @@ func GetConfig() Config {
 
 	gcm := GCM{CCSEndpoint: gcmCcsEndpoint, SenderID: gcmSenderID, APIKey: os.Getenv("GOOGLE_API_KEY")}
 	if env != "production" {
-		// todo: use staging specific endpoint, sender ID, and API key (i.e. nbusy-test)
+		// todo: use preprod specific endpoint, sender ID, and API key (i.e. nbusy-test)
 	}
 
 	config = Config{App: app, GCM: gcm}
 	initialized = true
-	if (debug) {
+	if debug {
 		fmt.Printf("Config: %+v\n", config)
 	}
 	return config
