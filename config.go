@@ -8,7 +8,22 @@ import (
 const (
 	gcmSenderID           = "218602439235"
 	gcmCcsEndpoint        = "gcm.googleapis.com:5235"
+	gcmPrepodSenderID     = ""
 	gcmCcsPreprodEndpoint = "gcm-preprod.googleapis.com:5236"
+
+	// GO execution envrinment variables
+	goEnv   = "GO_ENV"
+	goDebug = "GO_DEBUG"
+
+	// possible GO_ENV values
+	dev     = "development"
+	test    = "test"
+	staging = "staging"
+	prod    = "production"
+
+	// Google environment variables
+	googAPIKey        = "GOOGLE_API_KEY"
+	googPreprodAPIKey = "GOOGLE_PREPROD_API_KEY"
 )
 
 var config Config
@@ -22,7 +37,9 @@ type Config struct {
 
 // App contains the global application variables.
 type App struct {
-	Env   string // development, test, staging, production
+	// One of the following: development, test, staging, production
+	Env string
+	// Enables verbose logging to stdout
 	Debug bool
 }
 
@@ -39,22 +56,25 @@ func GetConfig() Config {
 		return config
 	}
 
-	env := os.Getenv("GO_ENV")
+	env := os.Getenv(goEnv)
 	if env == "" {
-		env = "development"
+		env = dev
 	}
-	debug := os.Getenv("GO_DEBUG") != ""
+
+	debug := os.Getenv(goDebug) != ""
+
 	app := App{Env: env, Debug: debug}
 
-	gcm := GCM{CCSEndpoint: gcmCcsEndpoint, SenderID: gcmSenderID, APIKey: os.Getenv("GOOGLE_API_KEY")}
-	if env != "production" {
-		// todo: use preprod specific endpoint, sender ID, and API key (i.e. nbusy-test)
+	gcm := GCM{CCSEndpoint: gcmCcsEndpoint, SenderID: gcmSenderID, APIKey: os.Getenv(googAPIKey)}
+	if env != prod && os.Getenv(googPreprodAPIKey) != "" {
+		// todo: use preprod specific endpoint, sender ID, and API key from a separate app (i.e. nbusy-preprod)
 	}
 
 	config = Config{App: app, GCM: gcm}
-	initialized = true
 	if debug {
 		fmt.Printf("Config: %+v\n", config)
 	}
+
+	initialized = true
 	return config
 }
