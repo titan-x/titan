@@ -10,7 +10,7 @@ import (
 func main() {
 	config := GetConfig()
 	config.App.Debug = true
-	ccsConnection, err := ccs.New(config.GCM.CCSEndpoint, config.GCM.SenderID, config.GCM.APIKey, config.App.Debug)
+	ccsConn, err := ccs.New(config.GCM.CCSEndpoint, config.GCM.SenderID, config.GCM.APIKey, config.App.Debug)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -19,7 +19,7 @@ func main() {
 	msgCh := make(chan map[string]interface{})
 	errCh := make(chan error)
 
-	go ccsConnection.Listen(msgCh, errCh)
+	go ccsConn.Listen(msgCh, errCh)
 
 	//	ccsMessage := ccs.NewMessage("GCM_TEST_REG_ID")
 	//	ccsMessage.SetData("hello", "world")

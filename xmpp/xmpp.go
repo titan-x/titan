@@ -203,11 +203,11 @@ func saslDigestResponse(username, realm, passwd, nonce, cnonceStr,
 	}
 
 	a1 := string(h(username+":"+realm+":"+passwd)) + ":" +
-					nonce + ":" + cnonceStr
+		nonce + ":" + cnonceStr
 	a2 := authenticate + ":" + digestUri
 	response := hex(kd(hex(h(a1)), nonce+":"+
-						nonceCountStr+":"+cnonceStr+":auth:"+
-						hex(h(a2))))
+		nonceCountStr+":"+cnonceStr+":auth:"+
+		hex(h(a2))))
 	return response
 }
 
@@ -237,8 +237,8 @@ func (c *Client) init(o *Options) error {
 
 	// Declare intent to be a jabber client.
 	fmt.Fprintf(c.conn, "<?xml version='1.0'?>\n"+
-						"<stream:stream to='%s' xmlns='%s'\n"+
-						" xmlns:stream='%s' version='1.0'>\n",
+		"<stream:stream to='%s' xmlns='%s'\n"+
+		" xmlns:stream='%s' version='1.0'>\n",
 		xmlEscape(domain), nsClient, nsStream)
 
 	// Server should respond with a stream opening.
@@ -337,7 +337,7 @@ func (c *Client) init(o *Options) error {
 	// Now that we're authenticated, we're supposed to start the stream over again.
 	// Declare intent to be a jabber client.
 	fmt.Fprintf(c.conn, "<stream:stream to='%s' xmlns='%s'\n"+
-						" xmlns:stream='%s' version='1.0'>\n",
+		" xmlns:stream='%s' version='1.0'>\n",
 		xmlEscape(domain), nsClient, nsStream)
 
 	// Here comes another <stream> and <features>.
@@ -415,11 +415,11 @@ func (c *Client) Recv() (event interface{}, err error) {
 // Send sends message text.
 func (c *Client) Send(chat Chat) {
 	fmt.Fprintf(c.conn, "<message to='%s' type='%s' xml:lang='en'>"+
-						"<body>%s</body></message>",
+		"<body>%s</body></message>",
 		xmlEscape(chat.Remote), xmlEscape(chat.Type), xmlEscape(chat.Text))
 }
 
-// Send origin
+// Send original
 func (c *Client) SendOrg(org string) {
 	fmt.Fprint(c.conn, org)
 }
@@ -611,7 +611,7 @@ func next(p *xml.Decoder) (xml.Name, interface{}, error) {
 		nv = &clientError{}
 	default:
 		return xml.Name{}, nil, errors.New("unexpected XMPP message " +
-						se.Name.Space + " <" + se.Name.Local + "/>")
+			se.Name.Space + " <" + se.Name.Local + "/>")
 	}
 
 	// Unmarshal into that storage.

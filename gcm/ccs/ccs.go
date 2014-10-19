@@ -30,7 +30,7 @@ type Conn struct {
 // Optionally debug mode can be enabled to dump all CSS communications to stdout.
 func New(endpoint, senderID, apiKey string, debug bool) (*Conn, error) {
 	if !strings.Contains(senderID, gcmDomain) {
-		senderID += "@" + gcmDomain
+		senderID += "@"+gcmDomain
 	}
 
 	c := &Conn{
@@ -40,11 +40,17 @@ func New(endpoint, senderID, apiKey string, debug bool) (*Conn, error) {
 		Debug:    debug,
 	}
 
+	err := c.open()
 	if debug {
-		fmt.Printf("New CCS connection established with parameters: %+v\n", c)
+		if err == nil {
+			fmt.Printf("New CCS connection established with parameters: %+v\n", c)
+		} else {
+			if err == nil {
+				fmt.Printf("New CCS connection failed established with parameters: %+v\n", c)
+			}
+		}
 	}
 
-	err := c.open()
 	return c, err
 }
 
@@ -84,13 +90,20 @@ func (c *Conn) Listen(msgChan chan map[string]interface{}, errChan chan error) e
 				if isGcmMessage {
 					return
 				}
-				msgChan <- message
+			msgChan <- message
 			}
 		}(event)
 	}
 }
 
+// Close a CSS connection.
+func (c *Conn) Close() error {
+	c.isConnected = false
+	return c.xmppConn.Close()
+}
+
 func (c *Conn) handleMessage(msg string) (isGcmMessage bool, message map[string]interface{}, err error) {
+	fmt.Printf("%v", message)
 	jsonData, err := json.NewJson([]byte(msg))
 	if err != nil {
 		return false, nil, errors.New("unknow message")
