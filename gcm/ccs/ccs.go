@@ -45,9 +45,7 @@ func New(endpoint, senderID, apiKey string, debug bool) (*Conn, error) {
 		if err == nil {
 			fmt.Printf("New CCS connection established with parameters: %+v\n", c)
 		} else {
-			if err == nil {
-				fmt.Printf("New CCS connection failed established with parameters: %+v\n", c)
-			}
+			fmt.Printf("New CCS connection failed to establish with parameters: %+v\n", c)
 		}
 	}
 
@@ -103,7 +101,7 @@ func (c *Conn) Close() error {
 }
 
 func (c *Conn) handleMessage(msg string) (isGcmMessage bool, message map[string]interface{}, err error) {
-	fmt.Printf("Incoming message: %v", msg)
+	fmt.Printf("Incoming message: %v\n", msg)
 	jsonData, err := json.NewJson([]byte(msg))
 	if err != nil {
 		return false, nil, errors.New("unknow message")
