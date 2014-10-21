@@ -101,7 +101,7 @@ func (c *Conn) Close() error {
 }
 
 func (c *Conn) handleMessage(msg string) (isGcmMessage bool, message map[string]interface{}, err error) {
-	fmt.Printf("Incoming message: %v\n", msg)
+	fmt.Printf("Incoming CCS message: %v\n", msg)
 	jsonData, err := json.NewJson([]byte(msg))
 	if err != nil {
 		return false, nil, errors.New("unknow message")
@@ -116,7 +116,7 @@ func (c *Conn) handleMessage(msg string) (isGcmMessage bool, message map[string]
 		case "ack":
 			return true, nil, nil
 		case "nack":
-			errFormat := "From: %v, MessageID: %v, Error: %v"
+			errFormat := "From: %v, Message ID: %v, Error: %v"
 			result := fmt.Sprintf(errFormat, from, messageID, err)
 			return true, nil, errors.New(result)
 		}

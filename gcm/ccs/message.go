@@ -1,5 +1,3 @@
-// XMPP <message> stanza used in GCM CCS communications from and to the server.
-// https://developer.android.com/google/gcm/ccs.html#format
 package ccs
 
 import (
@@ -9,13 +7,23 @@ import (
 	"time"
 )
 
+// XMPP <message> stanzas used in GCM CCS communications from and to the server.
+// https://developer.android.com/google/gcm/ccs.html#format
 type Message struct {
 	To             string            `json:"to"`
 	MessageID      string            `json:"message_id"`
-	CollapseKey    string            `json:"collapse_key,omitempty"`
 	Data           map[string]string `json:"data,omitempty"`
+	CollapseKey    string            `json:"collapse_key,omitempty"`
 	TimeToLive     int               `json:"time_to_live,omitempty"`
 	DelayWhileIdle bool              `json:"delay_while_idle,omitempty"`
+}
+
+type IncomingMessage struct {
+	From        string            `json:"from"`
+	MessageID   string            `json:"message_id"`
+	MessageType string            `json:"message_type"`
+	Data        map[string]string `json:"data"`
+	Error       string            `json:"error"`
 }
 
 func NewMessage(id string) *Message {
