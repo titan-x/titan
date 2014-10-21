@@ -24,6 +24,9 @@ const (
 	// Google environment variables
 	googAPIKey        = "GOOGLE_API_KEY"
 	googPreprodAPIKey = "GOOGLE_PREPROD_API_KEY"
+
+	// GCM environment variables
+	gcmRegID = "GCM_REG_ID"
 )
 
 var config Config
@@ -48,6 +51,7 @@ type GCM struct {
 	CCSEndpoint string
 	SenderID    string
 	APIKey      string
+	RegID       string
 }
 
 // GetConfig returns a singleton instance of the application configuration.
@@ -65,7 +69,7 @@ func GetConfig() Config {
 
 	app := App{Env: env, Debug: debug}
 
-	gcm := GCM{CCSEndpoint: gcmCcsEndpoint, SenderID: gcmSenderID, APIKey: os.Getenv(googAPIKey)}
+	gcm := GCM{CCSEndpoint: gcmCcsEndpoint, SenderID: gcmSenderID, APIKey: os.Getenv(googAPIKey), RegID: os.Getenv(gcmRegID)}
 	if env != prod && os.Getenv(googPreprodAPIKey) != "" {
 		// todo: use preprod specific endpoint, sender ID, and API key from a separate app (i.e. nbusy-preprod)
 	}

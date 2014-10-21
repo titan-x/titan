@@ -30,7 +30,7 @@ type Conn struct {
 // Optionally debug mode can be enabled to dump all CSS communications to stdout.
 func New(endpoint, senderID, apiKey string, debug bool) (*Conn, error) {
 	if !strings.Contains(senderID, gcmDomain) {
-		senderID += "@"+gcmDomain
+		senderID += "@" + gcmDomain
 	}
 
 	c := &Conn{
@@ -90,7 +90,7 @@ func (c *Conn) Listen(msgChan chan map[string]interface{}, errChan chan error) e
 				if isGcmMessage {
 					return
 				}
-			msgChan <- message
+				msgChan <- message
 			}
 		}(event)
 	}
@@ -103,7 +103,7 @@ func (c *Conn) Close() error {
 }
 
 func (c *Conn) handleMessage(msg string) (isGcmMessage bool, message map[string]interface{}, err error) {
-	fmt.Printf("%v", message)
+	fmt.Printf("Incoming message: %v", msg)
 	jsonData, err := json.NewJson([]byte(msg))
 	if err != nil {
 		return false, nil, errors.New("unknow message")

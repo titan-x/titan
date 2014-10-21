@@ -1,8 +1,9 @@
 package main
 
 import (
-	"testing"
 	"fmt"
+	"testing"
+
 	"github.com/soygul/nbusy-server/gcm/ccs"
 )
 
@@ -18,7 +19,7 @@ func TestMain(t *testing.T) {
 
 	go ccsConn.Listen(msgCh, errCh)
 
-	ccsMessage := ccs.NewMessage("GCM_TEST_REG_ID")
+	ccsMessage := ccs.NewMessage(config.GCM.RegID)
 	ccsMessage.SetData("hello", "world")
 	ccsConn.Send(ccsMessage)
 
@@ -26,10 +27,10 @@ func TestMain(t *testing.T) {
 		select {
 		case err := <-errCh:
 			fmt.Println("err:", err)
-			return;
+			return
 		case msg := <-msgCh:
 			fmt.Println("msg:", msg)
-			return;
+			return
 		}
 	}
 }

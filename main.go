@@ -9,7 +9,7 @@ import (
 
 func main() {
 	config := GetConfig()
-	config.App.Debug = true
+	// config.App.Debug = true
 	ccsConn, err := ccs.New(config.GCM.CCSEndpoint, config.GCM.SenderID, config.GCM.APIKey, config.App.Debug)
 	if err != nil {
 		log.Fatal(err)
@@ -21,12 +21,9 @@ func main() {
 
 	go ccsConn.Listen(msgCh, errCh)
 
-	//	ccsMessage := ccs.NewMessage("GCM_TEST_REG_ID")
-	//	ccsMessage.SetData("hello", "world")
-	//	ccsMessage.CollapseKey = ""
-	//	ccsMessage.TimeToLive = 0
-	//	ccsMessage.DelayWhileIdle = true
-	//	ccsClient.Send(ccsMessage)
+	ccsMessage := ccs.NewMessage(config.GCM.RegID)
+	ccsMessage.SetData("hello", "world")
+	ccsConn.Send(ccsMessage)
 
 	fmt.Println("NBusy messege server started.")
 
