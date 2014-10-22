@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// Message is an XMPP <message> stanzas used in sending messages from our client to the CCS server.
+// Message is an XMPP <message> stanzas used in sending messages to the GCM CCS server.
 // https://developer.android.com/google/gcm/ccs.html#format
 type Message struct {
 	To             string            `json:"to"`
@@ -17,8 +17,10 @@ type Message struct {
 	CollapseKey    string            `json:"collapse_key,omitempty"`
 	TimeToLive     int               `json:"time_to_live,omitempty"`
 	DelayWhileIdle bool              `json:"delay_while_idle,omitempty"`
+	ReturnReceipt  bool              `json:"delivery_receipt_requested,omitempty"`
 }
 
+// IncomingMessage is an XMPP <message> stanzas coming from the CCS server.
 type IncomingMessage struct {
 	From        string            `json:"from"`
 	MessageID   string            `json:"message_id"`
@@ -27,6 +29,7 @@ type IncomingMessage struct {
 	Error       string            `json:"error"`
 }
 
+// NewMessage creates a CCS message.
 func NewMessage(id string) *Message {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
@@ -37,6 +40,7 @@ func NewMessage(id string) *Message {
 	}
 }
 
+// SetData is a legacy function not to be used..
 func (m *Message) SetData(key string, value string) {
 	if m.Data == nil {
 		m.Data = make(map[string]string)
