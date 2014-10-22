@@ -7,11 +7,12 @@ import (
 	"time"
 )
 
-// XMPP <message> stanzas used in GCM CCS communications from and to the server.
+// Message is an XMPP <message> stanzas used in sending messages from our client to the CCS server.
 // https://developer.android.com/google/gcm/ccs.html#format
 type Message struct {
 	To             string            `json:"to"`
 	MessageID      string            `json:"message_id"`
+	MessageType    string            `json:"message_type,omitempty"`
 	Data           map[string]string `json:"data,omitempty"`
 	CollapseKey    string            `json:"collapse_key,omitempty"`
 	TimeToLive     int               `json:"time_to_live,omitempty"`
