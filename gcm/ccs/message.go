@@ -12,21 +12,23 @@ import (
 type Message struct {
 	To             string            `json:"to"`
 	MessageID      string            `json:"message_id"`
-	MessageType    string            `json:"message_type,omitempty"`
 	Data           map[string]string `json:"data,omitempty"`
+	MessageType    string            `json:"message_type,omitempty"`
 	CollapseKey    string            `json:"collapse_key,omitempty"`
-	TimeToLive     int               `json:"time_to_live,omitempty"`
-	DelayWhileIdle bool              `json:"delay_while_idle,omitempty"`
-	ReturnReceipt  bool              `json:"delivery_receipt_requested,omitempty"`
+	TimeToLive     int               `json:"time_to_live,omitempty"`               //default:2419200 (in seconds = 4 weeks)
+	DelayWhileIdle bool              `json:"delay_while_idle,omitempty"`           //default:false
+	ReturnReceipt  bool              `json:"delivery_receipt_requested,omitempty"` //default:false
 }
 
 // IncomingMessage is an XMPP <message> stanzas coming from the CCS server.
 type IncomingMessage struct {
-	From        string            `json:"from"`
-	MessageID   string            `json:"message_id"`
-	MessageType string            `json:"message_type"`
-	Data        map[string]string `json:"data"`
-	Error       string            `json:"error"`
+	From             string            `json:"from"`
+	MessageID        string            `json:"message_id"`
+	Data             map[string]string `json:"data"`
+	MessageType      string            `json:"message_type"`
+	ControlType      string            `json:"control_type"`
+	Error            string            `json:"error"`
+	ErrorDescription string            `json:"error_description"`
 }
 
 // NewMessage creates a CCS message.
@@ -40,7 +42,8 @@ func NewMessage(id string) *Message {
 	}
 }
 
-// SetData is a legacy function not to be used..
+// SetData adds a key/value pair to the message payload data. Google recommends key/value pairs to be strings and
+// keys cannot be reserved words described in GCM server documentation.
 func (m *Message) SetData(key string, value string) {
 	if m.Data == nil {
 		m.Data = make(map[string]string)
