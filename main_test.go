@@ -8,10 +8,14 @@ import (
 )
 
 func TestMain(t *testing.T) {
+
+}
+
+func initServer() {
 	config := GetConfig()
 	ccsConn, err := ccs.New(config.GCM.CCSEndpoint, config.GCM.SenderID, config.GCM.APIKey, config.App.Debug)
 	if err != nil {
-		t.Fatalf("Connection to CCS failed with error: %+v", err)
+		fmt.Errorf("Connection to CCS failed with error: %+v", err)
 	}
 
 	msgCh := make(chan map[string]interface{})
