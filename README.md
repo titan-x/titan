@@ -15,3 +15,7 @@ Following environment variables needs to be present on any dev or production env
 export GOOGLE_API_KEY=
 export GOOGLE_PREPROD_API_KEY=
 ```
+
+## License
+
+[Apache License 2.0](LICENSE)

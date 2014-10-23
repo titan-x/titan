@@ -8,7 +8,6 @@ import (
 )
 
 func TestMain(t *testing.T) {
-
 }
 
 func initServer() {
