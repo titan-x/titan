@@ -1,4 +1,5 @@
 // todo: simplify this package in accordance with: https://developer.android.com/google/gcm/ccs.html
+// can be based on this: https://github.com/daneharrigan/hipchat/blob/master/xmpp/xmpp.go
 
 package xmpp
 
