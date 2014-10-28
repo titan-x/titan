@@ -5,23 +5,16 @@ import (
 	"testing"
 )
 
-const (
-	// GCM environment variables
-	gcmSenderID    = "GCM_SENDER_ID"
-	gcmRegID       = "GCM_REG_ID"
-	gcmCcsEndpoint = "GCM_CCS_ENDPOINT"
-	googleAPIKey   = "GOOGLE_API_KEY"
-)
-
-var senderID = os.Getenv(gcmSenderID)
-var regID = os.Getenv(gcmRegID)
-var ccsEndpoint = os.Getenv(gcmSenderID)
-var apiKey = os.Getenv(googleAPIKey)
+// GCM environment variables
+var senderID = os.Getenv("GCM_SENDER_ID")
+var regID = os.Getenv("GCM_REG_ID")
+var ccsEndpoint = os.Getenv("GCM_CCS_ENDPOINT")
+var apiKey = os.Getenv("GOOGLE_API_KEY")
 
 func TestConnect(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode.")
-	}
+}
+
+func TestDisconnect(t *testing.T) {
 }
 
 // recv message
@@ -30,7 +23,10 @@ func TestConnect(t *testing.T) {
 // message data fields match
 // documentation descriptions match
 
-func initServer(t *testing.T) {
+func getConn(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode.")
+	}
 	// config := GetConfig()
 	// ccsConn, err := New(config.GCM.CCSEndpoint, config.GCM.SenderID, config.GCM.APIKey, config.App.Debug)
 	// if err != nil {
