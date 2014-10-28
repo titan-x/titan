@@ -8,6 +8,15 @@ NBusy messaging server for delivering all chat messages to all devices (mobile a
 ## Tech Stack
 GCM CCS (for message delivery and retrieval from Android clients), GAE Sockets API (CCS XMPP delivery protocol, used in place of plain TCP on AppEngine)
 
+## Architecture
+Messaging server utilizes device specific delivery options; GCM for Android, APNS+TCP for iOS, WebSockets for Web browsers.
+
++-------+------------+---------------+
+|  GCM  |  APNS+TCP  |  Web Sockets  |
++-------+------------+---------------+
+|          Messaging Server          |
++------------------------------------+
+
 ## Environment Variables
 Following environment variables needs to be present on any dev or production environment:
 
