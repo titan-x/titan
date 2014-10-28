@@ -11,10 +11,10 @@ GCM CCS (for message delivery and retrieval from Android clients), GAE Sockets A
 ## Architecture
 Messaging server utilizes device specific delivery options; GCM for Android, APNS+TCP for iOS, WebSockets for Web browsers.
 
-+-------+------------+---------------+
-|  GCM  |  APNS+TCP  |  Web Sockets  |
-+-------+------------+---------------+
-|          Messaging Server          |
++-------+------------+---------------+<br />
+|  GCM  |  APNS+TCP  |  Web Sockets  |<br />
++-------+------------+---------------+<br />
+|          Messaging Server          |<br />
 +------------------------------------+
 
 ## Environment Variables
