@@ -1,9 +1,27 @@
 package ccs
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
+
+const (
+	// GCM environment variables
+	gcmSenderID    = "GCM_SENDER_ID"
+	gcmRegID       = "GCM_REG_ID"
+	gcmCcsEndpoint = "GCM_CCS_ENDPOINT"
+	googleAPIKey   = "GOOGLE_API_KEY"
+)
+
+var senderID = os.Getenv(gcmSenderID)
+var regID = os.Getenv(gcmRegID)
+var ccsEndpoint = os.Getenv(gcmSenderID)
+var apiKey = os.Getenv(googleAPIKey)
 
 func TestConnect(t *testing.T) {
-	t.SkipNow()
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode.")
+	}
 }
 
 // recv message
