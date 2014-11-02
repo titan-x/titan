@@ -5,6 +5,7 @@ package ccs
 import (
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 
 	json "github.com/bitly/go-simplejson"
@@ -43,9 +44,9 @@ func New(endpoint, senderID, apiKey string, debug bool) (*Conn, error) {
 	err := c.open()
 	if debug {
 		if err == nil {
-			fmt.Printf("New CCS connection established with parameters: %+v\n", c)
+			log.Printf("New CCS connection established with parameters: %+v\n", c)
 		} else {
-			fmt.Printf("New CCS connection failed to establish with parameters: %+v\n", c)
+			log.Printf("New CCS connection failed to establish with parameters: %+v\n", c)
 		}
 	}
 
@@ -101,7 +102,7 @@ func (c *Conn) Close() error {
 }
 
 func (c *Conn) handleMessage(msg string) (isGcmMessage bool, message map[string]interface{}, err error) {
-	fmt.Printf("Incoming CCS message: %v\n", msg)
+	log.Printf("Incoming CCS message: %v\n", msg)
 	jsonData, err := json.NewJson([]byte(msg))
 	if err != nil {
 		return false, nil, errors.New("unknow message")

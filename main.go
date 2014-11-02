@@ -9,7 +9,6 @@ import (
 
 func main() {
 	config := GetConfig()
-	// config.App.Debug = true
 	ccsConn, err := ccs.New(config.GCM.CCSEndpoint, config.GCM.SenderID, config.GCM.APIKey, config.App.Debug)
 	if err != nil {
 		log.Fatal(err)

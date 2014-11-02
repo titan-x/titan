@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"os"
 )
 
@@ -11,11 +11,11 @@ const (
 	gcmPrepodSenderID     = ""
 	gcmCcsPreprodEndpoint = "gcm-preprod.googleapis.com:5236"
 
-	// GO execution envrinment variables
-	goEnv   = "GO_ENV"
-	goDebug = "GO_DEBUG"
+	// NBusy server envrinment variables
+	nbusyEnv   = "NBUSY_ENV"
+	nbusyDebug = "NBUSY_DEBUG"
 
-	// possible GO_ENV values
+	// possible NBUSY_ENV values
 	dev     = "development"
 	test    = "test"
 	staging = "staging"
@@ -60,12 +60,12 @@ func GetConfig() Config {
 		return config
 	}
 
-	env := os.Getenv(goEnv)
+	env := os.Getenv(nbusyEnv)
 	if env == "" {
 		env = dev
 	}
 
-	debug := os.Getenv(goDebug) != ""
+	debug := os.Getenv(nbusyDebug) != ""
 
 	app := App{Env: env, Debug: debug}
 
@@ -76,7 +76,7 @@ func GetConfig() Config {
 
 	config = Config{App: app, GCM: gcm}
 	if debug {
-		fmt.Printf("Config: %+v\n", config)
+		log.Printf("Config: %+v\n", config)
 	}
 
 	initialized = true

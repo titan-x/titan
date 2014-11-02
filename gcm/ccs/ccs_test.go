@@ -17,16 +17,27 @@ func TestConnect(t *testing.T) {
 func TestDisconnect(t *testing.T) {
 }
 
-// recv message
-// send message
-// gcm message types
-// message data fields match
-// documentation descriptions match
+func TestGCMMessages(t *testing.T) {
+	// see if we can handle all known GCM message types properly
+}
+
+func TestMessageFields(t *testing.T) {
+	// see if our message structure's fields match the incoming message fields exactly
+}
+
+func TestReceive(t *testing.T) {
+}
+
+func TestSend(t *testing.T) {
+}
 
 func getConn(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode.")
+		t.Skip("skipping integration test in short testing mode.")
+	} else if senderID == "" || regID == "" || ccsEndpoint == "" || apiKey == "" {
+		t.Skip("skipping integration test due to missing GCM configuration environment variables.")
 	}
+
 	// config := GetConfig()
 	// ccsConn, err := New(config.GCM.CCSEndpoint, config.GCM.SenderID, config.GCM.APIKey, config.App.Debug)
 	// if err != nil {
