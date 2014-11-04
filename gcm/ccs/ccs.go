@@ -2,6 +2,18 @@
 // https://developer.android.com/google/gcm/ccs.html
 package ccs
 
+/*
+Connection, Channel
+
+Connect, Dial, Open
+
+Accept, Listen
+
+Receive, Read
+
+Close
+*/
+
 import (
 	"errors"
 	"fmt"
@@ -26,15 +38,14 @@ type Conn struct {
 	isConnected                bool
 }
 
-// New function connects to GCM CCS server and returns the connection object and an error (only if there were any).
-// Accepts a CCS endpoint URI (production or staging) along with relevant credentials.
-// Optionally debug mode can be enabled to dump all CSS communications to stdout.
-func New(endpoint, senderID, apiKey string, debug bool) (*Conn, error) {
+// Dial connects to GCM CCS server denoted by endpoint URI (production or staging) along with relevant credentials.
+// Debug mode dumps all CSS communications to stdout.
+func Dial(endpoint, senderID, apiKey string, debug bool) (Conn, error) {
 	if !strings.Contains(senderID, gcmDomain) {
 		senderID += "@" + gcmDomain
 	}
 
-	c := &Conn{
+	c := Conn{
 		Endpoint: endpoint,
 		SenderID: senderID,
 		APIKey:   apiKey,

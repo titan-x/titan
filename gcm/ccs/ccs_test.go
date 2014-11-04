@@ -31,12 +31,14 @@ func TestReceive(t *testing.T) {
 func TestSend(t *testing.T) {
 }
 
-func getConn(t *testing.T) {
+func getConn(t *testing.T) Conn, err {
 	if testing.Short() {
 		t.Skip("skipping integration test in short testing mode.")
 	} else if senderID == "" || regID == "" || ccsEndpoint == "" || apiKey == "" {
 		t.Skip("skipping integration test due to missing GCM configuration environment variables.")
 	}
+
+	return Conn{}
 
 	// config := GetConfig()
 	// ccsConn, err := New(config.GCM.CCSEndpoint, config.GCM.SenderID, config.GCM.APIKey, config.App.Debug)
