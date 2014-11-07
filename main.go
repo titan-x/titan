@@ -9,28 +9,25 @@ import (
 
 func main() {
 	config := GetConfig()
-	ccsConn, err := ccs.New(config.GCM.CCSEndpoint, config.GCM.SenderID, config.GCM.APIKey, config.App.Debug)
+	conn, err := ccs.Connect(config.GCM.CCSEndpoint, config.GCM.SenderID, config.GCM.APIKey, config.App.Debug)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("Successfully logged in to GCM.")
 
-	msgCh := make(chan map[string]interface{})
-	errCh := make(chan error)
-
-	go ccsConn.Listen(msgCh, errCh)
+	go conn.Listen()
 
 	ccsMessage := ccs.NewMessage(config.GCM.RegID)
 	ccsMessage.SetData("hello", "world")
-	ccsConn.Send(ccsMessage)
+	conn.Send(ccsMessage)
 
 	fmt.Println("NBusy messege server started.")
 
 	for {
 		select {
-		case err := <-errCh:
+		case err := <-conn.ErrorChan:
 			fmt.Println("err:", err)
-		case msg := <-msgCh:
+		case msg := <-conn.MessageChan:
 			fmt.Println("msg:", msg)
 		}
 	}

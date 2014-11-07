@@ -3,7 +3,7 @@
 package ccs
 
 /*
-Connection, Channel
+Connection*, Channel
 
 Connect, Dial, Open
 
@@ -34,13 +34,15 @@ const (
 type Conn struct {
 	Endpoint, SenderID, APIKey string
 	Debug                      bool
+	MessageChan                chan map[string]interface{}
+	ErrorChan                  chan error
 	xmppConn                   *xmpp.Client //xmpp.Connection
 	isConnected                bool
 }
 
-// Dial connects to GCM CCS server denoted by endpoint URI (production or staging) along with relevant credentials.
+// Connect connects to GCM CCS server denoted by endpoint URI (production or staging) along with relevant credentials.
 // Debug mode dumps all CSS communications to stdout.
-func Dial(endpoint, senderID, apiKey string, debug bool) (Conn, error) {
+func Connect(endpoint, senderID, apiKey string, debug bool) (Conn, error) {
 	if !strings.Contains(senderID, gcmDomain) {
 		senderID += "@" + gcmDomain
 	}
@@ -52,7 +54,12 @@ func Dial(endpoint, senderID, apiKey string, debug bool) (Conn, error) {
 		Debug:    debug,
 	}
 
-	err := c.open()
+	xc, err := xmpp.NewClient(c.Endpoint, c.SenderID, c.APIKey, c.Debug)
+	if err == nil {
+		c.xmppConn = xc
+		c.isConnected = true
+	}
+
 	if debug {
 		if err == nil {
 			log.Printf("New CCS connection established with parameters: %+v\n", c)
@@ -64,23 +71,8 @@ func Dial(endpoint, senderID, apiKey string, debug bool) (Conn, error) {
 	return c, err
 }
 
-func (c *Conn) open() error {
-	xc, err := xmpp.NewClient(c.Endpoint, c.SenderID, c.APIKey, c.Debug)
-	if err != nil {
-		return err
-	}
-
-	c.xmppConn = xc
-	c.isConnected = true
-	return nil
-}
-
 // Listen starts listening for incoming messages from the CCS connection.
-func (c *Conn) Listen(msgChan chan map[string]interface{}, errChan chan error) error {
-	if !c.isConnected {
-		return errors.New("no ccs connection")
-	}
-
+func (c *Conn) Listen() error {
 	for {
 		event, err := c.xmppConn.Recv() //xmppConn.Listen
 		if err != nil {
@@ -94,13 +86,13 @@ func (c *Conn) Listen(msgChan chan map[string]interface{}, errChan chan error) e
 			case xmpp.Chat: //xmpp.Message
 				isGcmMessage, message, err := c.handleMessage(v.Other[0])
 				if err != nil {
-					errChan <- err
+					c.ErrorChan <- err
 					return
 				}
 				if isGcmMessage {
 					return
 				}
-				msgChan <- message
+				c.MessageChan <- message
 			}
 		}(event)
 	}
