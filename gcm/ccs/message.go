@@ -11,7 +11,7 @@ import (
 // https://developer.android.com/google/gcm/ccs.html#format
 type Message struct {
 	To             string            `json:"to"`
-	MessageID      string            `json:"message_id"`
+	ID             string            `json:"message_id"`
 	Data           map[string]string `json:"data,omitempty"`
 	MessageType    string            `json:"message_type,omitempty"`
 	CollapseKey    string            `json:"collapse_key,omitempty"`
@@ -22,13 +22,13 @@ type Message struct {
 
 // IncomingMessage is an XMPP <message> stanzas coming from the CCS server.
 type IncomingMessage struct {
-	From             string            `json:"from"`
-	MessageID        string            `json:"message_id"`
-	Data             map[string]string `json:"data"`
-	MessageType      string            `json:"message_type"`
-	ControlType      string            `json:"control_type"`
-	Error            string            `json:"error"`
-	ErrorDescription string            `json:"error_description"`
+	From        string                 `json:"from"`
+	ID          string                 `json:"message_id"`
+	Data        map[string]interface{} `json:"data"`
+	MessageType string                 `json:"message_type"`
+	ControlType string                 `json:"control_type"`
+	Err         string                 `json:"error"`
+	ErrDesc     string                 `json:"error_description"`
 }
 
 // NewMessage creates a CCS message.
@@ -36,9 +36,9 @@ func NewMessage(id string) *Message {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	return &Message{
-		To:        id,
-		MessageID: "m-" + strconv.Itoa(r.Intn(100000)),
-		Data:      make(map[string]string),
+		To:   id,
+		ID:   "m-" + strconv.Itoa(r.Intn(100000)),
+		Data: make(map[string]string),
 	}
 }
 

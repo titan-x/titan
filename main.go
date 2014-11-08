@@ -15,18 +15,21 @@ func main() {
 	}
 	fmt.Println("Successfully logged in to GCM.")
 
-	go conn.Listen()
-
 	ccsMessage := ccs.NewMessage(config.GCM.RegID)
 	ccsMessage.SetData("hello", "world")
 	conn.Send(ccsMessage)
 
 	fmt.Println("NBusy messege server started.")
 
-	select {
-	case err := <-conn.ErrorChan:
-		fmt.Println("err:", err)
-	case msg := <-conn.MessageChan:
-		fmt.Println("msg:", msg)
+	for {
+		msg, err := conn.Read()
+		if err != nil {
+			log.Printf("Incoming CCS error: %v\n", err)
+		}
+		go readHandler(msg)
 	}
+}
+
+func readHandler(msg map[string]interface{}) {
+	log.Printf("Incoming CCS message: %v\n", msg)
 }
