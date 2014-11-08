@@ -23,12 +23,10 @@ func main() {
 
 	fmt.Println("NBusy messege server started.")
 
-	for {
-		select {
-		case err := <-conn.ErrorChan:
-			fmt.Println("err:", err)
-		case msg := <-conn.MessageChan:
-			fmt.Println("msg:", msg)
-		}
+	select {
+	case err := <-conn.ErrorChan:
+		fmt.Println("err:", err)
+	case msg := <-conn.MessageChan:
+		fmt.Println("msg:", msg)
 	}
 }

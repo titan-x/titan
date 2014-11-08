@@ -5,13 +5,13 @@ package ccs
 /*
 Connection*, Channel
 
-Connect, Dial, Open
+Connect*, Dial, Open
 
-Accept, Listen
+Accept, Listen*
 
-Receive, Read
+Receive, Read*
 
-Close
+Close*
 */
 
 import (
@@ -36,7 +36,7 @@ type Conn struct {
 	Debug                      bool
 	MessageChan                chan map[string]interface{}
 	ErrorChan                  chan error
-	xmppConn                   *xmpp.Client //xmpp.Connection
+	xmppConn                   *xmpp.Client
 	isConnected                bool
 }
 
@@ -74,7 +74,7 @@ func Connect(endpoint, senderID, apiKey string, debug bool) (Conn, error) {
 // Listen starts listening for incoming messages from the CCS connection.
 func (c *Conn) Listen() error {
 	for {
-		event, err := c.xmppConn.Recv() //xmppConn.Listen
+		event, err := c.xmppConn.Recv()
 		if err != nil {
 			c.xmppConn.Close()
 			c.isConnected = false
@@ -83,7 +83,7 @@ func (c *Conn) Listen() error {
 
 		go func(event interface{}) {
 			switch v := event.(type) {
-			case xmpp.Chat: //xmpp.Message
+			case xmpp.Chat:
 				isGcmMessage, message, err := c.handleMessage(v.Other[0])
 				if err != nil {
 					c.ErrorChan <- err
@@ -126,7 +126,7 @@ func (c *Conn) handleMessage(msg string) (isGcmMessage bool, message map[string]
 		}
 	} else {
 		ack := fmt.Sprintf(gcmACK, from, messageID)
-		c.xmppConn.SendOrg(fmt.Sprintf(gcmXML, ack)) //xmppConn.SendRaw -or- just .Send (and .SendMsg for the other)
+		c.xmppConn.SendOrg(fmt.Sprintf(gcmXML, ack))
 	}
 
 	if _, ok := jsonData.CheckGet("from"); ok {
@@ -144,7 +144,7 @@ func (c *Conn) Send(message *Message) error {
 	}
 
 	res := fmt.Sprintf(gcmXML, message)
-	c.xmppConn.SendOrg(res) //xmppConn.SendRaw
+	c.xmppConn.SendOrg(res)
 
 	return nil
 }
