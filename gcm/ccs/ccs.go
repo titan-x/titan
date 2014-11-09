@@ -56,7 +56,7 @@ func Connect(host, senderID, apiKey string, debug bool) (Conn, error) {
 }
 
 // Read reads the next incoming messages from the CCS connection.
-func (c *Conn) Read() (map[string]interface{}, error) {
+func (c *Conn) Read() (map[string]string, error) {
 	event, err := c.xmppConn.Recv()
 	if err != nil {
 		c.Close()
@@ -78,7 +78,7 @@ func (c *Conn) Read() (map[string]interface{}, error) {
 	return nil, nil
 }
 
-func (c *Conn) handleMessage(msg string) (isGcmMessage bool, message map[string]interface{}, err error) {
+func (c *Conn) handleMessage(msg string) (isGcmMessage bool, message map[string]string, err error) {
 	log.Printf("Incoming raw CCS message: %v\n", msg)
 	var m IncomingMessage
 	err = json.Unmarshal([]byte(msg), &m)

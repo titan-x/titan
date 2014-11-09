@@ -9,7 +9,7 @@ import (
 var host = os.Getenv("GCM_CCS_HOST")
 var senderID = os.Getenv("GCM_SENDER_ID")
 var apiKey = os.Getenv("GOOGLE_API_KEY")
-var regID = os.Getenv("GCM_REG_ID") // optional Android device registration ID for sender tests
+var regID = os.Getenv("GCM_REG_ID") // optional registration ID from an Android device testing outgoing messages
 
 func TestConnect(t *testing.T) {
 	c, err := getConn(t)
@@ -17,9 +17,6 @@ func TestConnect(t *testing.T) {
 		t.Fatal(err)
 	}
 	c.Close()
-}
-
-func TestDisconnect(t *testing.T) {
 }
 
 func TestGCMMessages(t *testing.T) {

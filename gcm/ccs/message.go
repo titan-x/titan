@@ -22,13 +22,13 @@ type Message struct {
 
 // IncomingMessage is an XMPP <message> stanzas coming from the CCS server.
 type IncomingMessage struct {
-	From        string                 `json:"from"`
-	ID          string                 `json:"message_id"`
-	Data        map[string]interface{} `json:"data"`
-	MessageType string                 `json:"message_type"`
-	ControlType string                 `json:"control_type"`
-	Err         string                 `json:"error"`
-	ErrDesc     string                 `json:"error_description"`
+	From        string            `json:"from"`
+	ID          string            `json:"message_id"`
+	Data        map[string]string `json:"data"`
+	MessageType string            `json:"message_type"`
+	ControlType string            `json:"control_type"`
+	Err         string            `json:"error"`
+	ErrDesc     string            `json:"error_description"`
 }
 
 // NewMessage creates a CCS message.
