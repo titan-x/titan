@@ -20,26 +20,26 @@ const (
 
 // Conn is a GCM CCS connection.
 type Conn struct {
-	Endpoint, SenderID, APIKey string
-	Debug                      bool
-	xmppConn                   *xmpp.Client
+	Host, SenderID, APIKey string
+	Debug                  bool
+	xmppConn               *xmpp.Client
 }
 
-// Connect connects to GCM CCS server denoted by endpoint URI (production or staging) along with relevant credentials.
+// Connect connects to GCM CCS server denoted by host (production or staging CCS endpoint URI) along with relevant credentials.
 // Debug mode dumps all CSS communications to stdout.
-func Connect(endpoint, senderID, apiKey string, debug bool) (Conn, error) {
+func Connect(host, senderID, apiKey string, debug bool) (Conn, error) {
 	if !strings.Contains(senderID, gcmDomain) {
 		senderID += "@" + gcmDomain
 	}
 
 	c := Conn{
-		Endpoint: endpoint,
+		Host:     host,
 		SenderID: senderID,
 		APIKey:   apiKey,
 		Debug:    debug,
 	}
 
-	xc, err := xmpp.NewClient(c.Endpoint, c.SenderID, c.APIKey, c.Debug)
+	xc, err := xmpp.NewClient(c.Host, c.SenderID, c.APIKey, c.Debug)
 	if err == nil {
 		c.xmppConn = xc
 	}
