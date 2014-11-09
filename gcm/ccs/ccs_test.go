@@ -6,12 +6,17 @@ import (
 )
 
 // GCM environment variables
+var host = os.Getenv("GCM_CCS_HOST")
 var senderID = os.Getenv("GCM_SENDER_ID")
-var regID = os.Getenv("GCM_REG_ID")
-var ccsEndpoint = os.Getenv("GCM_CCS_ENDPOINT")
 var apiKey = os.Getenv("GOOGLE_API_KEY")
+var regID = os.Getenv("GCM_REG_ID") // optional Android device registration ID for sender tests
 
 func TestConnect(t *testing.T) {
+	c, err := getConn(t)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c.Close()
 }
 
 func TestDisconnect(t *testing.T) {
@@ -34,9 +39,9 @@ func TestSend(t *testing.T) {
 func getConn(t *testing.T) (Conn, error) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short testing mode.")
-	} else if senderID == "" || regID == "" || ccsEndpoint == "" || apiKey == "" {
-		t.Skip("skipping integration test due to missing GCM configuration environment variables.")
+	} else if host == "" || senderID == "" || apiKey == "" {
+		t.Skip("skipping integration test due to missing GCM environment variables.")
 	}
 
-	return Conn{}, nil
+	return Connect(host, senderID, apiKey, true)
 }
