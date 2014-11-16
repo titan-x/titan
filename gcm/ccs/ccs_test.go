@@ -12,33 +12,69 @@ var apiKey = os.Getenv("GOOGLE_API_KEY")
 var regID = os.Getenv("GCM_REG_ID") // optional registration ID from an Android device testing outgoing messages
 
 func TestConnect(t *testing.T) {
-	c, err := getConn(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	c := getConn(t)
 	c.Close()
+}
+
+func TestSend(t *testing.T) {
+	// if senderID == "" {
+	//
+	// }
+	//
+	// c := getConn(t)
+	//
+	// outmsg := OutMsg{To: senderID, Data: map[string]string{}}
+	// n, err = c.Send(outmsg)
+	//
+	// inmsg := read(t, c)
+	// if inmsg != nil {
+	//
+	// }
+	//
+	// c.Close()
 }
 
 func TestGCMMessages(t *testing.T) {
 	// see if we can handle all known GCM message types properly
+	c := getConn(t)
+	c.Close()
 }
 
 func TestMessageFields(t *testing.T) {
 	// see if our message structure's fields match the incoming message fields exactly
+	c := getConn(t)
+	c.Close()
 }
 
-func TestReceive(t *testing.T) {
-}
-
-func TestSend(t *testing.T) {
-}
-
-func getConn(t *testing.T) (Conn, error) {
+func getConn(t *testing.T) Conn {
 	if testing.Short() {
 		t.Skip("skipping integration test in short testing mode.")
 	} else if host == "" || senderID == "" || apiKey == "" {
 		t.Skip("skipping integration test due to missing GCM environment variables.")
 	}
 
-	return Connect(host, senderID, apiKey, true)
+	c, err := Connect(host, senderID, apiKey, true)
+	if err != nil {
+		t.Fatalf("CCS error while connecting to server: %v", err)
+	}
+	return c
+}
+
+func receive(t *testing.T, c *Conn) *InMsg {
+	m, err := c.Receive()
+	if err != nil {
+		t.Fatalf("CCS error while receiving message: %v", err)
+	}
+	return m
+}
+
+func send(t *testing.T, c *Conn, m *OutMsg) (n int) {
+	n, err := c.Send(m)
+	if err != nil {
+		t.Fatalf("CCS error while sending message: %v", err)
+	}
+	if n == 0 {
+		t.Fatal("CCS error while sending message: 0 bytes were written to the underlying socket connection")
+	}
+	return
 }

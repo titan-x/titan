@@ -55,8 +55,8 @@ func Connect(host, senderID, apiKey string, debug bool) (Conn, error) {
 	return c, err
 }
 
-// Read reads the next incoming messages from the CCS connection.
-func (c *Conn) Read() (map[string]string, error) {
+// Receive retrieves the next incoming messages from the CCS connection.
+func (c *Conn) Receive() (*InMsg, error) {
 	event, err := c.xmppConn.Recv()
 	if err != nil {
 		c.Close()
@@ -65,11 +65,11 @@ func (c *Conn) Read() (map[string]string, error) {
 
 	switch v := event.(type) {
 	case xmpp.Chat:
-		isGcmMessage, message, err := c.handleMessage(v.Other[0])
+		isGcmMsg, message, err := c.handleMessage(v.Other[0])
 		if err != nil {
 			return nil, err
 		}
-		if isGcmMessage {
+		if isGcmMsg {
 			return nil, nil
 		}
 		return message, nil
@@ -78,9 +78,9 @@ func (c *Conn) Read() (map[string]string, error) {
 	return nil, nil
 }
 
-func (c *Conn) handleMessage(msg string) (isGcmMessage bool, message map[string]string, err error) {
+func (c *Conn) handleMessage(msg string) (isGcmMsg bool, message *InMsg, err error) {
 	log.Printf("Incoming raw CCS message: %v\n", msg)
-	var m IncomingMessage
+	var m InMsg
 	err = json.Unmarshal([]byte(msg), &m)
 	if err != nil {
 		return false, nil, errors.New("unknow message")
@@ -101,17 +101,17 @@ func (c *Conn) handleMessage(msg string) (isGcmMessage bool, message map[string]
 	}
 
 	if m.From != "" {
-		return false, m.Data, nil
+		return false, &m, nil
 	}
 
 	return false, nil, errors.New("unknow message")
 }
 
-// Send a GCM CCS message.
-func (c *Conn) Send(message *Message) error {
+// Send sends a message to GCM CCS server and returns the number
+// of bytes written and any net.Conn write error encountered.
+func (c *Conn) Send(message *OutMsg) (n int, err error) {
 	res := fmt.Sprintf(gcmXML, message)
-	c.xmppConn.SendOrg(res)
-	return nil
+	return c.xmppConn.SendOrg(res)
 }
 
 // Close a CSS connection.

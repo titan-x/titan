@@ -7,9 +7,9 @@ import (
 	"time"
 )
 
-// Message is an XMPP <message> stanzas used in sending messages to the GCM CCS server.
+// OutMsg is an XMPP <message> stanzas used in sending messages to the GCM CCS server.
 // https://developer.android.com/google/gcm/ccs.html#format
-type Message struct {
+type OutMsg struct {
 	To             string            `json:"to"`
 	ID             string            `json:"message_id"`
 	Data           map[string]string `json:"data,omitempty"`
@@ -20,8 +20,8 @@ type Message struct {
 	ReturnReceipt  bool              `json:"delivery_receipt_requested,omitempty"` //default:false
 }
 
-// IncomingMessage is an XMPP <message> stanzas coming from the CCS server.
-type IncomingMessage struct {
+// InMsg is an XMPP <message> stanzas coming from the CCS server.
+type InMsg struct {
 	From        string            `json:"from"`
 	ID          string            `json:"message_id"`
 	Data        map[string]string `json:"data"`
@@ -31,11 +31,11 @@ type IncomingMessage struct {
 	ErrDesc     string            `json:"error_description"`
 }
 
-// NewMessage creates a CCS message.
-func NewMessage(id string) *Message {
+// NewMsg creates a outgoing CCS message.
+func NewMsg(id string) OutMsg {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	return &Message{
+	return OutMsg{
 		To:   id,
 		ID:   "m-" + strconv.Itoa(r.Intn(100000)),
 		Data: make(map[string]string),
@@ -44,14 +44,14 @@ func NewMessage(id string) *Message {
 
 // SetData adds a key/value pair to the message payload data. Google recommends key/value pairs to be strings and
 // keys cannot be reserved words described in GCM server documentation.
-func (m *Message) SetData(key string, value string) {
+func (m *OutMsg) SetData(key string, value string) {
 	if m.Data == nil {
 		m.Data = make(map[string]string)
 	}
 	m.Data[key] = value
 }
 
-func (m *Message) String() string {
+func (m *OutMsg) String() string {
 	result, _ := json.Marshal(m)
 	return string(result)
 }
