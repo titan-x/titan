@@ -27,32 +27,23 @@ type Conn struct {
 
 // Connect connects to GCM CCS server denoted by host (production or staging CCS endpoint URI) along with relevant credentials.
 // Debug mode dumps all CSS communications to stdout.
-func Connect(host, senderID, apiKey string, debug bool) (Conn, error) {
+func Connect(host, senderID, apiKey string, debug bool) (*Conn, error) {
 	if !strings.Contains(senderID, gcmDomain) {
 		senderID += "@" + gcmDomain
 	}
 
-	c := Conn{
+	c, err := xmpp.NewClient(host, senderID, apiKey, debug)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Conn{
 		Host:     host,
 		SenderID: senderID,
 		APIKey:   apiKey,
 		Debug:    debug,
-	}
-
-	xc, err := xmpp.NewClient(c.Host, c.SenderID, c.APIKey, c.Debug)
-	if err == nil {
-		c.xmppConn = xc
-	}
-
-	if debug {
-		if err == nil {
-			log.Printf("New CCS connection established with parameters: %+v\n", c)
-		} else {
-			log.Printf("New CCS connection failed to establish with parameters: %+v\n", c)
-		}
-	}
-
-	return c, err
+		xmppConn: c,
+	}, nil
 }
 
 // Receive retrieves the next incoming messages from the CCS connection.
@@ -109,7 +100,7 @@ func (c *Conn) handleMessage(msg string) (isGcmMsg bool, message *InMsg, err err
 
 // Send sends a message to GCM CCS server and returns the number
 // of bytes written and any net.Conn write error encountered.
-func (c *Conn) Send(message OutMsg) (n int, err error) { // todo: message *OutMsg or message OutMessage?? read crypto.tls code as an example
+func (c *Conn) Send(message *OutMsg) (n int, err error) {
 	res := fmt.Sprintf(gcmXML, message)
 	return c.xmppConn.SendOrg(res)
 }

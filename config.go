@@ -6,6 +6,7 @@ import (
 )
 
 // todo: use init block and expose Config variable directly, which will simplify things a lot
+// todo: also use a proper config file along with env variables for configuration: http://stackoverflow.com/a/16466189
 
 const (
 	gcmSenderID           = "218602439235"
@@ -26,9 +27,6 @@ const (
 	// Google environment variables
 	googleAPIKey        = "GOOGLE_API_KEY"
 	googlePreprodAPIKey = "GOOGLE_PREPROD_API_KEY"
-
-	// GCM environment variables
-	gcmRegID = "GCM_REG_ID"
 )
 
 var config Config
@@ -53,7 +51,6 @@ type GCM struct {
 	CCSEndpoint string
 	SenderID    string
 	APIKey      string
-	RegID       string
 }
 
 // GetConfig returns a singleton instance of the application configuration.
@@ -71,7 +68,7 @@ func GetConfig() Config {
 
 	app := App{Env: env, Debug: debug}
 
-	gcm := GCM{CCSEndpoint: gcmCcsEndpoint, SenderID: gcmSenderID, APIKey: os.Getenv(googleAPIKey), RegID: os.Getenv(gcmRegID)}
+	gcm := GCM{CCSEndpoint: gcmCcsEndpoint, SenderID: gcmSenderID, APIKey: os.Getenv(googleAPIKey)}
 	if env != prod && os.Getenv(googlePreprodAPIKey) != "" {
 		// todo: use preprod specific endpoint, sender ID, and API key from a separate app (i.e. nbusy-preprod)
 	}

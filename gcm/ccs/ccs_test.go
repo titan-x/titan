@@ -9,7 +9,7 @@ import (
 var host = os.Getenv("GCM_CCS_HOST")
 var senderID = os.Getenv("GCM_SENDER_ID")
 var apiKey = os.Getenv("GOOGLE_API_KEY")
-var regID = os.Getenv("GCM_REG_ID") // optional registration ID from an Android device testing outgoing messages
+var regID = os.Getenv("GCM_REG_ID") // optional registration ID from an Android device, used for testing outgoing messages
 
 func TestConnect(t *testing.T) {
 	c := getConn(t)
@@ -24,7 +24,7 @@ func TestSend(t *testing.T) {
 	c := getConn(t)
 
 	outmsg := OutMsg{To: senderID, Data: map[string]string{}}
-	send(t, c, outmsg)
+	send(t, c, &outmsg)
 
 	inmsg := receive(t, c)
 	if inmsg != nil {
@@ -46,7 +46,7 @@ func TestMessageFields(t *testing.T) {
 	c.Close()
 }
 
-func getConn(t *testing.T) Conn {
+func getConn(t *testing.T) *Conn {
 	if testing.Short() {
 		t.Skip("skipping integration test in short testing mode.")
 	} else if host == "" || senderID == "" || apiKey == "" {
@@ -60,7 +60,7 @@ func getConn(t *testing.T) Conn {
 	return c
 }
 
-func receive(t *testing.T, c Conn) *InMsg {
+func receive(t *testing.T, c *Conn) *InMsg {
 	m, err := c.Receive()
 	if err != nil {
 		t.Fatalf("CCS error while receiving message: %v", err)
@@ -68,7 +68,7 @@ func receive(t *testing.T, c Conn) *InMsg {
 	return m
 }
 
-func send(t *testing.T, c Conn, m OutMsg) (n int) {
+func send(t *testing.T, c *Conn, m *OutMsg) (n int) {
 	n, err := c.Send(m)
 	if err != nil {
 		t.Fatalf("CCS error while sending message: %v", err)
