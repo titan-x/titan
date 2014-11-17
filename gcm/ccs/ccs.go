@@ -109,7 +109,7 @@ func (c *Conn) handleMessage(msg string) (isGcmMsg bool, message *InMsg, err err
 
 // Send sends a message to GCM CCS server and returns the number
 // of bytes written and any net.Conn write error encountered.
-func (c *Conn) Send(message *OutMsg) (n int, err error) {
+func (c *Conn) Send(message OutMsg) (n int, err error) { // todo: message *OutMsg or message OutMessage?? read crypto.tls code as an example
 	res := fmt.Sprintf(gcmXML, message)
 	return c.xmppConn.SendOrg(res)
 }

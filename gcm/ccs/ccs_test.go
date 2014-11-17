@@ -17,21 +17,21 @@ func TestConnect(t *testing.T) {
 }
 
 func TestSend(t *testing.T) {
-	// if senderID == "" {
-	//
-	// }
-	//
-	// c := getConn(t)
-	//
-	// outmsg := OutMsg{To: senderID, Data: map[string]string{}}
-	// n, err = c.Send(outmsg)
-	//
-	// inmsg := read(t, c)
-	// if inmsg != nil {
-	//
-	// }
-	//
-	// c.Close()
+	if regID == "" {
+		t.Skip("skipping integration test due to missing GCM registration ID (GCM_REG_ID) environment variable.")
+	}
+
+	c := getConn(t)
+
+	outmsg := OutMsg{To: senderID, Data: map[string]string{}}
+	send(t, c, outmsg)
+
+	inmsg := receive(t, c)
+	if inmsg != nil {
+		// todo ...
+	}
+
+	c.Close()
 }
 
 func TestGCMMessages(t *testing.T) {
@@ -60,7 +60,7 @@ func getConn(t *testing.T) Conn {
 	return c
 }
 
-func receive(t *testing.T, c *Conn) *InMsg {
+func receive(t *testing.T, c Conn) *InMsg {
 	m, err := c.Receive()
 	if err != nil {
 		t.Fatalf("CCS error while receiving message: %v", err)
@@ -68,7 +68,7 @@ func receive(t *testing.T, c *Conn) *InMsg {
 	return m
 }
 
-func send(t *testing.T, c *Conn, m *OutMsg) (n int) {
+func send(t *testing.T, c Conn, m OutMsg) (n int) {
 	n, err := c.Send(m)
 	if err != nil {
 		t.Fatalf("CCS error while sending message: %v", err)
