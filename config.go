@@ -5,6 +5,8 @@ import (
 	"os"
 )
 
+// todo: use init block and expose Config variable directly, which will simplify things a lot
+
 const (
 	gcmSenderID           = "218602439235"
 	gcmCcsEndpoint        = "gcm.googleapis.com:5235"
