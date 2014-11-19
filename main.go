@@ -8,7 +8,7 @@ import (
 
 func main() {
 	conf := GetConfig()
-	c, err := ccs.Connect(conf.GCM.CCSEndpoint, conf.GCM.SenderID, conf.GCM.APIKey, conf.App.Debug)
+	c, err := ccs.Connect(conf.GCM.CCSHost, conf.GCM.SenderID, conf.GCM.APIKey, conf.App.Debug)
 
 	if conf.App.Debug {
 		if err == nil {

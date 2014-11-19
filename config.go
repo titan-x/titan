@@ -5,15 +5,7 @@ import (
 	"os"
 )
 
-// todo: use init block and expose Config variable directly, which will simplify things a lot
-// todo: also use a proper config file along with env variables for configuration: http://stackoverflow.com/a/16466189
-
 const (
-	gcmSenderID           = "218602439235"
-	gcmCcsEndpoint        = "gcm.googleapis.com:5235"
-	gcmPrepodSenderID     = ""
-	gcmCcsPreprodEndpoint = "gcm-preprod.googleapis.com:5236"
-
 	// NBusy server envrinment variables
 	nbusyEnv   = "NBUSY_ENV"
 	nbusyDebug = "NBUSY_DEBUG"
@@ -24,9 +16,12 @@ const (
 	staging = "staging"
 	prod    = "production"
 
+	// GCM environment variables
+	gcmSenderID = "GCM_SENDER_ID"
+	gcmCcsHost  = "GCM_CCS_HOST"
+
 	// Google environment variables
-	googleAPIKey        = "GOOGLE_API_KEY"
-	googlePreprodAPIKey = "GOOGLE_PREPROD_API_KEY"
+	googleAPIKey = "GOOGLE_API_KEY"
 )
 
 var config Config
@@ -48,9 +43,9 @@ type App struct {
 
 // GCM describes the Google Cloud Messaging parameters as described here: https://developer.android.com/google/gcm/gs.html
 type GCM struct {
-	CCSEndpoint string
-	SenderID    string
-	APIKey      string
+	CCSHost  string
+	SenderID string
+	APIKey   string
 }
 
 // GetConfig returns a singleton instance of the application configuration.
@@ -59,21 +54,16 @@ func GetConfig() Config {
 		return config
 	}
 
+	debug := os.Getenv(nbusyDebug) != ""
 	env := os.Getenv(nbusyEnv)
 	if env == "" {
 		env = dev
 	}
 
-	debug := os.Getenv(nbusyDebug) != ""
-
 	app := App{Env: env, Debug: debug}
-
-	gcm := GCM{CCSEndpoint: gcmCcsEndpoint, SenderID: gcmSenderID, APIKey: os.Getenv(googleAPIKey)}
-	if env != prod && os.Getenv(googlePreprodAPIKey) != "" {
-		// todo: use preprod specific endpoint, sender ID, and API key from a separate app (i.e. nbusy-preprod)
-	}
-
+	gcm := GCM{CCSHost: gcmCcsHost, SenderID: gcmSenderID, APIKey: os.Getenv(googleAPIKey)}
 	config = Config{App: app, GCM: gcm}
+
 	if debug {
 		log.Printf("Config: %+v\n", config)
 	}
