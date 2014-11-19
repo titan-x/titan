@@ -7,10 +7,9 @@ import (
 )
 
 func main() {
-	conf := GetConfig()
-	c, err := ccs.Connect(conf.GCM.CCSHost, conf.GCM.SenderID, conf.GCM.APIKey, conf.App.Debug)
+	c, err := ccs.Connect(Conf.GCM.CCSHost, Conf.GCM.SenderID, Conf.GCM.APIKey, Conf.App.Debug)
 
-	if conf.App.Debug {
+	if Conf.App.Debug {
 		if err == nil {
 			log.Printf("New CCS connection established with parameters: %+v\n", c)
 		} else {

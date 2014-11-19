@@ -24,8 +24,8 @@ const (
 	googleAPIKey = "GOOGLE_API_KEY"
 )
 
-var config Config
-var initialized bool
+// Conf contains all the global configuration for the NBusy server.
+var Conf Config
 
 // Config describes the global configuration for the NBusy server.
 type Config struct {
@@ -48,12 +48,7 @@ type GCM struct {
 	APIKey   string
 }
 
-// GetConfig returns a singleton instance of the application configuration.
-func GetConfig() Config {
-	if initialized {
-		return config
-	}
-
+func init() {
 	debug := os.Getenv(nbusyDebug) != ""
 	env := os.Getenv(nbusyEnv)
 	if env == "" {
@@ -61,13 +56,10 @@ func GetConfig() Config {
 	}
 
 	app := App{Env: env, Debug: debug}
-	gcm := GCM{CCSHost: gcmCcsHost, SenderID: gcmSenderID, APIKey: os.Getenv(googleAPIKey)}
-	config = Config{App: app, GCM: gcm}
+	gcm := GCM{CCSHost: os.Getenv(gcmCcsHost), SenderID: os.Getenv(gcmSenderID), APIKey: os.Getenv(googleAPIKey)}
+	Conf = Config{App: app, GCM: gcm}
 
 	if debug {
-		log.Printf("Config: %+v\n", config)
+		log.Printf("Config: %+v\n", Conf)
 	}
-
-	initialized = true
-	return config
 }
