@@ -25,12 +25,13 @@ func TestSend(t *testing.T) {
 
 	c := getConn(t)
 
-	outmsg := OutMsg{To: senderID, Data: map[string]string{}}
+	outmsg := OutMsg{To: senderID, Data: map[string]string{"test": "blah"}}
+	t.Logf("Testing out message: %+v", outmsg)
 	send(t, c, &outmsg)
 
 	inmsg := receive(t, c)
 	if inmsg != nil {
-		// todo ...
+
 	}
 
 	c.Close()

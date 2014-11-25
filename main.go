@@ -8,15 +8,9 @@ import (
 
 func main() {
 	c, err := ccs.Connect(Conf.GCM.CCSHost, Conf.GCM.SenderID, Conf.GCM.APIKey, Conf.App.Debug)
-
-	if Conf.App.Debug {
-		if err == nil {
-			log.Printf("New CCS connection established with parameters: %+v\n", c)
-		} else {
-			log.Fatalf("New CCS connection failed to establish with parameters: %+v\n", c)
-		}
+	if err != nil {
+		log.Fatalf("NBusy messege server failed to start.")
 	}
-
 	log.Println("NBusy messege server started.")
 
 	for {

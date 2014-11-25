@@ -33,6 +33,14 @@ func Connect(host, senderID, apiKey string, debug bool) (*Conn, error) {
 	}
 
 	c, err := xmpp.NewClient(host, senderID, apiKey, debug)
+	if debug {
+		if err == nil {
+			log.Printf("New CCS connection established with XMPP parameters: %+v\n", c)
+		} else {
+			log.Printf("New CCS connection failed to establish with XMPP parameters: %+v and with error: %v\n", c, err)
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +78,7 @@ func (c *Conn) Receive() (*InMsg, error) {
 }
 
 func (c *Conn) handleMessage(msg string) (isGcmMsg bool, message *InMsg, err error) {
-	log.Printf("Incoming raw CCS message: %v\n", msg)
+	log.Printf("Incoming raw CCS message: %+v\n", msg)
 	var m InMsg
 	err = json.Unmarshal([]byte(msg), &m)
 	if err != nil {
