@@ -25,8 +25,8 @@ func TestSend(t *testing.T) {
 
 	c := getConn(t)
 
-	outmsg := OutMsg{To: senderID, Data: map[string]string{"test": "blah"}}
-	t.Logf("Testing out message: %+v", outmsg)
+	outmsg := OutMsg{To: regID, Data: map[string]string{"test": "blah"}} // todo: send meaningful data about testing
+	t.Logf("Testing out message: %+v to device with registration ID: %+v", outmsg, regID)
 	send(t, c, &outmsg)
 
 	inmsg := receive(t, c)
