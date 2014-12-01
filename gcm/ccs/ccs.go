@@ -1,4 +1,4 @@
-// Package ccs provides GCM Cloud Connection Server (XMPP) client implementation.
+// Package ccs provides GCM CCS (Cloud Connection Server) client implementation using XMPP.
 // https://developer.android.com/google/gcm/ccs.html
 package ccs
 
@@ -14,7 +14,6 @@ import (
 
 const (
 	gcmXML    = `<message id=""><gcm xmlns="google:mobile:data">%v</gcm></message>`
-	gcmACK    = `{"to": "%v", "message_id": "%v", "message_type": "ack"}`
 	gcmDomain = "gcm.googleapis.com"
 )
 
@@ -77,12 +76,15 @@ func (c *Conn) Receive() (*InMsg, error) {
 	return nil, nil
 }
 
+// isGcmMsg indicates if this is a GCM control message (ack, nack, control) coming from the CCS server.
+// If so, the message is automatically handled with appropriate response. Otherwise, it is sent to the
+// parent app server for handling.
 func (c *Conn) handleMessage(msg string) (isGcmMsg bool, message *InMsg, err error) {
 	log.Printf("Incoming raw CCS message: %+v\n", msg)
 	var m InMsg
 	err = json.Unmarshal([]byte(msg), &m)
 	if err != nil {
-		return false, nil, errors.New("unknow message")
+		return false, nil, errors.New("unknow message from CCS")
 	}
 
 	if m.MessageType != "" {
@@ -95,8 +97,11 @@ func (c *Conn) handleMessage(msg string) (isGcmMsg bool, message *InMsg, err err
 			return true, nil, errors.New(result)
 		}
 	} else {
-		ack := fmt.Sprintf(gcmACK, m.From, m.ID)
-		c.xmppConn.SendOrg(fmt.Sprintf(gcmXML, ack))
+		ack := &OutMsg{MessageType: "ack", To: m.From, ID: m.ID}
+		_, err = c.Send(ack)
+		if err != nil {
+			return false, nil, fmt.Errorf("Failed to send ack message to CCS. Error was: %v", err)
+		}
 	}
 
 	if m.From != "" {
