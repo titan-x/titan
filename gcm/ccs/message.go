@@ -10,14 +10,14 @@ import (
 // OutMsg is an XMPP <message> stanzas used in sending messages to the GCM CCS server.
 // https://developer.android.com/google/gcm/ccs.html#format
 type OutMsg struct {
-	To             string            `json:"to"`
-	ID             string            `json:"message_id"`
-	Data           map[string]string `json:"data,omitempty"`
-	MessageType    string            `json:"message_type,omitempty"`
-	CollapseKey    string            `json:"collapse_key,omitempty"`
-	TimeToLive     int               `json:"time_to_live,omitempty"`               //default:2419200 (in seconds = 4 weeks)
-	DelayWhileIdle bool              `json:"delay_while_idle,omitempty"`           //default:false
-	ReturnReceipt  bool              `json:"delivery_receipt_requested,omitempty"` //default:false
+	To                       string            `json:"to"`
+	ID                       string            `json:"message_id"`
+	Data                     map[string]string `json:"data,omitempty"`
+	MessageType              string            `json:"message_type,omitempty"`
+	CollapseKey              string            `json:"collapse_key,omitempty"`
+	TimeToLive               int               `json:"time_to_live,omitempty"`               //default:2419200 (in seconds = 4 weeks)
+	DelayWhileIdle           bool              `json:"delay_while_idle,omitempty"`           //default:false
+	DeliveryReceiptRequested bool              `json:"delivery_receipt_requested,omitempty"` //default:false
 }
 
 // InMsg is an XMPP <message> stanzas coming from the CCS server.

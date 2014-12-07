@@ -31,7 +31,7 @@ func TestSend(t *testing.T) {
 
 	inmsg := receive(t, c)
 	if inmsg != nil {
-
+		t.Fatalf("Received a message for some reason even though delivery request was not requested. Received message: %+v", inmsg)
 	}
 
 	c.Close()

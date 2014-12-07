@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/soygul/nbusy-server/gcm/ccs"
+	"github.com/soygul/gcm-ccs"
 )
 
 func main() {
