@@ -9,9 +9,9 @@ import (
 func main() {
 	c, err := ccs.Connect(Conf.GCM.CCSHost, Conf.GCM.SenderID, Conf.GCM.APIKey, Conf.App.Debug)
 	if err != nil {
-		log.Fatalf("NBusy messege server failed to start.")
+		log.Fatalf("NBusy message server failed to start.")
 	}
-	log.Println("NBusy messege server started.")
+	log.Println("NBusy message server started.")
 
 	for {
 		m, err := c.Receive()
