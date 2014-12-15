@@ -1,9 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
-	"github.com/soygul/gcm-ccs"
+	"github.com/nbusy/gcm/ccs"
 )
 
 func main() {
@@ -11,7 +12,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("NBusy message server failed to start.")
 	}
-	log.Println("NBusy message server started.")
+	fmt.Println("NBusy message server started.")
 
 	for {
 		m, err := c.Receive()
@@ -23,5 +24,5 @@ func main() {
 }
 
 func readHandler(m *ccs.InMsg) {
-	log.Printf("Incoming CCS message: %v\n", m)
+	fmt.Printf("Incoming CCS message: %v\n", m)
 }
