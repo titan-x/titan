@@ -45,7 +45,10 @@ type App struct {
 type GCM struct {
 	CCSHost  string
 	SenderID string
-	APIKey   string
+}
+
+func (gcm *GCM) getAPIKey() string {
+	return os.Getenv(googleAPIKey)
 }
 
 func init() {
@@ -56,10 +59,10 @@ func init() {
 	}
 
 	app := App{Env: env, Debug: debug}
-	gcm := GCM{CCSHost: os.Getenv(gcmCcsHost), SenderID: os.Getenv(gcmSenderID), APIKey: os.Getenv(googleAPIKey)}
+	gcm := GCM{CCSHost: os.Getenv(gcmCcsHost), SenderID: os.Getenv(gcmSenderID)}
 	Conf = Config{App: app, GCM: gcm}
 
 	if debug {
-		log.Printf("Config: %+v\n", Conf)
+		log.Println("Server config initiated with values:", Conf)
 	}
 }

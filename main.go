@@ -1,28 +1,28 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/nbusy/gcm/ccs"
 )
 
 func main() {
-	c, err := ccs.Connect(Conf.GCM.CCSHost, Conf.GCM.SenderID, Conf.GCM.APIKey, Conf.App.Debug)
+	c, err := ccs.Connect(Conf.GCM.CCSHost, Conf.GCM.SenderID, Conf.GCM.getAPIKey(), Conf.App.Debug)
 	if err != nil {
-		log.Fatalf("NBusy message server failed to start.")
+		log.Fatalln("Failed to connect to GCM CCS with error:", err)
 	}
-	fmt.Println("NBusy message server started.")
+
+	log.Println("NBusy message server started.")
 
 	for {
 		m, err := c.Receive()
 		if err != nil {
-			log.Printf("Incoming CCS error: %v\n", err)
+			log.Println("CCS sent error:", err)
 		}
 		go readHandler(m)
 	}
 }
 
 func readHandler(m *ccs.InMsg) {
-	fmt.Printf("Incoming CCS message: %v\n", m)
+	log.Println("Incoming CCS message:", m)
 }
