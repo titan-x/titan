@@ -16,6 +16,7 @@ type User struct {
 
 // Device is an NBusy installed device.
 type Device interface {
+	// Send sends given data to to a device using device specific infrastructure.
 	Send(data map[string]string) error // note: not adding SendMessage/SendNotification/etc. like fine grained methods to keep this library more low level
 }
 
