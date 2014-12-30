@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	c, err := ccs.Connect(Conf.GCM.CCSHost, Conf.GCM.SenderID, Conf.GCM.getAPIKey(), Conf.App.Debug)
+	c, err := ccs.Connect(Conf.GCM.CCSHost, Conf.GCM.SenderID, Conf.GCM.apiKey(), Conf.App.Debug)
 	if err != nil {
 		log.Fatalln("Failed to connect to GCM CCS with error:", err)
 	}

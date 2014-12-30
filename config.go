@@ -47,7 +47,7 @@ type GCM struct {
 	SenderID string
 }
 
-func (gcm *GCM) getAPIKey() string {
+func (gcm *GCM) apiKey() string {
 	return os.Getenv(googleAPIKey)
 }
 
@@ -63,6 +63,6 @@ func init() {
 	Conf = Config{App: app, GCM: gcm}
 
 	if debug {
-		log.Println("Server config initiated with values:", Conf)
+		log.Printf("Server config initialized with values: %+v\n", Conf)
 	}
 }
