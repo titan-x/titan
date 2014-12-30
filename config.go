@@ -47,7 +47,8 @@ type GCM struct {
 	SenderID string
 }
 
-func (gcm *GCM) apiKey() string {
+// APIKey gets the GCM API key from environment variable.
+func (gcm *GCM) APIKey() string {
 	return os.Getenv(googleAPIKey)
 }
 
