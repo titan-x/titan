@@ -16,19 +16,19 @@ type User struct {
 
 // Device is an NBusy installed device.
 type Device interface {
-	Send()
+	Send(data map[string]string) error // note: not adding SendMessage/SendNotification/etc. like fine grained methods to keep this library more low level
 }
 
 // Android device.
 type Android struct {
-	GCMRegID string
-	Phone    uint64
+	GCMRegID    string
+	PhoneNumber uint64
 }
 
 // iOS device.
 type iOS struct {
 	APNSDeviceToken string
-	Phone           uint64
+	PhoneNumber     uint64
 }
 
 var chats = make(map[string]Chat)
