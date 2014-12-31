@@ -32,6 +32,7 @@ type iOS struct {
 	PhoneNumber     uint64
 }
 
+// List of all private or group chats.
 var chats = make(map[string]Chat)
 
 // user -> id (user or chat id) -> message
