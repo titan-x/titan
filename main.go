@@ -14,6 +14,9 @@ func main() {
 	if err != nil {
 		log.Fatalln("Failed to connect to GCM CCS with error:", err)
 	}
+
+	// todo: retrieve users list from database for in-memory (future redis) caching
+
 	log.Println("NBusy message server started.")
 
 	for {
