@@ -27,23 +27,32 @@ func main() {
 }
 
 func readHandler(m *ccs.InMsg) {
-	ids := m.Data["to_user"]
-	if ids == "" {
-		log.Printf("Unknown message from device: %+v\n", m)
+	t := m.Data["n.message_type"]
+	if t == "" {
+		log.Printf("Malformed message from device: %+v\n", m)
 		return
 	}
 
-	id64, err := strconv.ParseUint(ids, 10, 32)
-	if err != nil || id64 == 0 {
-		log.Printf("Invalid use ID specific in to_user data field in message from device: %+v\n", m)
-		return
-	}
+	switch t {
+	case "message":
+		ids := m.Data["n.to"]
+		if ids == "" {
+			log.Printf("Malformed message from device: %+v\n", m)
+			return
+		}
 
-	id := uint32(id64)
-	user, ok := users[id]
-	if !ok {
-		log.Printf("User not found in user list: %+v\n", m)
-	}
+		id64, err := strconv.ParseUint(ids, 10, 32)
+		if err != nil || id64 == 0 {
+			log.Printf("Invalid user ID specific in 'n.to' data field in message from device: %+v\n", m)
+			return
+		}
 
-	user.Devices[0].Send(m.Data)
+		id := uint32(id64)
+		user, ok := users[id]
+		if !ok {
+			log.Printf("User not found in user list: %+v\n", m)
+		}
+
+		user.Devices[0].Send(m.Data)
+	}
 }
