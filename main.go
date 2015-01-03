@@ -56,6 +56,6 @@ func readHandler(m *ccs.InMsg) {
 			log.Printf("User not found in user list: %+v\n", m)
 		}
 
-		user.Devices[0].Send(m.Data)
+		user.Send(m.Data)
 	}
 }

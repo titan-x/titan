@@ -8,28 +8,17 @@ type Chat struct {
 
 // User is a mobile user.
 type User struct {
-	ID      uint32
-	Devices []Device
-	Name    string
-	Picture []byte
-}
-
-// Device is an NBusy installed device.
-type Device interface {
-	// Send sends given data to to a device using device specific infrastructure.
-	Send(data map[string]string) error // note: not adding SendMessage/SendNotification/etc. like fine grained methods to keep this library more low level
-}
-
-// Android device.
-type Android struct {
-	GCMRegID    string
+	ID          uint32
 	PhoneNumber uint64
+	GCMRegID    string
+	Name        string
+	Picture     []byte
 }
 
-// iOS device.
-type iOS struct {
-	APNSDeviceToken string
-	PhoneNumber     uint64
+// Send sends given data to to a device using device specific infrastructure.
+func (u *User) Send(data map[string]string) error {
+	// note: not adding SendMessage/SendNotification/etc. like fine grained methods to keep this library more low level
+	return nil
 }
 
 // List of all private or group chats.
