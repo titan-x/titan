@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/nbusy/gcm/ccs"
+	// "google.golang.org/appengine/datastore"
 )
 
 var users = make(map[uint32]User)
