@@ -14,7 +14,3 @@ func (u *User) Send(data map[string]string) error {
 	// note: not adding SendMessage/SendNotification/etc. like fine grained methods to keep this library more low level
 	return nil
 }
-
-// user -> id (user or chat id) -> message
-// delivery status -> user
-// read status -> user
