@@ -6,8 +6,8 @@ import (
 
 	"github.com/nbusy/gcm/ccs"
 	// "google.golang.org/appengine/datastore"
-	// "google.golang.org/cloud/datastore"
-	// "code.google.com/p/google-api-go-client/urlshortener/v1"
+	// * "google.golang.org/cloud/datastore"
+	// "code.google.com/p/google-api-go-client/datastore/v1beta2"
 )
 
 var users = make(map[uint32]User)
