@@ -2,8 +2,8 @@ package main
 
 import "crypto/tls"
 
-// Conn is a mobile client connection.
-type Conn struct {
+// MobConn is a mobile client connection.
+type MobConn struct {
 	conn tls.Conn
 
 	// user -> id (user or chat id) -> message
@@ -12,11 +12,11 @@ type Conn struct {
 }
 
 // SendMessage sends a message to a connected mobile client.
-func (t *Conn) SendMessage() error {
+func (c *MobConn) SendMessage() error {
 	return nil
 }
 
 // SendNotification sends a notification to a connected mobile client.
-func (t *Conn) SendNotification() error {
+func (c *MobConn) SendNotification() error {
 	return nil
 }
