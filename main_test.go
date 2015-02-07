@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"log"
@@ -17,7 +18,7 @@ func TestMain(t *testing.T) {
 
 // Generate a self-signed X.509 certificate for a TLS server.
 // Based on sample from http://golang.org/src/crypto/tls/generate_cert.go (Jan 30, 2015).
-func genCert() x509.Certificate {
+func genCert() tls.Certificate {
 	hosts := []string{"devastator.com"}
 	privKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	notBefore := time.Now()
@@ -55,5 +56,8 @@ func genCert() x509.Certificate {
 		log.Fatalf("Failed to create certificate: %s", err)
 	}
 
-	return cert
+	return tls.Certificate{
+		Certificate: [][]byte{derBytes},
+		PrivateKey:  privKey,
+	}
 }
