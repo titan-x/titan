@@ -18,7 +18,7 @@ func TestMain(t *testing.T) {
 // Generate a self-signed X.509 certificate for a TLS server.
 // Based on sample from http://golang.org/src/crypto/tls/generate_cert.go (Jan 30, 2015).
 func genCert() x509.Certificate {
-	hosts := []string{"nbusy.com"}
+	hosts := []string{"devastator.com"}
 	privKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	notBefore := time.Now()
 	notAfter := notBefore.Add(290 * 365 * 24 * time.Hour) //290 years
@@ -32,7 +32,7 @@ func genCert() x509.Certificate {
 		IsCA:         true,
 		SerialNumber: serialNumber,
 		Subject: pkix.Name{
-			Organization: []string{"NBusy"},
+			Organization: []string{"devastator"},
 		},
 		NotBefore: notBefore,
 		NotAfter:  notAfter,

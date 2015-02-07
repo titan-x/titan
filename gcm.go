@@ -13,7 +13,7 @@ func listenGCM() {
 		log.Fatalln("Failed to connect to GCM CCS with error:", err)
 	}
 
-	log.Println("NBusy message server started.")
+	log.Println("devastator message server started.")
 
 	for {
 		m, err := c.Receive()

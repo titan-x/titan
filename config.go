@@ -6,11 +6,11 @@ import (
 )
 
 const (
-	// NBusy server envrinment variables
-	nbusyEnv   = "NBUSY_ENV"
-	nbusyDebug = "NBUSY_DEBUG"
+	// devastator server envrinment variables
+	devastatorEnv   = "devastator_ENV"
+	devastatorDebug = "devastator_DEBUG"
 
-	// possible NBUSY_ENV values
+	// possible devastator_ENV values
 	dev     = "development"
 	test    = "test"
 	staging = "staging"
@@ -24,10 +24,10 @@ const (
 	googleAPIKey = "GOOGLE_API_KEY"
 )
 
-// Conf contains all the global configuration for the NBusy server.
+// Conf contains all the global configuration for the devastator server.
 var Conf Config
 
-// Config describes the global configuration for the NBusy server.
+// Config describes the global configuration for the devastator server.
 type Config struct {
 	App App
 	GCM GCM
@@ -53,8 +53,8 @@ func (gcm *GCM) APIKey() string {
 }
 
 func init() {
-	debug := os.Getenv(nbusyDebug) != ""
-	env := os.Getenv(nbusyEnv)
+	debug := os.Getenv(devastatorDebug) != ""
+	env := os.Getenv(devastatorEnv)
 	if env == "" {
 		env = dev
 	}
