@@ -1,7 +1,7 @@
 Devastator
 ==========
 
-[![Build Status](https://travis-ci.org/devastator/devastator-server.svg?branch=master)](https://travis-ci.org/devastator/devastator-server)
+[![Build Status](https://travis-ci.org/nbusy/devastator.svg?branch=master)](https://travis-ci.org/nbusy/devastator)
 
 Devastator is a messaging server for delivering all chat messages to all devices (mobile apps + the browser). For each delivery target, the server uses different protocol. i.e. GCM for the NBusy Android app, WebSockets for nbusy.com, etc. The server is completely written in Go and makes huge use of goroutines and channels.
 
