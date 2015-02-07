@@ -23,6 +23,11 @@ Messaging server utilizes device specific delivery options; GCM for Android, APN
 +------------------------------------+
 ```
 
+Testing
+-------
+
+All the tests can be executed by `go test -race -cover ./...` command. Integration tests require environment variables defined in the next section. If they are missing, integration tests are skipped.
+
 Environment Variables
 ---------------------
 
