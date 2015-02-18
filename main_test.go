@@ -17,7 +17,7 @@ func TestMain(t *testing.T) {
 }
 
 // Generate a self-signed X.509 certificate for a TLS server.
-// Based on sample from http://golang.org/src/crypto/tls/generate_cert.go (Jan 30, 2015).
+// Based on sample from http://golang.org/src/crypto/tls/generate_cert.go (taken at Jan 30, 2015).
 func genCert() tls.Certificate {
 	hosts := []string{"localhost"}
 	privKey, err := rsa.GenerateKey(rand.Reader, 2048)
