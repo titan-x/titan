@@ -3,6 +3,8 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
+	"log"
 	"net"
 )
 
@@ -18,7 +20,7 @@ func Listen(cert, priv []byte, laddr string, debug bool) (*Listener, error) {
 	c, err := x509.ParseCertificate(cert)
 	p, err := x509.ParsePKCS1PrivateKey(priv)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse the certificate or the private key with error: %v", err)
 	}
 
 	pool := x509.NewCertPool()
@@ -34,9 +36,17 @@ func Listen(cert, priv []byte, laddr string, debug bool) (*Listener, error) {
 		ClientCAs:    pool,
 	}
 
+	if laddr == "" {
+		laddr = "0.0.0.0:443"
+	}
+
 	listener, err := tls.Listen("tcp", laddr, &config)
 	if err != nil {
 		return nil, err
+	}
+
+	if debug {
+		log.Printf("New CCS connection established with XMPP parameters: %+v\n", c)
 	}
 
 	return &Listener{
