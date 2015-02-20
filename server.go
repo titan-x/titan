@@ -1,7 +1,7 @@
 package main
 
 import (
-	"crypto/tls"
+	"crypto/x509"
 	"net"
 )
 
@@ -10,7 +10,12 @@ type Listener struct {
 	tls *net.Listener
 }
 
-// Listen creates a listener with given server certificate. Debug mode logs all communications.
-func Listen(cert tls.Certificate, debug bool) (*Listener, error) {
+// Listen creates a listener with the given PEM encoded X.509 certificate and the private key. Debug mode logs all communications.
+func Listen(cert, priv []byte, debug bool) (*Listener, error) {
+	c, err := x509.ParseCertificate(cert)
+	p, err := x509.ParsePKCS1PrivateKey(priv)
+	if err != nil {
+		return nil, err
+	}
 	return nil, nil
 }

@@ -3,9 +3,9 @@ package main
 import (
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/pem"
 	"log"
 	"math/big"
 	"net"
@@ -16,9 +16,9 @@ import (
 func TestMain(t *testing.T) {
 }
 
-// Generate a self-signed X.509 certificate for a TLS server.
-// Based on sample from http://golang.org/src/crypto/tls/generate_cert.go (taken at Jan 30, 2015).
-func genCert() tls.Certificate {
+// Generate a self-signed PEM encoded X.509 certificate.
+// Based on the sample from http://golang.org/src/crypto/tls/generate_cert.go (taken at Jan 30, 2015).
+func genCert() (pemBytes, privBytes []byte) {
 	hosts := []string{"localhost"}
 	privKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	notBefore := time.Now()
@@ -56,8 +56,7 @@ func genCert() tls.Certificate {
 		log.Fatalf("Failed to create certificate: %s", err)
 	}
 
-	return tls.Certificate{
-		Certificate: [][]byte{derBytes},
-		PrivateKey:  privKey,
-	}
+	pemBytes = pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
+	privBytes = pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(privKey)})
+	return
 }
