@@ -7,10 +7,10 @@ import (
 
 const (
 	// devastator server envrinment variables
-	devastatorEnv   = "devastator_ENV"
-	devastatorDebug = "devastator_DEBUG"
+	devastatorEnv   = "DEVASTATOR_ENV"
+	devastatorDebug = "DEVASTATOR_DEBUG"
 
-	// possible devastator_ENV values
+	// possible DEVASTATOR_ENV values
 	dev     = "development"
 	test    = "test"
 	staging = "staging"
