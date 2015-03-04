@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"io"
 	"log"
 	"net"
 )
@@ -14,7 +15,7 @@ type Listener struct {
 	listener net.Listener
 }
 
-// Listen creates a listener with the given PEM encoded X.509 certificate and the private key on the local network address laddr.
+// Listen creates a TCP listener with the given PEM encoded X.509 certificate and the private key on the local network address laddr.
 // Debug mode logs all server activity.
 func Listen(cert, priv []byte, laddr string, debug bool) (*Listener, error) {
 	c, err := x509.ParseCertificate(cert)
@@ -45,9 +46,8 @@ func Listen(cert, priv []byte, laddr string, debug bool) (*Listener, error) {
 		return nil, err
 	}
 
-	// todo ...
 	if debug {
-		log.Printf("New CCS connection established with XMPP parameters: %+v\n", c)
+		log.Printf("Listener created with local network address: %v\n", laddr)
 	}
 
 	return &Listener{
@@ -57,46 +57,35 @@ func Listen(cert, priv []byte, laddr string, debug bool) (*Listener, error) {
 }
 
 // Accept waits for incoming connections and forwards incoming messages to handleMsg in a new goroutine.
-// This function never returns, unless there is an error while accepting new connections.
-// Listener is closed upon error return.
+// This function never returns, unless there is an error while accepting new connection.
 func (l *Listener) Accept(handleMsg func(string)) error {
-	defer l.listener.Close()
-	log.Println("server: conn: closed")
 	for {
 		conn, err := l.listener.Accept()
 		if err != nil {
-			// todo: return error!
-			log.Printf("Error while accepting a new connection from a client: %v", err)
-			return err
+			return fmt.Errorf("error while accepting a new connection from a client: %v", err)
 			// todo: it might not be appropriate to break the loop on recoverable errors (like client disconnect during handshake)
 			// the underlying fd.accept() does some basic recovery though we might need more: http://golang.org/src/net/fd_unix.go
 		}
-		log.Printf("server: accepted connection from client IP: %s", conn.RemoteAddr())
 
+		log.Printf("Accepted connection and waiting for data from client IP: %v\n", conn.RemoteAddr())
 		go handleConn(conn)
 	}
 }
 
 func handleConn(conn net.Conn) {
 	defer conn.Close()
-	defer log.Printf("Closed connection to client with IP: %s", conn.RemoteAddr())
-	buf := make([]byte, 512)
+	defer log.Printf("Closed connection to client with IP: %v\n", conn.RemoteAddr())
 	for {
-		log.Print("server: conn: waiting")
-		n, err := conn.Read(buf)
+		written, err := io.Copy(conn, conn)
 		if err != nil {
-			if err != nil {
-				log.Printf("server: conn: read: %s", err)
-			}
 			break
 		}
-
-		log.Printf("server: conn: echo %q\n", string(buf[:n]))
-		n, err = conn.Write(buf[:n])
-		log.Printf("server: conn: wrote %d bytes", n)
-		if err != nil {
-			log.Printf("server: write: %s", err)
-			break
-		}
+		log.Printf("Echoed %v bytes to client with IP: %v\n", written, conn.RemoteAddr())
 	}
+}
+
+// Close closes the listener.
+func (l *Listener) Close() error {
+	defer log.Printf("Listener on local network address %v was closed.\n", l.listener.Addr())
+	return l.listener.Close()
 }
