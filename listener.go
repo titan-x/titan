@@ -45,6 +45,7 @@ func Listen(cert, priv []byte, laddr string, debug bool) (*Listener, error) {
 		return nil, err
 	}
 
+	// todo ...
 	if debug {
 		log.Printf("New CCS connection established with XMPP parameters: %+v\n", c)
 	}
@@ -60,10 +61,12 @@ func Listen(cert, priv []byte, laddr string, debug bool) (*Listener, error) {
 // Listener is closed upon error return.
 func (l *Listener) Accept(handleMsg func(string)) error {
 	defer l.listener.Close()
+	log.Println("server: conn: closed")
 	for {
 		conn, err := l.listener.Accept()
 		if err != nil {
-			log.Printf("error while accepting a new connection from a client: %v", err)
+			// todo: return error!
+			log.Printf("Error while accepting a new connection from a client: %v", err)
 			return err
 			// todo: it might not be appropriate to break the loop on recoverable errors (like client disconnect during handshake)
 			// the underlying fd.accept() does some basic recovery though we might need more: http://golang.org/src/net/fd_unix.go
@@ -76,6 +79,7 @@ func (l *Listener) Accept(handleMsg func(string)) error {
 
 func handleConn(conn net.Conn) {
 	defer conn.Close()
+	defer log.Printf("Closed connection to client with IP: %s", conn.RemoteAddr())
 	buf := make([]byte, 512)
 	for {
 		log.Print("server: conn: waiting")
@@ -87,23 +91,12 @@ func handleConn(conn net.Conn) {
 			break
 		}
 
-		tlscon, ok := conn.(*tls.Conn)
-		if ok {
-			state := tlscon.ConnectionState()
-			sub := state.PeerCertificates[0].Subject
-			log.Println(sub)
-		}
-
 		log.Printf("server: conn: echo %q\n", string(buf[:n]))
 		n, err = conn.Write(buf[:n])
-
-		n, err = conn.Write(buf[:n])
 		log.Printf("server: conn: wrote %d bytes", n)
-
 		if err != nil {
 			log.Printf("server: write: %s", err)
 			break
 		}
 	}
-	log.Println("server: conn: closed")
 }
