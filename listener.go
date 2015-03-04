@@ -57,21 +57,24 @@ func Listen(cert, priv []byte, laddr string, debug bool) (*Listener, error) {
 
 // Accept waits for incoming connections and forwards incoming messages to handleMsg in a new goroutine.
 // This function never returns, unless there is an error while accepting new connections.
+// Listener is closed upon error return.
 func (l *Listener) Accept(handleMsg func(string)) error {
+	defer l.listener.Close()
 	for {
 		conn, err := l.listener.Accept()
 		if err != nil {
 			log.Printf("error while accepting a new connection from a client: %v", err)
-			return err // todo: it might not be appropriate to break the loop on all errors (like client disconnect during handshake)
+			return err
+			// todo: it might not be appropriate to break the loop on recoverable errors (like client disconnect during handshake)
+			// the underlying fd.accept() does some basic recovery though we might need more: http://golang.org/src/net/fd_unix.go
 		}
+		log.Printf("server: accepted connection from client IP: %s", conn.RemoteAddr())
 
-		defer conn.Close()
-		log.Printf("server: accepted from %s", conn.RemoteAddr())
-		go handleClient(conn)
+		go handleConn(conn)
 	}
 }
 
-func handleClient(conn net.Conn) {
+func handleConn(conn net.Conn) {
 	defer conn.Close()
 	buf := make([]byte, 512)
 	for {
