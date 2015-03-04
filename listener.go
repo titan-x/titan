@@ -62,7 +62,7 @@ func (l *Listener) Accept(handleMsg func(string)) error {
 		conn, err := l.listener.Accept()
 		if err != nil {
 			log.Printf("error while accepting a new connection from a client: %v", err)
-			return err
+			return err // todo: it might not be appropriate to break the loop on all errors (like client disconnect during handshake)
 		}
 
 		defer conn.Close()
