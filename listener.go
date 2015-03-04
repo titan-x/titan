@@ -55,13 +55,14 @@ func Listen(cert, priv []byte, laddr string, debug bool) (*Listener, error) {
 	}, nil
 }
 
-// Accept waits for incoming connections and forwards incoming messages to handleMsg.
-func (l *Listener) Accept(handleMsg func(string)) {
+// Accept waits for incoming connections and forwards incoming messages to handleMsg in a new goroutine.
+// This function never returns, unless there is an error while accepting new connections.
+func (l *Listener) Accept(handleMsg func(string)) error {
 	for {
 		conn, err := l.listener.Accept()
 		if err != nil {
 			log.Printf("error while accepting a new connection from a client: %v", err)
-			break
+			return err
 		}
 
 		defer conn.Close()

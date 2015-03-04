@@ -11,12 +11,12 @@ type Conn struct {
 	// read status -> user
 }
 
-// SendMessage sends a message to a connected mobile client.
+// SendMessage sends a message to the connected mobile client.
 func (c *Conn) SendMessage() error {
 	return nil
 }
 
-// SendNotification sends a notification to a connected mobile client.
+// SendNotification sends a notification to the connected mobile client.
 func (c *Conn) SendNotification() error {
 	return nil
 }
