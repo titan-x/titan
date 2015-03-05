@@ -17,9 +17,9 @@ type Listener struct {
 
 // Listen creates a TCP listener with the given PEM encoded X.509 certificate and the private key on the local network address laddr.
 // Debug mode logs all server activity.
-func Listen(cert, priv []byte, laddr string, debug bool) (*Listener, error) {
+func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 	c, err := x509.ParseCertificate(cert)
-	p, err := x509.ParsePKCS1PrivateKey(priv)
+	p, err := x509.ParsePKCS1PrivateKey(privKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse the certificate or the private key with error: %v", err)
 	}
@@ -58,7 +58,7 @@ func Listen(cert, priv []byte, laddr string, debug bool) (*Listener, error) {
 
 // Accept waits for incoming connections and forwards incoming messages to handleMsg in a new goroutine.
 // This function never returns, unless there is an error while accepting a new connection.
-func (l *Listener) Accept(handleMsg func(string)) error {
+func (l *Listener) Accept( /*handleMsg func(string)*/ ) error {
 	for {
 		conn, err := l.listener.Accept()
 		if err != nil {
