@@ -57,7 +57,7 @@ func Listen(cert, priv []byte, laddr string, debug bool) (*Listener, error) {
 }
 
 // Accept waits for incoming connections and forwards incoming messages to handleMsg in a new goroutine.
-// This function never returns, unless there is an error while accepting new connection.
+// This function never returns, unless there is an error while accepting a new connection.
 func (l *Listener) Accept(handleMsg func(string)) error {
 	for {
 		conn, err := l.listener.Accept()
