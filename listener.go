@@ -18,18 +18,11 @@ type Listener struct {
 // Listen creates a TCP listener with the given PEM encoded X.509 certificate and the private key on the local network address laddr.
 // Debug mode logs all server activity.
 func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
-	c, err := x509.ParseCertificate(cert)
-	p, err := x509.ParsePKCS1PrivateKey(privKey)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse the certificate or the private key with error: %v", err)
-	}
-
+	tlsCert, err := tls.X509KeyPair(cert, privKey)
 	pool := x509.NewCertPool()
-	pool.AddCert(c)
-
-	tlsCert := tls.Certificate{
-		Certificate: [][]byte{cert},
-		PrivateKey:  p,
+	ok := pool.AppendCertsFromPEM(cert)
+	if err != nil || !ok {
+		return nil, fmt.Errorf("failed to parse the certificate or the private key with error: %v", err)
 	}
 
 	config := tls.Config{
