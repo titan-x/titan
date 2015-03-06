@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io"
 	"log"
 	"net"
 )
@@ -60,25 +59,28 @@ func (l *Listener) Accept( /*handleMsg func(string)*/ ) error {
 			// the underlying fd.accept() does some basic recovery though we might need more: http://golang.org/src/net/fd_unix.go
 		}
 
-		log.Printf("Accepted connection and waiting for data from client IP: %v\n", conn.RemoteAddr())
+		log.Println("Client connected: listening for messages from client IP:", conn.RemoteAddr())
 		go handleConn(conn)
 	}
 }
 
 func handleConn(conn net.Conn) {
 	defer conn.Close()
-	defer log.Printf("Closed connection to client with IP: %v\n", conn.RemoteAddr())
+	defer log.Println("Closed connection to client with IP:", conn.RemoteAddr())
+	buf := make([]byte, 512)
 	for {
-		written, err := io.Copy(conn, conn)
+		n, err := conn.Read(buf)
 		if err != nil {
+			// todo: pass the error back to handler
 			break
 		}
-		log.Printf("Echoed %v bytes to client with IP: %v\n", written, conn.RemoteAddr())
+		log.Printf("Echoed %v bytes to client with IP: %v\n", n, conn.RemoteAddr())
+		// go handleMsg()
 	}
 }
 
 // Close closes the listener.
 func (l *Listener) Close() error {
-	defer log.Printf("Listener on local network address %v was closed.\n", l.listener.Addr())
+	defer log.Println("Listener was closed on local network address:", l.listener.Addr())
 	return l.listener.Close()
 }
