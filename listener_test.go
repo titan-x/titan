@@ -51,10 +51,6 @@ func TestListener(t *testing.T) {
 	listener.Close()
 }
 
-func TestListenerClose(t *testing.T) {
-	// todo: should close underlying goroutines and connections gracefully
-}
-
 func send(t *testing.T, conn *tls.Conn, msg string) {
 	n, err := io.WriteString(conn, msg)
 	if err != nil {
