@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"time"
 )
 
 // Listener accepts connections from devices.
@@ -69,6 +70,7 @@ func handleConn(conn net.Conn, handleMsg func(msg []byte)) {
 	defer log.Println("Closed connection to client with IP:", conn.RemoteAddr())
 	buf := make([]byte, 4096) // same limit as Google Cloud Messaging for simplicity
 	for {
+		err := conn.SetReadDeadline(time.Now().Add(time.Minute * 5))
 		n, err := conn.Read(buf)
 		if err != nil {
 			log.Fatalln("Client read error: ", err)

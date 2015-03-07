@@ -10,11 +10,13 @@ import (
 	"io"
 	"math/big"
 	"net"
+	"sync"
 	"testing"
 	"time"
 )
 
 func TestListener(t *testing.T) {
+	var wg sync.WaitGroup
 	cert, privKey := genCert(t)
 	listener, err := Listen(cert, privKey, "localhost:8091", true)
 	if err != nil {
@@ -22,6 +24,8 @@ func TestListener(t *testing.T) {
 	}
 
 	go listener.Accept(func(msg []byte) {
+		defer wg.Done()
+		wg.Add(1)
 		t.Logf("client: read %q", string(msg))
 	})
 
@@ -39,8 +43,8 @@ func TestListener(t *testing.T) {
 	send(t, conn, "Ping 1")
 	send(t, conn, "Ping 2")
 	send(t, conn, "Ping 3")
-	time.Sleep(time.Second * 1)
 
+	wg.Wait()
 	conn.Close()
 	listener.Close()
 }
