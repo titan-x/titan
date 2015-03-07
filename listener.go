@@ -92,7 +92,7 @@ func handleConn(conn net.Conn, handleMsg func(msg []byte)) {
 		}
 
 		go handleMsg(msg)
-		if n == 5 && bytes.Equal(buf[:n], closed) {
+		if n == 5 && bytes.Equal(msg, closed) {
 			return
 		}
 	}
