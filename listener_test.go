@@ -14,8 +14,7 @@ import (
 	"time"
 )
 
-// todo: should close underlying goroutines and connections gracefully
-func TestListenerClose(t *testing.T) {
+func TestListener(t *testing.T) {
 	cert, privKey := genCert(t)
 	listener, err := Listen(cert, privKey, "localhost:8091", true)
 	if err != nil {
@@ -32,26 +31,30 @@ func TestListenerClose(t *testing.T) {
 		panic("failed to parse root certificate")
 	}
 
-	clientConn, err := tls.Dial("tcp", "localhost:8091", &tls.Config{RootCAs: roots})
+	conn, err := tls.Dial("tcp", "localhost:8091", &tls.Config{RootCAs: roots})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	message := "Ping"
-	n, err := io.WriteString(clientConn, message)
-	if err != nil {
-		t.Fatalf("client: write: %s", err)
-	}
-	t.Logf("client: wrote %q (%d bytes)", message, n)
-
-	// reply := make([]byte, 256)
-	// n, err = conn.Read(reply)
-	// t.Printf("client: read %q (%d bytes)", string(reply[:n]), n)
-
+	send(t, conn, "Ping 1")
+	send(t, conn, "Ping 2")
+	send(t, conn, "Ping 3")
 	time.Sleep(time.Second * 1)
 
-	clientConn.Close()
+	conn.Close()
 	listener.Close()
+}
+
+func TestListenerClose(t *testing.T) {
+	// todo: should close underlying goroutines and connections gracefully
+}
+
+func send(t *testing.T, conn *tls.Conn, msg string) {
+	n, err := io.WriteString(conn, msg)
+	if err != nil {
+		t.Fatalf("Error while writing message to connection %v", err)
+	}
+	t.Logf("client: wrote %q (%d bytes)", msg, n)
 }
 
 // Generate a self-signed PEM encoded X.509 certificate and private key pair (i.e. 'cert.pem', 'key.pem').

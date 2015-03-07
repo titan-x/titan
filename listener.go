@@ -67,7 +67,7 @@ func (l *Listener) Accept(handleMsg func(msg []byte)) error {
 func handleConn(conn net.Conn, handleMsg func(msg []byte)) {
 	defer conn.Close()
 	defer log.Println("Closed connection to client with IP:", conn.RemoteAddr())
-	buf := make([]byte, 512)
+	buf := make([]byte, 4096) // same limit as Google Cloud Messaging for simplicity
 	for {
 		n, err := conn.Read(buf)
 		if err != nil {
