@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	ping  = []byte("ping")
-	close = []byte("close")
+	ping   = []byte("ping")
+	closed = []byte("close")
 )
 
 // Listener accepts connections from devices.
@@ -92,7 +92,7 @@ func handleConn(conn net.Conn, handleMsg func(msg []byte)) {
 		}
 
 		go handleMsg(msg)
-		if n == 5 && bytes.Equal(buf[:n], close) {
+		if n == 5 && bytes.Equal(buf[:n], closed) {
 			return
 		}
 	}

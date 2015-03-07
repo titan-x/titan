@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/tls"
@@ -15,26 +14,6 @@ import (
 	"testing"
 	"time"
 )
-
-func TestTemp(t *testing.T) {
-	n := 4
-	buf := []byte("ping pong")
-
-	if bytes.Compare(buf[:n], []byte("pind")) == 0 {
-		t.Log("equal!")
-	}
-
-	for i := 0; i < 10; i++ {
-		t.Log(i)
-
-		if n == 4 && bytes.Equal(buf[:n], ping) {
-			continue
-		} else if n == 5 && bytes.Equal(buf[:n], close) {
-			return
-		}
-		t.Log(i)
-	}
-}
 
 func TestListener(t *testing.T) {
 	var wg sync.WaitGroup
