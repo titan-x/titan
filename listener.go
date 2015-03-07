@@ -1,12 +1,18 @@
 package main
 
 import (
+	"bytes"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
 	"log"
 	"net"
 	"time"
+)
+
+var (
+	ping  = []byte("ping")
+	close = []byte("close")
 )
 
 // Listener accepts connections from devices.
@@ -31,7 +37,7 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 	}
 
 	if laddr == "" {
-		laddr = "0.0.0.0:443"
+		laddr = "localhost:443"
 	}
 
 	listener, err := tls.Listen("tcp", laddr, &config)
@@ -72,11 +78,19 @@ func handleConn(conn net.Conn, handleMsg func(msg []byte)) {
 	for {
 		err := conn.SetReadDeadline(time.Now().Add(time.Minute * 5))
 		n, err := conn.Read(buf)
-		if err != nil {
+		if err != nil || n == 0 {
 			log.Fatalln("Client read error: ", err)
 			break
 		}
 		log.Printf("Read %v bytes from client with IP: %v\n", n, conn.RemoteAddr())
+
+		if n == 4 && bytes.Equal(buf[:n], ping) {
+			continue
+		} else if n == 5 && bytes.Equal(buf[:n], close) {
+			go handleMsg(buf[:n])
+			return
+		}
+
 		go handleMsg(buf[:n])
 	}
 }

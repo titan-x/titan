@@ -24,8 +24,8 @@ func TestListener(t *testing.T) {
 	}
 
 	go listener.Accept(func(msg []byte) {
-		defer wg.Done()
 		wg.Add(1)
+		defer wg.Done()
 		t.Logf("client: read %q", string(msg))
 	})
 
@@ -40,9 +40,11 @@ func TestListener(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	send(t, conn, "Ping 1")
-	send(t, conn, "Ping 2")
-	send(t, conn, "Ping 3")
+	send(t, conn, "ping")
+	send(t, conn, "Lorem")
+	send(t, conn, "Ipsum")
+	send(t, conn, "Dolor")
+	send(t, conn, "close")
 
 	wg.Wait()
 	conn.Close()
