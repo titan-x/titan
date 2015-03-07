@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/tls"
@@ -15,6 +16,26 @@ import (
 	"time"
 )
 
+func TestTemp(t *testing.T) {
+	n := 4
+	buf := []byte("ping pong")
+
+	if bytes.Compare(buf[:n], []byte("pind")) == 0 {
+		t.Log("equal!")
+	}
+
+	for i := 0; i < 10; i++ {
+		t.Log(i)
+
+		if n == 4 && bytes.Equal(buf[:n], ping) {
+			continue
+		} else if n == 5 && bytes.Equal(buf[:n], close) {
+			return
+		}
+		t.Log(i)
+	}
+}
+
 func TestListener(t *testing.T) {
 	var wg sync.WaitGroup
 	cert, privKey := genCert(t)
@@ -26,7 +47,7 @@ func TestListener(t *testing.T) {
 	go listener.Accept(func(msg []byte) {
 		wg.Add(1)
 		defer wg.Done()
-		t.Logf("client: read %q", string(msg))
+		t.Logf("Incoming message to listener from a client: %v", string(msg))
 	})
 
 	roots := x509.NewCertPool()
@@ -41,12 +62,13 @@ func TestListener(t *testing.T) {
 	}
 
 	send(t, conn, "ping")
-	send(t, conn, "Lorem")
-	send(t, conn, "Ipsum")
-	send(t, conn, "Dolor")
+	send(t, conn, "Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
+	send(t, conn, "In sit amet lectus felis, at pellentesque turpis.")
+	send(t, conn, "Nunc urna enim, cursus varius aliquet ac, imperdiet eget tellus.")
 	send(t, conn, "close")
 
 	wg.Wait()
+	time.Sleep(100 * time.Millisecond)
 	conn.Close()
 	listener.Close()
 }
@@ -56,7 +78,7 @@ func send(t *testing.T, conn *tls.Conn, msg string) {
 	if err != nil {
 		t.Fatalf("Error while writing message to connection %v", err)
 	}
-	t.Logf("client: wrote %q (%d bytes)", msg, n)
+	t.Logf("Sending message to listener from client: %v (%v bytes)", msg, n)
 }
 
 // Generate a self-signed PEM encoded X.509 certificate and private key pair (i.e. 'cert.pem', 'key.pem').

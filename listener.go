@@ -82,16 +82,19 @@ func handleConn(conn net.Conn, handleMsg func(msg []byte)) {
 			log.Fatalln("Client read error: ", err)
 			break
 		}
-		log.Printf("Read %v bytes from client with IP: %v\n", n, conn.RemoteAddr())
 
-		if n == 4 && bytes.Equal(buf[:n], ping) {
+		msg := make([]byte, n)
+		copy(msg, buf[:n])
+		log.Printf("Read %v bytes message '%v' from client with IP: %v\n", n, string(msg), conn.RemoteAddr())
+
+		if n == 4 && bytes.Equal(msg, ping) {
 			continue
-		} else if n == 5 && bytes.Equal(buf[:n], close) {
-			go handleMsg(buf[:n])
-			return
 		}
 
-		go handleMsg(buf[:n])
+		go handleMsg(msg)
+		if n == 5 && bytes.Equal(buf[:n], close) {
+			return
+		}
 	}
 }
 
