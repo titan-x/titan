@@ -63,14 +63,18 @@ func (l *Listener) Accept(handleMsg func(msg []byte)) error {
 			// the underlying fd.accept() does some basic recovery though we might need more: http://golang.org/src/net/fd_unix.go
 		}
 
-		log.Println("Client connected: listening for messages from client IP:", conn.RemoteAddr())
-		go handleConn(conn, handleMsg)
+		if l.debug {
+			log.Println("Client connected: listening for messages from client IP:", conn.RemoteAddr())
+		}
+		go handleConn(conn, l.debug, handleMsg)
 	}
 }
 
-func handleConn(conn net.Conn, handleMsg func(msg []byte)) {
+func handleConn(conn net.Conn, debug bool, handleMsg func(msg []byte)) {
 	defer conn.Close()
-	defer log.Println("Closed connection to client with IP:", conn.RemoteAddr())
+	if debug {
+		defer log.Println("Closed connection to client with IP:", conn.RemoteAddr())
+	}
 	header := make([]byte, 4) // so max message size is 9999 bytes for now
 	for {
 		err := conn.SetReadDeadline(time.Now().Add(time.Minute * 5))
@@ -87,16 +91,19 @@ func handleConn(conn net.Conn, handleMsg func(msg []byte)) {
 			log.Fatalln("Client read error: invalid content lenght header sent or content lenght mismatch: ", err)
 			break
 		}
-		log.Println("Starting to read message content of bytes: ", n)
 		// read the message content
+		if debug {
+			log.Println("Starting to read message content of bytes: ", n)
+		}
 		msg := make([]byte, n)
 		n, err = conn.Read(msg)
 		if err != nil || n == 0 {
 			log.Fatalln("Client read error: ", err)
 			break
 		}
-
-		log.Printf("Read %v bytes message '%v' from client with IP: %v\n", n, string(msg), conn.RemoteAddr())
+		if debug {
+			log.Printf("Read %v bytes message '%v' from client with IP: %v\n", n, string(msg), conn.RemoteAddr())
+		}
 
 		if n == 4 && bytes.Equal(msg, ping) {
 			continue
@@ -111,6 +118,8 @@ func handleConn(conn net.Conn, handleMsg func(msg []byte)) {
 
 // Close closes the listener.
 func (l *Listener) Close() error {
-	defer log.Println("Listener was closed on local network address:", l.listener.Addr())
+	if l.debug {
+		defer log.Println("Listener was closed on local network address:", l.listener.Addr())
+	}
 	return l.listener.Close()
 }
