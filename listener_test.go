@@ -45,7 +45,7 @@ func TestListener(t *testing.T) {
 	send(t, conn, "56  Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
 	send(t, conn, "49  In sit amet lectus felis, at pellentesque turpis.")
 	send(t, conn, "64  Nunc urna enim, cursus varius aliquet ac, imperdiet eget tellus.")
-	// send(t, conn, "8671"+randString(8671))
+	// send(t, conn, "9999"+randString(9999))
 	send(t, conn, "5   close")
 
 	wg.Wait()
