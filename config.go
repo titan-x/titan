@@ -9,12 +9,12 @@ const (
 	// devastator server envrinment variables
 	devastatorEnv   = "DEVASTATOR_ENV"
 	devastatorDebug = "DEVASTATOR_DEBUG"
+	devastatorPort  = "DEVASTATOR_PORT"
 
 	// possible DEVASTATOR_ENV values
-	dev     = "development"
-	test    = "test"
-	staging = "staging"
-	prod    = "production"
+	dev  = "development"
+	test = "test"
+	prod = "production"
 
 	// GCM environment variables
 	gcmSenderID = "GCM_SENDER_ID"
@@ -22,6 +22,10 @@ const (
 
 	// Google environment variables
 	googleAPIKey = "GOOGLE_API_KEY"
+
+	// Default listener port configuration
+	portDefault = "3000"
+	portTest    = "3001"
 )
 
 // Conf contains all the global configuration for the devastator server.
@@ -35,10 +39,12 @@ type Config struct {
 
 // App contains the global application variables.
 type App struct {
-	// One of the following: development, test, staging, production
+	// One of the following: development, test, production
 	Env string
 	// Enables verbose logging to stdout
 	Debug bool
+	// Listener port
+	Port string
 }
 
 // GCM describes the Google Cloud Messaging parameters as described here: https://developer.android.com/google/gcm/gs.html
@@ -58,8 +64,17 @@ func init() {
 	if env == "" {
 		env = dev
 	}
+	port := os.Getenv(devastatorPort)
+	if port == "" {
+		switch env {
+		case test:
+			port = portTest
+		default:
+			port = portDefault
+		}
+	}
 
-	app := App{Env: env, Debug: debug}
+	app := App{Env: env, Debug: debug, Port: port}
 	gcm := GCM{CCSHost: os.Getenv(gcmCcsHost), SenderID: os.Getenv(gcmSenderID)}
 	Conf = Config{App: app, GCM: gcm}
 

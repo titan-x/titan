@@ -17,8 +17,9 @@ func TestLen(t *testing.T) {
 
 func TestListener(t *testing.T) {
 	var wg sync.WaitGroup
+	host := "localhost:" + Conf.App.Port
 	cert, privKey, _ := genCert()
-	listener, err := Listen(cert, privKey, "localhost:8091", true)
+	listener, err := Listen(cert, privKey, host, Conf.App.Debug)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,7 +36,7 @@ func TestListener(t *testing.T) {
 		panic("failed to parse root certificate")
 	}
 
-	conn, err := tls.Dial("tcp", "localhost:8091", &tls.Config{RootCAs: roots})
+	conn, err := tls.Dial("tcp", host, &tls.Config{RootCAs: roots})
 	if err != nil {
 		t.Fatal(err)
 	}

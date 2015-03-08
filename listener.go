@@ -37,10 +37,6 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 		ClientCAs:    pool,
 	}
 
-	if laddr == "" {
-		laddr = "localhost:443"
-	}
-
 	listener, err := tls.Listen("tcp", laddr, &config)
 	if err != nil {
 		return nil, err
