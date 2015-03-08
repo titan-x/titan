@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"crypto/tls"
+	"testing"
+)
 
 func TestRandString(t *testing.T) {
 	l := 12304
@@ -17,6 +20,7 @@ func TestRandString(t *testing.T) {
 func TestGetID(t *testing.T) {
 	for i := 0; i < 50; i++ {
 		id, err := getID()
+
 		if err != nil {
 			t.Fatalf("Error while generating unique ID: %v", err)
 		}
@@ -26,5 +30,25 @@ func TestGetID(t *testing.T) {
 		if id[3] == id[4] && id[5] == id[6] && id[7] == id[8] && id[9] == id[10] {
 			t.Fatal("Expected a random string, got repeated characters.")
 		}
+	}
+}
+
+func TestGenCert(t *testing.T) {
+	pemBytes, privBytes, err := genCert()
+
+	if err != nil {
+		t.Fatalf("Failed to generate certificate or key: %v", err)
+	}
+	if pemBytes == nil || privBytes == nil {
+		t.Fatal("Generated empty certificate or key")
+	}
+
+	tlsCert, err := tls.X509KeyPair(pemBytes, privBytes)
+
+	if err != nil {
+		t.Fatalf("Generated invalid certificate or key: %v", err)
+	}
+	if &tlsCert == nil {
+		t.Fatal("Generated invalid certificate or key")
 	}
 }

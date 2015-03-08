@@ -17,7 +17,7 @@ func TestLen(t *testing.T) {
 
 func TestListener(t *testing.T) {
 	var wg sync.WaitGroup
-	cert, privKey := genCert(t)
+	cert, privKey, _ := genCert()
 	listener, err := Listen(cert, privKey, "localhost:8091", true)
 	if err != nil {
 		t.Fatal(err)

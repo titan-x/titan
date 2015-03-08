@@ -10,7 +10,6 @@ import (
 	"math/big"
 	mathrand "math/rand"
 	"net"
-	"testing"
 	"time"
 )
 
@@ -37,7 +36,7 @@ func getID() (string, error) {
 
 // genCert generates a self-signed PEM encoded X.509 certificate and private key pair (i.e. 'cert.pem', 'key.pem').
 // This code is based on the sample from http://golang.org/src/crypto/tls/generate_cert.go (taken at Jan 30, 2015).
-func genCert(t *testing.T) (pemBytes, privBytes []byte) {
+func genCert() (pemBytes, privBytes []byte, err error) {
 	hosts := []string{"localhost"}
 	privKey, err := rsa.GenerateKey(rand.Reader, 512)
 	notBefore := time.Now()
@@ -45,7 +44,7 @@ func genCert(t *testing.T) (pemBytes, privBytes []byte) {
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
 	if err != nil {
-		t.Fatalf("failed to generate serial number: %s", err)
+		return nil, nil, fmt.Errorf("failed to generate the certificate serial number: %v", err)
 	}
 
 	cert := x509.Certificate{
@@ -71,7 +70,7 @@ func genCert(t *testing.T) (pemBytes, privBytes []byte) {
 
 	derBytes, err := x509.CreateCertificate(rand.Reader, &cert, &cert, &privKey.PublicKey, privKey)
 	if err != nil {
-		t.Fatalf("Failed to create certificate: %s", err)
+		return nil, nil, fmt.Errorf("failed to create certificate: %v", err)
 	}
 
 	pemBytes = pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
