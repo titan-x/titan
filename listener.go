@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
 	"time"
 )
 
@@ -74,17 +75,31 @@ func (l *Listener) Accept(handleMsg func(msg []byte)) error {
 func handleConn(conn net.Conn, handleMsg func(msg []byte)) {
 	defer conn.Close()
 	defer log.Println("Closed connection to client with IP:", conn.RemoteAddr())
-	buf := make([]byte, 4096) // same limit as Google Cloud Messaging for simplicity
+	header := make([]byte, 4) // so max message size is 9999 bytes for now
 	for {
 		err := conn.SetReadDeadline(time.Now().Add(time.Minute * 5))
-		n, err := conn.Read(buf)
+		// read the content length header
+		n, err := conn.Read(header)
+		if err != nil || n == 0 {
+			log.Fatalln("Client read error: ", err)
+			break
+		}
+		// calculate the content length
+		th := bytes.TrimRight(header, " ")
+		n, err = strconv.Atoi(string(th))
+		if err != nil || n == 0 {
+			log.Fatalln("Client read error: invalid content lenght header sent or content lenght mismatch: ", err)
+			break
+		}
+		log.Println("Starting to read message content of bytes: ", n)
+		// read the message content
+		msg := make([]byte, n)
+		n, err = conn.Read(msg)
 		if err != nil || n == 0 {
 			log.Fatalln("Client read error: ", err)
 			break
 		}
 
-		msg := make([]byte, n)
-		copy(msg, buf[:n])
 		log.Printf("Read %v bytes message '%v' from client with IP: %v\n", n, string(msg), conn.RemoteAddr())
 
 		if n == 4 && bytes.Equal(msg, ping) {
