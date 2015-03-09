@@ -62,10 +62,10 @@ func (l *Listener) Accept(handleMsg func(msg []byte)) error {
 			// todo: it might not be appropriate to break the loop on recoverable errors (like client disconnect during handshake)
 			// the underlying fd.accept() does some basic recovery though we might need more: http://golang.org/src/net/fd_unix.go
 		}
-
 		if l.debug {
 			log.Println("Client connected: listening for messages from client IP:", conn.RemoteAddr())
 		}
+
 		go handleConn(conn, l.debug, handleMsg)
 	}
 }
@@ -75,7 +75,7 @@ func handleConn(conn net.Conn, debug bool, handleMsg func(msg []byte)) {
 	if debug {
 		defer log.Println("Closed connection to client with IP:", conn.RemoteAddr())
 	}
-	header := make([]byte, 4) // so max message size is 9999 bytes for now
+	header := make([]byte, 4) // so max message size is 9999 bytes
 	for {
 		err := conn.SetReadDeadline(time.Now().Add(time.Minute * 5))
 		// read the content length header
