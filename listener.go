@@ -35,6 +35,7 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 	config := tls.Config{
 		Certificates: []tls.Certificate{tlsCert},
 		ClientCAs:    pool,
+		ClientAuth:   tls.VerifyClientCertIfGiven,
 	}
 
 	listener, err := tls.Listen("tcp", laddr, &config)
