@@ -54,7 +54,7 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 
 // Accept waits for incoming connections and forwards incoming messages to handleMsg in a new goroutine.
 // This function never returns, unless there is an error while accepting a new connection.
-func (l *Listener) Accept(handleMsg func(msg []byte)) error {
+func (l *Listener) Accept( /*handleConn func(clientCert?), handleMsg func(msg []byte), handleDisconn func(clientCert?)*/ handleMsg func(msg []byte)) error {
 	for {
 		conn, err := l.listener.Accept()
 		if err != nil {
@@ -66,15 +66,16 @@ func (l *Listener) Accept(handleMsg func(msg []byte)) error {
 			log.Println("Client connected: listening for messages from client IP:", conn.RemoteAddr())
 		}
 
-		go handleConn(conn, l.debug, handleMsg)
+		go handleClient(conn, l.debug, handleMsg)
 	}
 }
 
-func handleConn(conn net.Conn, debug bool, handleMsg func(msg []byte)) {
+func handleClient(conn net.Conn, debug bool, handleMsg func(msg []byte)) {
 	defer conn.Close()
 	if debug {
 		defer log.Println("Closed connection to client with IP:", conn.RemoteAddr())
 	}
+
 	header := make([]byte, 4) // so max message size is 9999 bytes
 	for {
 		err := conn.SetReadDeadline(time.Now().Add(time.Minute * 5))
