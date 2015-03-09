@@ -54,7 +54,7 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 
 // Accept waits for incoming connections and forwards incoming messages to handleMsg in a new goroutine.
 // This function never returns, unless there is an error while accepting a new connection.
-func (l *Listener) Accept( /*handleConn func(clientCert?), handleMsg func(msg []byte), handleDisconn func(clientCert?)*/ handleMsg func(msg []byte)) error {
+func (l *Listener) Accept(handleConn func(net.Conn), handleMsg func(conn net.Conn, msg []byte), handleDisconn func(net.Conn)) error {
 	for {
 		conn, err := l.listener.Accept()
 		if err != nil {
@@ -70,7 +70,7 @@ func (l *Listener) Accept( /*handleConn func(clientCert?), handleMsg func(msg []
 	}
 }
 
-func handleClient(conn net.Conn, debug bool, handleMsg func(msg []byte)) {
+func handleClient(conn net.Conn, debug bool, handleMsg func(conn net.Conn, msg []byte)) {
 	defer conn.Close()
 	if debug {
 		defer log.Println("Closed connection to client with IP:", conn.RemoteAddr())
@@ -110,7 +110,7 @@ func handleClient(conn net.Conn, debug bool, handleMsg func(msg []byte)) {
 			continue
 		}
 
-		go handleMsg(msg)
+		go handleMsg(conn, msg)
 		if n == 5 && bytes.Equal(msg, closed) {
 			return
 		}
