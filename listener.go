@@ -55,7 +55,7 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 // Accept waits for incoming connections and forwards the client connect/message/disconnect
 // events to provided handlers in a new goroutine.
 // This function never returns, unless there is an error while accepting a new connection.
-func (l *Listener) Accept(handleConn func(conn *tls.Conn), handleMsg func(conn *tls.Conn, msg []byte), handleDisconn func(conn *tls.Conn)) error {
+func (l *Listener) Accept(handleMsg func(conn *tls.Conn, session *interface{}, msg []byte), handleDisconn func(conn *tls.Conn, session *interface{})) error {
 	for {
 		conn, err := l.listener.Accept()
 		if err != nil {
@@ -67,7 +67,6 @@ func (l *Listener) Accept(handleConn func(conn *tls.Conn), handleMsg func(conn *
 		if l.debug {
 			log.Println("Client connected: listening for messages from client IP:", conn.RemoteAddr())
 		}
-		go handleConn(tlsconn)
 		go handleClient(tlsconn, l.debug, handleMsg, handleDisconn)
 	}
 }
@@ -75,13 +74,14 @@ func (l *Listener) Accept(handleConn func(conn *tls.Conn), handleMsg func(conn *
 // handleClient waits for messages from the connected client and forwards the client message/disconnect
 // events to provided handlers in a new goroutine.
 // This function never returns, unless there is an error while reading from the channel or the client disconnects.
-func handleClient(conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, msg []byte), handleDisconn func(conn *tls.Conn)) {
+func handleClient(conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, session *interface{}, msg []byte), handleDisconn func(conn *tls.Conn, session *interface{})) {
 	defer conn.Close()
 	if debug {
 		defer log.Println("Closed connection to client with IP:", conn.RemoteAddr())
 	}
 
 	header := make([]byte, 4) // so max message size is 9999 bytes
+	var session interface{}
 	for {
 		err := conn.SetReadDeadline(time.Now().Add(time.Minute * 5))
 
@@ -118,7 +118,7 @@ func handleClient(conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, msg
 			continue
 		}
 
-		go handleMsg(conn, msg)
+		go handleMsg(conn, &session, msg)
 		if n == 5 && bytes.Equal(msg, closed) {
 			return
 		}

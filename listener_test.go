@@ -24,22 +24,12 @@ func TestListener(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	go listener.Accept(
-		func(conn *tls.Conn) {
-			t.Logf("%+v", conn.ConnectionState())
-			// if ok {
-			// 	state := tlsconn.ConnectionState()
-			// 	sub := state.PeerCertificates[0].Subject
-			// 	log.Println(sub)
-			// }
-		},
-		func(conn *tls.Conn, msg []byte) {
-			wg.Add(1)
-			defer wg.Done()
-			t.Logf("Incoming message to listener from a client: %v", string(msg))
-		},
-		func(conn *tls.Conn) {
-		})
+	go listener.Accept(func(conn *tls.Conn, session *interface{}, msg []byte) {
+		wg.Add(1)
+		defer wg.Done()
+		t.Logf("Incoming message to listener from a client: %v", string(msg))
+	}, func(conn *tls.Conn, session *interface{}) {
+	})
 
 	roots := x509.NewCertPool()
 	ok := roots.AppendCertsFromPEM(cert)
