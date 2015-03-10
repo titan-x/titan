@@ -42,7 +42,6 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	if debug {
 		log.Printf("Listener created with local network address: %v\n", laddr)
 	}
@@ -56,7 +55,7 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 // Accept waits for incoming connections and forwards the client connect/message/disconnect
 // events to provided handlers in a new goroutine.
 // This function never returns, unless there is an error while accepting a new connection.
-func (l *Listener) Accept(handleConn func(conn net.Conn), handleMsg func(conn net.Conn, msg []byte), handleDisconn func(conn net.Conn)) error {
+func (l *Listener) Accept(handleConn func(conn *tls.Conn), handleMsg func(conn *tls.Conn, msg []byte), handleDisconn func(conn *tls.Conn)) error {
 	for {
 		conn, err := l.listener.Accept()
 		if err != nil {
@@ -64,18 +63,19 @@ func (l *Listener) Accept(handleConn func(conn net.Conn), handleMsg func(conn ne
 			// todo: it might not be appropriate to break the loop on recoverable errors (like client disconnect during handshake)
 			// the underlying fd.accept() does some basic recovery though we might need more: http://golang.org/src/net/fd_unix.go
 		}
+		tlsconn, _ := conn.(*tls.Conn) // todo: check ok
 		if l.debug {
 			log.Println("Client connected: listening for messages from client IP:", conn.RemoteAddr())
 		}
-		go handleConn(conn)
-		go handleClient(conn, l.debug, handleMsg, handleDisconn)
+		go handleConn(tlsconn)
+		go handleClient(tlsconn, l.debug, handleMsg, handleDisconn)
 	}
 }
 
 // handleClient waits for messages from the connected client and forwards the client message/disconnect
 // events to provided handlers in a new goroutine.
 // This function never returns, unless there is an error while reading from the channel or the client disconnects.
-func handleClient(conn net.Conn, debug bool, handleMsg func(conn net.Conn, msg []byte), handleDisconn func(conn net.Conn)) {
+func handleClient(conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, msg []byte), handleDisconn func(conn *tls.Conn)) {
 	defer conn.Close()
 	if debug {
 		defer log.Println("Closed connection to client with IP:", conn.RemoteAddr())

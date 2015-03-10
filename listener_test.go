@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"io"
-	"net"
 	"strconv"
 	"sync"
 	"testing"
@@ -25,11 +24,22 @@ func TestListener(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	go listener.Accept(func(conn net.Conn) {}, func(conn net.Conn, msg []byte) {
-		wg.Add(1)
-		defer wg.Done()
-		t.Logf("Incoming message to listener from a client: %v", string(msg))
-	}, func(conn net.Conn) {})
+	go listener.Accept(
+		func(conn *tls.Conn) {
+			t.Logf("%+v", conn.ConnectionState())
+			// if ok {
+			// 	state := tlsconn.ConnectionState()
+			// 	sub := state.PeerCertificates[0].Subject
+			// 	log.Println(sub)
+			// }
+		},
+		func(conn *tls.Conn, msg []byte) {
+			wg.Add(1)
+			defer wg.Done()
+			t.Logf("Incoming message to listener from a client: %v", string(msg))
+		},
+		func(conn *tls.Conn) {
+		})
 
 	roots := x509.NewCertPool()
 	ok := roots.AppendCertsFromPEM(cert)
