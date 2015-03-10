@@ -53,7 +53,8 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 	}, nil
 }
 
-// Accept waits for incoming connections and forwards incoming messages to handleMsg in a new goroutine.
+// Accept waits for incoming connections and forwards the client connect/message/disconnect
+// events to provided handlers in a new goroutine.
 // This function never returns, unless there is an error while accepting a new connection.
 func (l *Listener) Accept(handleConn func(net.Conn), handleMsg func(conn net.Conn, msg []byte), handleDisconn func(net.Conn)) error {
 	for {
@@ -66,12 +67,15 @@ func (l *Listener) Accept(handleConn func(net.Conn), handleMsg func(conn net.Con
 		if l.debug {
 			log.Println("Client connected: listening for messages from client IP:", conn.RemoteAddr())
 		}
-
-		go handleClient(conn, l.debug, handleMsg)
+		go handleConn(conn)
+		go handleClient(conn, l.debug, handleMsg, handleDisconn)
 	}
 }
 
-func handleClient(conn net.Conn, debug bool, handleMsg func(conn net.Conn, msg []byte)) {
+// handleClient waits for messages from the connected client and forwards the client message/disconnect
+// events to provided handlers in a new goroutine.
+// This function never returns, unless there is an error while reading from the channel or the client disconnects.
+func handleClient(conn net.Conn, debug bool, handleMsg func(conn net.Conn, msg []byte), handleDisconn func(net.Conn)) {
 	defer conn.Close()
 	if debug {
 		defer log.Println("Closed connection to client with IP:", conn.RemoteAddr())
@@ -80,12 +84,14 @@ func handleClient(conn net.Conn, debug bool, handleMsg func(conn net.Conn, msg [
 	header := make([]byte, 4) // so max message size is 9999 bytes
 	for {
 		err := conn.SetReadDeadline(time.Now().Add(time.Minute * 5))
+
 		// read the content length header
 		n, err := conn.Read(header)
 		if err != nil || n == 0 {
 			log.Fatalln("Client read error: ", err)
 			break
 		}
+
 		// calculate the content length
 		th := bytes.TrimRight(header, " ")
 		n, err = strconv.Atoi(string(th))
@@ -93,6 +99,7 @@ func handleClient(conn net.Conn, debug bool, handleMsg func(conn net.Conn, msg [
 			log.Fatalln("Client read error: invalid content lenght header sent or content lenght mismatch: ", err)
 			break
 		}
+
 		// read the message content
 		if debug {
 			log.Println("Starting to read message content of bytes: ", n)
