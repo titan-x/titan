@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/tls"
 	"crypto/x509"
@@ -52,6 +53,7 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 	}, nil
 }
 
+// Session is a generic session data store for client handlers.
 type Session struct {
 	id   int
 	data interface{}
@@ -85,22 +87,21 @@ func handleClient(conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, ses
 		defer log.Println("Closed connection to client with IP:", conn.RemoteAddr())
 	}
 
-	header := make([]byte, 4) // so max message size is 9999 bytes
 	session := &Session{id: 1}
+	reader := bufio.NewReaderSize(conn, 50000)
 
 	for {
 		err := conn.SetReadDeadline(time.Now().Add(time.Minute * 5))
 
 		// read the content length header
-		n, err := conn.Read(header)
-		if err != nil || n == 0 {
+		line, err := reader.ReadSlice('|') // todo: remove this and use the readslice source code directly not to have another wrapper
+		if err != nil {
 			log.Fatalln("Client read error: ", err)
 			break
 		}
 
 		// calculate the content length
-		th := bytes.TrimRight(header, " ")
-		n, err = strconv.Atoi(string(th))
+		n, err := strconv.Atoi(string(line[:len(line)-1]))
 		if err != nil || n == 0 {
 			log.Fatalln("Client read error: invalid content lenght header sent or content lenght mismatch: ", err)
 			break
@@ -111,9 +112,17 @@ func handleClient(conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, ses
 			log.Println("Starting to read message content of bytes: ", n)
 		}
 		msg := make([]byte, n)
-		n, err = conn.Read(msg)
-		if err != nil || n == 0 {
-			log.Fatalln("Client read error: ", err)
+		total := 0
+		for total < n {
+			i, err := reader.Read(msg)
+			if err != nil {
+				log.Fatalln("Error while reading incoming message: ", err)
+				break
+			}
+			total += i
+		}
+		if err != nil {
+			log.Fatalln("Error while reading incoming message: ", err)
 			break
 		}
 		if debug {
