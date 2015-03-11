@@ -94,7 +94,7 @@ func handleClient(conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, ses
 		err := conn.SetReadDeadline(time.Now().Add(time.Minute * 5))
 
 		// read the content length header
-		line, err := reader.ReadSlice('|')
+		line, err := reader.ReadSlice('\n')
 		if err != nil {
 			log.Fatalln("Client read error: ", err)
 			break

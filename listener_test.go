@@ -42,12 +42,12 @@ func TestListener(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	send(t, conn, "4|ping")
-	send(t, conn, "56|Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
-	send(t, conn, "49|In sit amet lectus felis, at pellentesque turpis.")
-	send(t, conn, "64|Nunc urna enim, cursus varius aliquet ac, imperdiet eget tellus.")
-	send(t, conn, "45000|"+randString(45000))
-	send(t, conn, "5|close")
+	send(t, conn, "4\nping")
+	send(t, conn, "56\nLorem ipsum dolor sit amet, consectetur adipiscing elit.")
+	send(t, conn, "49\nIn sit amet lectus felis, at pellentesque turpis.")
+	send(t, conn, "64\nNunc urna enim, cursus varius aliquet ac, imperdiet eget tellus.")
+	send(t, conn, "45000\n"+randString(45000))
+	send(t, conn, "5\nclose")
 
 	wg.Wait()
 	time.Sleep(1000 * time.Millisecond) // todo: a more proper wait..
