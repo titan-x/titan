@@ -28,6 +28,13 @@ func TestListener(t *testing.T) {
 		wg.Add(1)
 		defer wg.Done()
 		t.Logf("Incoming message to listener from a client: %v", string(msg))
+		// if conn.ConnectionState() != nil {
+		// 	t.Log(conn.ConnectionState())
+		// }
+		certs := conn.ConnectionState().PeerCertificates
+		if len(certs) > 0 {
+			t.Logf("Client connected with client certificate subject: %v", certs[0].Subject)
+		}
 	}, func(conn *tls.Conn, session *Session) {
 	})
 
