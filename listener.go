@@ -114,6 +114,7 @@ func handleClient(conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, ses
 		msg := make([]byte, n)
 		total := 0
 		for total < n {
+			// todo: log here in case it gets stuck, pumping up cpu usage!
 			i, err := reader.Read(msg)
 			if err != nil {
 				log.Fatalln("Error while reading incoming message: ", err)
