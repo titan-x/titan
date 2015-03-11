@@ -24,11 +24,14 @@ func TestListener(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	go listener.Accept(func(conn *tls.Conn, session *interface{}, msg []byte) {
+	go listener.Accept(func(conn *tls.Conn, session *Session, msg []byte) {
+		session.id++
 		wg.Add(1)
 		defer wg.Done()
 		t.Logf("Incoming message to listener from a client: %v", string(msg))
-	}, func(conn *tls.Conn, session *interface{}) {
+		t.Log(session.id)
+	}, func(conn *tls.Conn, session *Session) {
+		t.Log("close", session.id)
 	})
 
 	roots := x509.NewCertPool()
