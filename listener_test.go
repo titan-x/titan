@@ -50,7 +50,7 @@ func TestListener(t *testing.T) {
 	send(t, conn, "5|close")
 
 	wg.Wait()
-	time.Sleep(2000 * time.Millisecond)
+	time.Sleep(1000 * time.Millisecond) // todo: a more proper wait..
 	conn.Close()
 	listener.Close()
 }

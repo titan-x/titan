@@ -88,7 +88,7 @@ func handleClient(conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, ses
 	}
 
 	session := &Session{id: 1}
-	reader := bufio.NewReaderSize(conn, 50000)
+	reader := bufio.NewReader(conn)
 
 	for {
 		err := conn.SetReadDeadline(time.Now().Add(time.Minute * 5))
