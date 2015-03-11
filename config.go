@@ -7,6 +7,7 @@ import (
 
 const (
 	// devastator server envrinment variables
+	goEnv           = "GO_ENV"
 	devastatorEnv   = "DEVASTATOR_ENV"
 	devastatorDebug = "DEVASTATOR_DEBUG"
 	devastatorPort  = "DEVASTATOR_PORT"
@@ -62,7 +63,9 @@ func init() {
 	debug := os.Getenv(devastatorDebug) != ""
 	env := os.Getenv(devastatorEnv)
 	if env == "" {
-		env = dev
+		if env = os.Getenv(goEnv); env == "" {
+			env = dev
+		}
 	}
 	port := os.Getenv(devastatorPort)
 	if port == "" {

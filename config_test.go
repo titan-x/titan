@@ -12,3 +12,8 @@ func TestConfig(t *testing.T) {
 		t.Error("Config file is not initialized properly for development environment.")
 	}
 }
+
+func TestGoEnv(t *testing.T) {
+	// GO_ENV should be used if "DEVASTATOR_ENV" is empty
+	// if both are empty, should be env = dev
+}

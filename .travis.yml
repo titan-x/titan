@@ -2,5 +2,3 @@ language: go
 go: tip
 env:
   - GO_ENV=test
-services:
-  - mongodb
