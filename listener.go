@@ -60,7 +60,7 @@ type Session struct {
 // Accept waits for incoming connections and forwards the client connect/message/disconnect
 // events to provided handlers in a new goroutine.
 // This function never returns, unless there is an error while accepting a new connection.
-func (l *Listener) Accept(handleMsg func(conn *tls.Conn, sess *Session, msg []byte), handleDisconn func(conn *tls.Conn, sess *Session)) error {
+func (l *Listener) Accept(handleMsg func(conn *tls.Conn, session *Session, msg []byte), handleDisconn func(conn *tls.Conn, session *Session)) error {
 	for {
 		conn, err := l.listener.Accept()
 		if err != nil {
