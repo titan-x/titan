@@ -30,18 +30,18 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 	pool := x509.NewCertPool()
 	ok := pool.AppendCertsFromPEM(cert)
 	if err != nil || !ok {
-		return nil, fmt.Errorf("failed to parse the certificate or the private key with error: %v", err)
+		return nil, fmt.Errorf("failed to parse the certificate or the private key: %v", err)
 	}
 
-	config := tls.Config{
+	conf := tls.Config{
 		Certificates: []tls.Certificate{tlsCert},
 		ClientCAs:    pool,
 		ClientAuth:   tls.VerifyClientCertIfGiven,
 	}
 
-	listener, err := tls.Listen("tcp", laddr, &config)
+	l, err := tls.Listen("tcp", laddr, &conf)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create TLS listener no network address %v: %v", laddr, err)
 	}
 	if debug {
 		log.Printf("Listener created with local network address: %v\n", laddr)
@@ -49,7 +49,7 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 
 	return &Listener{
 		debug:    debug,
-		listener: listener,
+		listener: l,
 	}, nil
 }
 
@@ -59,9 +59,8 @@ type Session struct {
 	data interface{}
 }
 
-// Accept waits for incoming connections and forwards the client connect/message/disconnect
-// events to provided handlers in a new goroutine.
-// This function never returns, unless there is an error while accepting a new connection.
+// Accept waits for incoming connections and forwards the client connect/message/disconnect events to provided handlers in a new goroutine.
+// This function blocks and never returns, unless there is an error while accepting a new connection.
 func (l *Listener) Accept(handleMsg func(conn *tls.Conn, session *Session, msg []byte), handleDisconn func(conn *tls.Conn, session *Session)) error {
 	for {
 		conn, err := l.listener.Accept()
