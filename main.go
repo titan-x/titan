@@ -6,5 +6,6 @@ package main
 
 var users = make(map[uint32]User)
 
-// func main() {
-// }
+func main() {
+	// todo: move this under /tools
+}

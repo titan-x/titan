@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"log"
 )
 
@@ -37,20 +38,30 @@ func (s *Server) Stop() error {
 }
 
 func handleMsg(conn *tls.Conn, session *Session, msg []byte) {
-	if session.id == "" {
-		auth(conn.ConnectionState().PeerCertificates, session, msg)
+	if session.ID == "" {
+		userID, err := auth(conn.ConnectionState().PeerCertificates, msg)
+		if err != nil {
+			// todo: signal connection close
+		}
+		session.ID = userID
 	}
 }
 
-func auth(peerCerts []*x509.Certificate, session *Session, msg []byte) {
+func auth(peerCerts []*x509.Certificate, msg []byte) (userID string, err error) {
 	// client certificate authorization: certificate is verified by the listener instance so we trust it
 	if len(peerCerts) > 0 {
-		session.id = peerCerts[0].Subject.CommonName
+		userID = peerCerts[0].Subject.CommonName
 		log.Printf("Client connected with client certificate subject: %+v", peerCerts[0].Subject)
 	}
 
 	// username/password authentication
-	// todo: json/func Unmarshal(data []byte, v interface{}) error
+	var req ReqMsg
+	err = json.Unmarshal(msg, req)
+	if err != nil {
+		return
+	}
+
+	return
 }
 
 func handleDisconn(conn *tls.Conn, session *Session) {

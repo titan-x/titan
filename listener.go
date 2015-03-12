@@ -55,8 +55,8 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 
 // Session is a generic session data store for client handlers.
 type Session struct {
-	id   string
-	data interface{}
+	ID   string
+	Data interface{}
 }
 
 // Accept waits for incoming connections and forwards the client connect/message/disconnect events to provided handlers in a new goroutine.
@@ -86,7 +86,7 @@ func handleClient(conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, ses
 		defer log.Println("Closed connection to client with IP:", conn.RemoteAddr())
 	}
 
-	session := &Session{id: ""}
+	session := &Session{ID: ""}
 	reader := bufio.NewReader(conn)
 
 	for {
