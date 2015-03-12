@@ -55,7 +55,7 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 
 // Session is a generic session data store for client handlers.
 type Session struct {
-	id   int
+	id   string
 	data interface{}
 }
 
@@ -86,7 +86,7 @@ func handleClient(conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, ses
 		defer log.Println("Closed connection to client with IP:", conn.RemoteAddr())
 	}
 
-	session := &Session{id: 1}
+	session := &Session{id: ""}
 	reader := bufio.NewReader(conn)
 
 	for {
@@ -126,7 +126,7 @@ func handleClient(conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, ses
 			break
 		}
 		if debug {
-			log.Printf("Read %v bytes message '%v' from client with IP: %v\n", n, string(msg), conn.RemoteAddr())
+			log.Printf("Read %v bytes client IP %v. Incoming message: %v\n", n, conn.RemoteAddr(), string(msg))
 		}
 
 		if n == 4 && bytes.Equal(msg, ping) {

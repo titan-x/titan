@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"log"
 )
 
@@ -26,21 +27,32 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 
 // Accept accepts connections on the internal listener and handles connections with registered onnection and message handlers.
 // This function blocks and never returns, unless there is an error while accepting a new connection.
-func (s *Server) Accept() {
-	s.listener.Accept(func(conn *tls.Conn, session *Session, msg []byte) {
-		// wg.Add(1)
-		// defer wg.Done()
-		log.Printf("Incoming message to listener from a client: %v", string(msg))
-
-		certs := conn.ConnectionState().PeerCertificates
-		if len(certs) > 0 {
-			log.Printf("Client connected with client certificate subject: %v", certs[0].Subject)
-		}
-	}, func(conn *tls.Conn, session *Session) {
-	})
+func (s *Server) Accept() error {
+	return s.listener.Accept(handleMsg, handleDisconn)
 }
 
 // Stop stops a server instance gracefully, waiting for remaining data to be written on open connections.
 func (s *Server) Stop() error {
 	return nil
+}
+
+func handleMsg(conn *tls.Conn, session *Session, msg []byte) {
+	if session.id == "" {
+		auth(conn.ConnectionState().PeerCertificates, session, msg)
+	}
+}
+
+func auth(peerCerts []*x509.Certificate, session *Session, msg []byte) {
+	// client certificate authorization: certificate is verified by the listener instance so we trust it
+	if len(peerCerts) > 0 {
+		session.id = peerCerts[0].Subject.CommonName
+		log.Printf("Client connected with client certificate subject: %+v", peerCerts[0].Subject)
+	}
+
+	// username/password authentication
+	// todo: json/func Unmarshal(data []byte, v interface{}) error
+}
+
+func handleDisconn(conn *tls.Conn, session *Session) {
+
 }
