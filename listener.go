@@ -56,7 +56,7 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 // Session is a generic session data store for client handlers.
 type Session struct {
 	UserID string
-	Closed bool
+	Error  string
 	Data   interface{}
 }
 
@@ -87,7 +87,7 @@ func handleClient(conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, ses
 		defer log.Println("Closed connection to client with IP:", conn.RemoteAddr())
 	}
 
-	session := &Session{UserID: ""}
+	session := &Session{}
 	reader := bufio.NewReader(conn)
 
 	for {

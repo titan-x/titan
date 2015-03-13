@@ -1,5 +1,7 @@
 package main
 
+import "crypto/tls"
+
 // User is a mobile user.
 type User struct {
 	ID              uint32
@@ -8,6 +10,7 @@ type User struct {
 	APNSDeviceToken string
 	Name            string
 	Picture         []byte
+	Conn            *tls.Conn
 }
 
 // Send sends given data to to a device using device specific infrastructure.

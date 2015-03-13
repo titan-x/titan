@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"fmt"
 	"log"
 )
 
@@ -43,8 +44,7 @@ func handleMsg(conn *tls.Conn, session *Session, msg []byte) {
 	if session.UserID == "" {
 		userID, err := auth(conn.ConnectionState().PeerCertificates, msg)
 		if err != nil {
-			log.Fatalf("Cannot parse client message: %v", err)
-			session.Closed = true
+			session.Error = fmt.Sprintf("Cannot parse client message: %v", err)
 		}
 		session.UserID = userID
 	}
