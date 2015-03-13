@@ -37,16 +37,20 @@ func (s *Server) Stop() error {
 	return nil
 }
 
+// handleMsg handles incoming client messages.
 func handleMsg(conn *tls.Conn, session *Session, msg []byte) {
-	if session.ID == "" {
+	// authenticate the session if not already done
+	if session.UserID == "" {
 		userID, err := auth(conn.ConnectionState().PeerCertificates, msg)
 		if err != nil {
-			// todo: signal connection close
+			log.Fatalf("Cannot parse client message: %v", err)
+			session.Closed = true
 		}
-		session.ID = userID
+		session.UserID = userID
 	}
 }
 
+// auth handles classical username/password and client certificate based authentication.
 func auth(peerCerts []*x509.Certificate, msg []byte) (userID string, err error) {
 	// client certificate authorization: certificate is verified by the listener instance so we trust it
 	if len(peerCerts) > 0 {
