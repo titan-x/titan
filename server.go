@@ -48,6 +48,8 @@ func handleMsg(conn *tls.Conn, session *Session, msg []byte) {
 		}
 		session.UserID = userID
 	}
+
+	// todo: session is authenticated and we have user ID now so associate user ID with session in a go map (var users = make(map[uint32]User) maybe??)
 }
 
 // auth handles classical username/password and client certificate based authentication.
