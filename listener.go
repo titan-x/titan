@@ -91,6 +91,11 @@ func handleClient(conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, ses
 	reader := bufio.NewReader(conn)
 
 	for {
+		if session.Error != "" {
+			// todo: send error message to user, log the error, and close the conn and return
+			return
+		}
+
 		err := conn.SetReadDeadline(time.Now().Add(time.Minute * 5))
 
 		// read the content length header

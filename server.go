@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -47,18 +48,17 @@ func handleMsg(conn *tls.Conn, session *Session, msg []byte) {
 	if session.UserID == 0 {
 		userID, err := auth(conn.ConnectionState().PeerCertificates, msg)
 		if err != nil {
-			session.Error = fmt.Sprintf("Cannot parse client message: %v", err)
+			session.Error = fmt.Sprintf("Cannot parse client message or method mismatched: %v", err)
 		}
 		session.UserID = userID
 		conns[userID] = conn
+		return
 	}
-
-	// todo: session is authenticated and we have user ID now so associate user ID with session in a go map (var users = make(map[uint32]User) maybe??)
 }
 
-// auth handles classical username/password and client certificate based authentication.
+// auth handles Google+ sign-in and client certificate authentication.
 func auth(peerCerts []*x509.Certificate, msg []byte) (userID uint32, err error) {
-	// client certificate authorization: certificate is verified by the listener instance so we trust it
+	// client certificate authorization: certificate is verified by the TLS listener instance so we trust it
 	if len(peerCerts) > 0 {
 		idstr := peerCerts[0].Subject.CommonName
 		uid64, err := strconv.ParseUint(idstr, 10, 32)
@@ -70,14 +70,21 @@ func auth(peerCerts []*x509.Certificate, msg []byte) (userID uint32, err error) 
 		return userID, nil
 	}
 
-	// username/password authentication
+	// Google+ authentication
 	var req ReqMsg
 	err = json.Unmarshal(msg, req)
 	if err != nil {
 		return
 	}
-
-	return
+	switch req.Method {
+	case "auth.token":
+		return
+	case "auth.google":
+		// todo: ping google, get user info, save user info in DB, generate and return permanent jwt token (or should this part be NBusy's business?)
+		return
+	default:
+		return 0, errors.New("initial unauthenticated request should be in the 'auth.xxx' form")
+	}
 }
 
 func handleDisconn(conn *tls.Conn, session *Session) {
