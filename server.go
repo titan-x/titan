@@ -72,12 +72,13 @@ func auth(peerCerts []*x509.Certificate, msg []byte) (userID uint32, err error) 
 
 	// Google+ authentication
 	var req ReqMsg
-	err = json.Unmarshal(msg, req)
+	err = json.Unmarshal(msg, &req)
 	if err != nil {
 		return
 	}
 	switch req.Method {
 	case "auth.token":
+		// http://attilaolah.eu/2013/11/29/json-decoding-in-go/
 		return
 	case "auth.google":
 		// todo: ping google, get user info, save user info in DB, generate and return permanent jwt token (or should this part be NBusy's business?)
