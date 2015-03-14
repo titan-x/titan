@@ -55,7 +55,7 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 
 // Session is a generic session data store for client handlers.
 type Session struct {
-	UserID string
+	UserID uint32
 	Error  string
 	Data   interface{}
 }
@@ -113,8 +113,8 @@ func handleClient(conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, ses
 		}
 		msg := make([]byte, n)
 		total := 0
-		for total < n {
-			// todo: log here in case it gets stuck, pumping up cpu usage!
+		for total != n {
+			// todo: log here in case it gets stuck, or there is a dos attack, pumping up cpu usage!
 			i, err := reader.Read(msg)
 			if err != nil {
 				log.Fatalln("Error while reading incoming message: ", err)

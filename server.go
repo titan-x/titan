@@ -6,7 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 )
+
+var conns = make(map[uint32]*tls.Conn)
 
 // Server wraps a listener instance and registers default connection and message handlers with the listener.
 type Server struct {
@@ -41,23 +44,30 @@ func (s *Server) Stop() error {
 // handleMsg handles incoming client messages.
 func handleMsg(conn *tls.Conn, session *Session, msg []byte) {
 	// authenticate the session if not already done
-	if session.UserID == "" {
+	if session.UserID == 0 {
 		userID, err := auth(conn.ConnectionState().PeerCertificates, msg)
 		if err != nil {
 			session.Error = fmt.Sprintf("Cannot parse client message: %v", err)
 		}
 		session.UserID = userID
+		conns[userID] = conn
 	}
 
 	// todo: session is authenticated and we have user ID now so associate user ID with session in a go map (var users = make(map[uint32]User) maybe??)
 }
 
 // auth handles classical username/password and client certificate based authentication.
-func auth(peerCerts []*x509.Certificate, msg []byte) (userID string, err error) {
+func auth(peerCerts []*x509.Certificate, msg []byte) (userID uint32, err error) {
 	// client certificate authorization: certificate is verified by the listener instance so we trust it
 	if len(peerCerts) > 0 {
-		userID = peerCerts[0].Subject.CommonName
+		idstr := peerCerts[0].Subject.CommonName
+		uid64, err := strconv.ParseUint(idstr, 10, 32)
+		if err != nil {
+			return 0, err
+		}
+		userID = uint32(uid64)
 		log.Printf("Client connected with client certificate subject: %+v", peerCerts[0].Subject)
+		return userID, nil
 	}
 
 	// username/password authentication
@@ -71,5 +81,5 @@ func auth(peerCerts []*x509.Certificate, msg []byte) (userID string, err error) 
 }
 
 func handleDisconn(conn *tls.Conn, session *Session) {
-
+	delete(conns, session.UserID)
 }
