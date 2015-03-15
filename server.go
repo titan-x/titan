@@ -52,8 +52,14 @@ func handleMsg(conn *tls.Conn, session *Session, msg []byte) {
 		}
 		session.UserID = userID
 		conns[userID] = conn
+		// todo: ack auth message, start sending other queued messages one by one
+		// can have 2 approaches here
+		// 1. users[id].send(...) & users[id].queue(...)
+		// 2. conn.write(...) && queue[id].conn = ...
 		return
 	}
+
+	// process the message and queue a reply if necessary
 }
 
 // auth handles Google+ sign-in and client certificate authentication.
