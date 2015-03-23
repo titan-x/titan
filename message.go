@@ -2,9 +2,9 @@ package main
 
 import "encoding/json"
 
-// ReqMsg is a JSON RPC 2.0 request object. Version field is ommited for brevity.
+// ReqMsg is a JSON RPC 2.0 request/notification object. Version field is ommited for brevity.
 type ReqMsg struct {
-	ID     string          `json:"id"`
+	ID     string          `json:"id,omitempty"`
 	Method string          `json:"method"`
 	Params json.RawMessage `json:"params,omitempty"`
 }

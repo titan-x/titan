@@ -4,7 +4,7 @@ import "crypto/tls"
 
 // Conn is a mobile client connection.
 type Conn struct {
-	conn    tls.Conn
+	conn    *tls.Conn
 	session interface{}
 
 	// user -> id (user or chat id) -> message
