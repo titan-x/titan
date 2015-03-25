@@ -4,5 +4,8 @@ package main
 // Messages are mapped from user ID to []interface{} array which may contain request, response, or notification messages.
 type Queue map[uint32][]interface{}
 
-// Send
+// Send sends a message immediately to .
 func (q *Queue) Send() {}
+
+// Queue .
+func (q *Queue) Queue() {}

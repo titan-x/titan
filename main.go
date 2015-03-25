@@ -4,8 +4,6 @@ package main
 // * "google.golang.org/cloud/datastore"
 // "code.google.com/p/google-api-go-client/datastore/v1beta2"
 
-var users = make(map[uint32]User)
-
 func main() {
 	// todo: move this under /tools
 }

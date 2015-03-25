@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-var conns = make(map[uint32]*tls.Conn)
+var users = make(map[uint32]User)
 
 // Server wraps a listener instance and registers default connection and message handlers with the listener.
 type Server struct {
@@ -51,7 +51,7 @@ func handleMsg(conn *tls.Conn, session *Session, msg []byte) {
 			session.Error = fmt.Sprintf("Cannot parse client message or method mismatched: %v", err)
 		}
 		session.UserID = userID
-		conns[userID] = conn
+		users[userID].Conn = conn
 		// todo: ack auth message, start sending other queued messages one by one
 		// can have 2 approaches here
 		// 1. users[id].send(...) & users[id].queue(...)

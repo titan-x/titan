@@ -11,10 +11,13 @@ type User struct {
 	Name            string
 	Picture         []byte
 	Conn            *tls.Conn
+
+	// MsgQueue may contain request, response, or notification messages.
+	MsgQueue []interface{}
 }
 
 // Send sends given data to to a device using device specific infrastructure.
-func (u *User) Send(data map[string]string) error {
-	// note: not adding SendMessage/SendNotification/etc. like fine grained methods to keep this library more low level, those are in the mobile conn and queue types
+// todo: not adding SendMessage/SendNotification/etc. like fine grained methods to keep this library more low level, those are in the mobile conn and queue types
+func (u *User) Send(msg interface{}) error {
 	return nil
 }

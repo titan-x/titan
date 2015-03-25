@@ -135,10 +135,10 @@ func handleClient(conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, ses
 			log.Printf("Read %v bytes client IP %v. Incoming message: %v\n", n, conn.RemoteAddr(), string(msg))
 		}
 
+		// shortcut 'ping' and 'close' messages, saves some processing time
 		if n == 4 && bytes.Equal(msg, ping) {
 			continue
 		}
-
 		if n == 5 && bytes.Equal(msg, closed) {
 			go handleDisconn(conn, session)
 			return
