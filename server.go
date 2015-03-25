@@ -59,6 +59,7 @@ func handleMsg(conn *tls.Conn, session *Session, msg []byte) {
 		return
 	}
 
+	// queue the incoming request and send an ack
 	// process the message and queue a reply if necessary
 }
 

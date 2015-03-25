@@ -21,3 +21,8 @@ type User struct {
 func (u *User) Send(msg interface{}) error {
 	return nil
 }
+
+// Queue queues a message to be sent to a user as soon as possible.
+func (u *User) Queue(msg interface{}) error {
+	return nil
+}
