@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-var users = make(map[uint32]User)
+var users = make(map[uint32]*User)
 
 // Server wraps a listener instance and registers default connection and message handlers with the listener.
 type Server struct {
@@ -104,5 +104,5 @@ func auth(peerCerts []*x509.Certificate, msg []byte) (userID uint32, err error) 
 }
 
 func handleDisconn(conn *tls.Conn, session *Session) {
-	delete(conns, session.UserID)
+	users[session.UserID].Conn = nil
 }
