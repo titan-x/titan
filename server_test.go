@@ -19,7 +19,9 @@ func TestReceiveOffileQueue(t *testing.T) {
 
 func TestSendEcho(t *testing.T) {
 	// t.Fatal("Failed to send a message to the echo user.")
+	// t.Fatal("Did not receive ACK for a sent message.")
 	// t.Fatal("Failed to receive a response from echo user.")
+	// t.Fatal("Could not send an ACK for an incoming message.")
 }
 
 func TestStop(t *testing.T) {

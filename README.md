@@ -23,6 +23,11 @@ Messaging server utilizes device specific delivery infrastructure for notificati
 +--------------------------------------+
 ```
 
+Client-Server Protocol
+----------------------
+
+Client server communication protocol is based on [JSON RPC](http://www.jsonrpc.org/specification) 2.0 specs. Mobile devices connect with the TLS endpoint and the Web browsers utilizes the WebSocket endpoint.
+
 Client Authentication
 ---------------------
 
