@@ -31,15 +31,17 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 	}, nil
 }
 
-// Accept accepts connections on the internal listener and handles connections with registered onnection and message handlers.
+// Start starts accepting connections on the internal listener and handles connections with registered onnection and message handlers.
 // This function blocks and never returns, unless there is an error while accepting a new connection.
-func (s *Server) Accept() error {
-	return s.listener.Accept(handleMsg, handleDisconn)
+func (s *Server) Start() error {
+	err := s.listener.Accept(handleMsg, handleDisconn)
+	// todo: blocking listen on internal channel for the stop signal, if default listener.Close() is not graceful (not sure about that)
+	return err
 }
 
 // Stop stops a server instance gracefully, waiting for remaining data to be written on open connections.
 func (s *Server) Stop() error {
-	return nil
+	return s.listener.Close()
 }
 
 // handleMsg handles incoming client messages.
