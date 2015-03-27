@@ -3,13 +3,23 @@ package main
 import "testing"
 
 func TestGoogleAuth(t *testing.T) {
-	// t.Fatal("Google+ sign-in failed with valid credentials.")
+	// t.Fatal("Google+ first sign-in (registration) failed with valid credentials.")
+	// t.Fatal("Google+ second sign-in (regular) failed with valid credentials.")
 	// t.Fatal("Google+ sign-in passed with invalid credentials.")
 }
 
 func TestClientCertAuth(t *testing.T) {
 	// t.Fatal("Authentication failed with a valid client certificate.")
 	// t.Fatal("Authenticated with invalid client certificate.")
+}
+
+func TestReceiveOffileQueue(t *testing.T) {
+	t.Fatal("Failed to receive queued messages after coming online.")
+}
+
+func TestSendEcho(t *testing.T) {
+	// t.Fatal("Failed to send a message to the echo user.")
+	// t.Fatal("Failed to receive a response from echo user.")
 }
 
 func TestStop(t *testing.T) {

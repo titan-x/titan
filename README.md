@@ -13,15 +13,20 @@ GCM CCS (for message delivery and retrieval from Android clients), GAE Sockets A
 Architecture
 ------------
 
-Messaging server utilizes device specific delivery options; GCM for Android, APNS+TCP for iOS, WebSockets for Web browsers.
+Messaging server utilizes device specific delivery infrastructure for notifications and messages; GCM + TLS for Android, APNS + TLS for iOS, and WebSockets for the Web browsers.
 
 ```
-+-------+------------+---------------+
-|  GCM  |  APNS+TCP  |  Web Sockets  |
-+-------+------------+---------------+
-|          Messaging Server          |
-+------------------------------------+
++-----------+------------+-------------+
+| GCM + TLS | APNS + TLS | Web Sockets |
++-----------+------------+-------------+
+|           Messaging Server           |
++--------------------------------------+
 ```
+
+Client Authentication
+---------------------
+
+First-time registration is done through Google+ OAuth 2.0 flow. After a successful registration, the connecting device receives a client-side TLS certificate (for mobile devices) or a JSON Web Token (for browsers), to be used for successive connections.
 
 Testing
 -------
