@@ -23,6 +23,8 @@ Messaging server utilizes device specific delivery infrastructure for notificati
 +--------------------------------------+
 ```
 
+Disclaimer: diagram prepared using [ASCIIFlow](https://github.com/lewish/asciiflow2).
+
 Client-Server Protocol
 ----------------------
 
