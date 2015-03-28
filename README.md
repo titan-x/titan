@@ -23,7 +23,17 @@ Messaging server utilizes device specific delivery infrastructure for notificati
 +--------------------------------------+
 ```
 
-Disclaimer: diagram prepared using [ASCIIFlow](https://github.com/lewish/asciiflow2).
+Following is the overview of the server application's components:
+
+```
++---------------------------------------+
+|              main + config            |
++---------------------------------------+
+|                 server                |
++---------------------------------------+
+|   router   |   listener   | msg queue |
++---------------------------------------+
+```
 
 Client-Server Protocol
 ----------------------
