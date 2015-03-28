@@ -51,12 +51,12 @@ Typical Client-Server Sequence
 Client-server communication sequence is pretty similar to that of XMPP, except we are using JSON RPC packaging.
 
 ```
-Server                        Client
+[Server]                    [Client]
 +                                  +
-|---------GCM Notification-------->|
+|---------GCM Notification-------->| [offline]
 |                                  |
 |                                  |
-|<-----------auth.cert-------------|
+|<-----------auth.cert-------------| [online]
 |                                  |
 |---------------ACK--------------->|
 |                                  |
@@ -73,8 +73,6 @@ Server                        Client
 |                                  |
 |<--------------ACK----------------|
 +                                  +
-
-
 ```
 
 Testing
