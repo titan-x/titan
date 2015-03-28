@@ -58,9 +58,7 @@ Client-server communication sequence is pretty similar to that of XMPP, except w
 |                                  |
 |<-----------auth.cert-------------| [online]
 |                                  |
-|---------------ACK--------------->|
-|                                  |
-|------------batch[msg]----------->|
+|---------ACK-or-batch[msg]------->|
 |                                  |
 |<-----------batch[ACK]------------|
 |                                  |
