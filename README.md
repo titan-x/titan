@@ -31,7 +31,7 @@ Following is the overview of the server application's components:
 +---------------------------------------+
 |                 server                |
 +---------------------------------------+
-|   router   |   listener   | msg queue |
+|   router  |   listener  |  msg queue  |
 +---------------------------------------+
 ```
 
@@ -43,7 +43,7 @@ Client server communication protocol is based on [JSON RPC](http://www.jsonrpc.o
 Client Authentication
 ---------------------
 
-First-time registration is done through Google+ OAuth 2.0 flow. After a successful registration, the connecting device receives a client-side TLS certificate (for mobile devices) or a JSON Web Token (for browsers), to be used for successive connections.
+First-time registration is done through Google+ OAuth 2.0 flow. After a successful registration, the connecting device receives an encrypted token to be used for successive connections.
 
 Testing
 -------

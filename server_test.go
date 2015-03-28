@@ -13,6 +13,12 @@ func TestClientCertAuth(t *testing.T) {
 	// t.Fatal("Authenticated with invalid client certificate.")
 }
 
+func TestTokenAuth(t *testing.T) {
+	// t.Fatal("Authentication failed with a valid token.")
+	// t.Fatal("Authenticated with invalid token.")
+	// t.Fatal("Authenticated with expired token.")
+}
+
 func TestReceiveOffileQueue(t *testing.T) {
 	// t.Fatal("Failed to receive queued messages after coming online.")
 	// t.Fatal("Failed to send ACK for received message queue.")
@@ -20,7 +26,7 @@ func TestReceiveOffileQueue(t *testing.T) {
 
 func TestSendEcho(t *testing.T) {
 	// t.Fatal("Failed to send a message to the echo user.")
-	// t.Fatal("Did not receive ACK for a sent message.")
+	// t.Fatal("Did not receive ACK for a message sent.")
 	// t.Fatal("Failed to receive a response from echo user.")
 	// t.Fatal("Could not send an ACK for an incoming message.")
 }
