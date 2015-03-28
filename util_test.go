@@ -13,7 +13,7 @@ func TestRandString(t *testing.T) {
 		t.Fatalf("Expected a random string of length %v but got %v", l, len(str))
 	}
 	if str[1] == str[2] && str[3] == str[4] && str[5] == str[6] && str[7] == str[8] {
-		t.Fatal("Expected a random string, got repeated characters.")
+		t.Fatal("Expected a random string, got repeated characters")
 	}
 }
 
@@ -28,7 +28,7 @@ func TestGetID(t *testing.T) {
 			t.Fatalf("Expected a string of length 26 but got %v", len(id))
 		}
 		if id[3] == id[4] && id[5] == id[6] && id[7] == id[8] && id[9] == id[10] {
-			t.Fatal("Expected a random string, got repeated characters.")
+			t.Fatal("Expected a random string, got repeated characters")
 		}
 	}
 }
