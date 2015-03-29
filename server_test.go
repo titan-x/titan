@@ -7,6 +7,7 @@ func TestGoogleAuth(t *testing.T) {
 	// t.Fatal("Google+ second sign-in (regular) failed with valid credentials")
 	// t.Fatal("Google+ sign-in passed with invalid credentials")
 	// t.Fatal("Authentication was not ACKed")
+
 }
 
 func TestClientCertAuth(t *testing.T) {
