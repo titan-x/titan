@@ -17,9 +17,10 @@ func (c *Conn) SendMsg(msg *interface{}) error {
 // ReadMsg waits for and reads the next message of the TLS connection.
 func (c *Conn) ReadMsg() (msg []byte, err error) {
 	if c.err != nil {
-		// todo: send error message to user, log the error, and close the conn and return
 		return nil, c.err
 	}
+
+	// first 4 bytes (uint32) is message length header with a maximum of 4294967295 (4GB) with a hard-cap defined by configuration
 
 	return
 }
