@@ -13,7 +13,6 @@ const headerSize = 4
 type Conn struct {
 	UserID       uint32
 	conn         *tls.Conn
-	err          error
 	maxMsgSize   int
 	readDeadline time.Duration
 	header       []byte
@@ -45,10 +44,6 @@ func (c *Conn) SendMsg(msg *interface{}) error {
 
 // ReadMsg waits for and reads the next message of the TLS connection.
 func (c *Conn) ReadMsg() (msg []byte, err error) {
-	if c.err != nil {
-		return nil, c.err
-	}
-
 	if err = c.conn.SetReadDeadline(time.Now().Add(c.readDeadline)); err != nil {
 		return
 	}
@@ -62,11 +57,11 @@ func (c *Conn) ReadMsg() (msg []byte, err error) {
 		return nil, fmt.Errorf("failed to read %v bytes message header, instead only read %v bytes", headerSize, n)
 	}
 
-	t := int(binary.LittleEndian.Uint32(c.header))
+	n = int(binary.LittleEndian.Uint32(c.header))
 	r := 0
-	msg = make([]byte, t)
-	for {
-		for r != t {
+	msg = make([]byte, n)
+	for r != n {
+		for r != n {
 			i, err := c.conn.Read(msg[r:])
 			if err != nil {
 				return nil, fmt.Errorf("errored while reading incoming message: %v", err)

@@ -11,3 +11,7 @@ func TestReadMsg(t *testing.T) {
 	binary.LittleEndian.PutUint32(b, i)
 	t.Log(b)
 }
+
+func TestConnTimeout(t *testing.T) {
+
+}

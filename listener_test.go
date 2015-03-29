@@ -27,7 +27,7 @@ func TestListener(t *testing.T) {
 	go listener.Accept(func(conn *tls.Conn, session *Session, msg []byte) {
 		wg.Add(1)
 		defer wg.Done()
-		// t.Logf("Incoming message to listener from a client: %v\n", string(msg))
+		// todo: compare sent/incoming messages for equality
 
 		certs := conn.ConnectionState().PeerCertificates
 		if len(certs) > 0 {
