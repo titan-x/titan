@@ -120,7 +120,7 @@ func handleClient(conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, ses
 		total := 0
 		for total != n {
 			// todo: log here in case it gets stuck, or there is a dos attack, pumping up cpu usage!
-			i, err := reader.Read(msg)
+			i, err := reader.Read(msg[total:])
 			if err != nil {
 				log.Fatalln("Error while reading incoming message:", err)
 				break
@@ -132,7 +132,7 @@ func handleClient(conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, ses
 			break
 		}
 		if debug {
-			log.Printf("Read %v bytes client IP %v. Incoming message: %v\n", n, conn.RemoteAddr(), string(msg))
+			log.Printf("Read %v bytes client IP %v. Incoming message was: %v\n", n, conn.RemoteAddr(), string(msg))
 		}
 
 		// shortcut 'ping' and 'close' messages, saves some processing time

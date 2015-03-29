@@ -17,6 +17,7 @@ var letters = []rune(". !abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 // randString generates a random string sequence of given size.
 func randString(n int) string {
+	mathrand.Seed(time.Now().UTC().UnixNano())
 	b := make([]rune, n)
 	for i := range b {
 		b[i] = letters[mathrand.Intn(len(letters))]

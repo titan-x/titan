@@ -31,7 +31,7 @@ func NewConn(conn *tls.Conn, maxMsgSize int, readDeadline int) (*Conn, error) {
 	}
 
 	return &Conn{
-		header:       make([]byte, headerSize), // todo: use a byte array rathen than a slice?
+		header:       make([]byte, headerSize), // todo: use a regular byte array rather than a slice?
 		conn:         conn,
 		maxMsgSize:   maxMsgSize,
 		readDeadline: time.Second * time.Duration(readDeadline),
@@ -59,11 +59,20 @@ func (c *Conn) ReadMsg() (msg []byte, err error) {
 		return
 	}
 	if n != headerSize {
-		return nil, fmt.Errorf("Failed to read %v bytes message header, instead only read %v bytes", headerSize, n)
+		return nil, fmt.Errorf("failed to read %v bytes message header, instead only read %v bytes", headerSize, n)
 	}
 
-	msg = make([]byte, binary.LittleEndian.Uint32(c.header))
+	t := int(binary.LittleEndian.Uint32(c.header))
+	r := 0
+	msg = make([]byte, t)
 	for {
+		for r != t {
+			i, err := c.conn.Read(msg[r:])
+			if err != nil {
+				return nil, fmt.Errorf("errored while reading incoming message: %v", err)
+			}
+			r += i
+		}
 	}
 
 	return

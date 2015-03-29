@@ -27,7 +27,7 @@ func TestListener(t *testing.T) {
 	go listener.Accept(func(conn *tls.Conn, session *Session, msg []byte) {
 		wg.Add(1)
 		defer wg.Done()
-		t.Logf("Incoming message to listener from a client: %v\n", string(msg))
+		// t.Logf("Incoming message to listener from a client: %v\n", string(msg))
 
 		certs := conn.ConnectionState().PeerCertificates
 		if len(certs) > 0 {
