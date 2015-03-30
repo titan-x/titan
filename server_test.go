@@ -7,7 +7,6 @@ func TestGoogleAuth(t *testing.T) {
 	// t.Fatal("Google+ second sign-in (regular) failed with valid credentials")
 	// t.Fatal("Google+ sign-in passed with invalid credentials")
 	// t.Fatal("Authentication was not ACKed")
-
 }
 
 func TestClientCertAuth(t *testing.T) {
@@ -38,4 +37,15 @@ func TestStop(t *testing.T) {
 	// todo: this should be a listener/queue test if we don't use any goroutines in the Server struct methods
 	// t.Fatal("Failed to stop the server gracefully: not all the goroutines were terminated properly")
 	// t.Fatal("Failed to stop the server gracefully: server did not wait for ongoing read/write operations")
+}
+
+// is this listener test? or do we handle these errors in the server?
+func TestTimeout(t *testing.T) {
+	// t.Fatal("Send timout did not occur")
+	// t.Fatal("Wait timeout did not occur")
+}
+
+// same question here..
+func TestDisconnect(t *testing.T) {
+
 }

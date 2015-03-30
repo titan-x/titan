@@ -137,7 +137,7 @@ func handleClient(conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, ses
 
 		// shortcut 'ping' and 'close' messages, saves some processing time
 		if n == 4 && bytes.Equal(msg, ping) {
-			continue
+			continue // send back pong?
 		}
 		if n == 5 && bytes.Equal(msg, closed) {
 			go handleDisconn(conn, session)
