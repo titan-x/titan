@@ -28,6 +28,8 @@ func TestReceiveOfflineQueue(t *testing.T) {
 
 func TestSendEcho(t *testing.T) {
 	// t.Fatal("Failed to send a message to the echo user")
+	// t.Fatal("Failed to send batch message to the echo user")
+	// t.Fatal("Failed to send large message to the echo user")
 	// t.Fatal("Did not receive ACK for a message sent")
 	// t.Fatal("Failed to receive a response from echo user")
 	// t.Fatal("Could not send an ACK for an incoming message")
@@ -47,5 +49,12 @@ func TestTimeout(t *testing.T) {
 
 // same question here..
 func TestDisconnect(t *testing.T) {
+	// t.Fatal("Client method.close request was not handled properly")
+	// t.Fatal("Client disconnect was not handled gracefully")
+	// t.Fatal("Server method.close request was not handled properly")
+	// t.Fatal("Server disconnect was not handled gracefully")
+}
 
+func TestPing(t *testing.T) {
+	// t.Fatal("Pong/ACK was not sent for ping")
 }
