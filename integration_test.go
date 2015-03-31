@@ -77,3 +77,13 @@ func TestDisconnect(t *testing.T) {
 func TestPing(t *testing.T) {
 	// t.Fatal("Pong/ACK was not sent for ping")
 }
+
+func getConn(t *testing.T) *Conn {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short testing mode")
+	} else if host == "" || senderID == "" || apiKey == "" {
+		t.Skip("Skipping integration test due to missing GCM environment variables")
+	}
+
+	return nil
+}
