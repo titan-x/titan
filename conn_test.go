@@ -12,6 +12,6 @@ func TestReadMsg(t *testing.T) {
 	t.Log(b)
 }
 
-func TestConnTimeout(t *testing.T) {
-
-}
+// func TestConnTimeout(t *testing.T) {
+//
+// }

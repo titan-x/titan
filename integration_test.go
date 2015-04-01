@@ -1,25 +1,6 @@
-// +build integration
-
 package main
 
 import "testing"
-
-// var fooAddr = flag.String(...)
-//
-// func TestToo(t *testing.T) {
-//     f, err := foo.Connect(*fooAddr)
-//     // ...
-// }
-
-// go test takes build tags just like go build, so you can call go test -tags=integration. It also synthesizes a package main which calls flag.Parse,
-// so any flags declared and visible will be processed and available to your tests.
-//
-// When you do this	Run this
-// Save	go fmt (or goimports)
-// Build	go vet, golint, and maybe go test
-// Deploy	go test -tags=integration
-//
-// or is the gcm style t.Short() better?
 
 func TestGoogleAuth(t *testing.T) {
 	// t.Fatal("Google+ first sign-in (registration) failed with valid credentials")
@@ -60,13 +41,16 @@ func TestStop(t *testing.T) {
 	// t.Fatal("Failed to stop the server gracefully: server did not wait for ongoing read/write operations")
 }
 
-// is this listener test? or do we handle these errors in the server?
-func TestTimeout(t *testing.T) {
+func TestConnTimeout(t *testing.T) {
 	// t.Fatal("Send timout did not occur")
 	// t.Fatal("Wait timeout did not occur")
+	// t.Fatal("Read timeout did not occur")
 }
 
-// same question here..
+func TestPing(t *testing.T) {
+	// t.Fatal("Pong/ACK was not sent for ping")
+}
+
 func TestDisconnect(t *testing.T) {
 	// t.Fatal("Client method.close request was not handled properly")
 	// t.Fatal("Client disconnect was not handled gracefully")
@@ -74,15 +58,9 @@ func TestDisconnect(t *testing.T) {
 	// t.Fatal("Server disconnect was not handled gracefully")
 }
 
-func TestPing(t *testing.T) {
-	// t.Fatal("Pong/ACK was not sent for ping")
-}
-
 func getConn(t *testing.T) *Conn {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
-	} else if host == "" || senderID == "" || apiKey == "" {
-		t.Skip("Skipping integration test due to missing GCM environment variables")
 	}
 
 	return nil
