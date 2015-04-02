@@ -2,7 +2,9 @@ package main
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -18,8 +20,8 @@ type Conn struct {
 	header       []byte
 }
 
-// NewConn creates and returns a new connection object. Default values for maxMsgSize and readDeadline are 4294967295 bytes (4GB)
-// and 300 seconds, respectively.
+// NewConn creates a new server-side connection object. Default values for maxMsgSize and readDeadline are
+// 4294967295 bytes (4GB) and 300 seconds, respectively.
 func NewConn(conn *tls.Conn, maxMsgSize int, readDeadline int) (*Conn, error) {
 	if maxMsgSize == 0 {
 		maxMsgSize = 4294967295
@@ -35,6 +37,22 @@ func NewConn(conn *tls.Conn, maxMsgSize int, readDeadline int) (*Conn, error) {
 		maxMsgSize:   maxMsgSize,
 		readDeadline: time.Second * time.Duration(readDeadline),
 	}, nil
+}
+
+// Dial creates a new client side connection to a given host with optional root CA (PEM encoded X.509 certificate).
+func Dial(host string, rootCA []byte) (*Conn, error) {
+	roots := x509.NewCertPool()
+	ok := roots.AppendCertsFromPEM(rootCA)
+	if !ok {
+		return nil, errors.New("failed to parse root certificate")
+	}
+
+	c, err := tls.Dial("tcp", host, &tls.Config{RootCAs: roots})
+	if err != nil {
+		return nil, err
+	}
+
+	return NewConn(c, 0, 0)
 }
 
 // SendMsg sends a message to the connected mobile client.
