@@ -19,21 +19,34 @@ func TestClientCertAuth(t *testing.T) {
 	// t.Fatal("Authentication was not ACKed")
 }
 
-func BenchmarkAuth(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		fmt.Sprintf("hello")
-	}
-}
-
 func TestTokenAuth(t *testing.T) {
 	// t.Fatal("Authentication failed with a valid token")
 	// t.Fatal("Authenticated with invalid/expired token")
 	// t.Fatal("Authentication was not ACKed")
 }
 
+func BenchmarkAuth(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		fmt.Sprintf("hello")
+	}
+}
+
+func BenchmarkClientCertAuth(b *testing.B) {
+	// for various certificate key sizes (512....4096) and with/without resumed handshake / session tickets
+	for i := 0; i < b.N; i++ {
+		fmt.Sprintf("hello")
+	}
+}
+
 func TestReceiveOfflineQueue(t *testing.T) {
 	// t.Fatal("Failed to receive queued messages after coming online")
 	// t.Fatal("Failed to send ACK for received message queue")
+}
+
+func BenchmarkQueue(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		fmt.Sprintf("hello")
+	}
 }
 
 func TestSendEcho(t *testing.T) {
@@ -43,6 +56,13 @@ func TestSendEcho(t *testing.T) {
 	// t.Fatal("Did not receive ACK for a message sent")
 	// t.Fatal("Failed to receive a response from echo user")
 	// t.Fatal("Could not send an ACK for an incoming message")
+}
+
+func BenchmarkParallelThroughput(b *testing.B) {
+	// for various conn levels vs. message per second: 50:xxxx, 500:xxx, 5000:xx, ... conn/mps (hopefully!)
+	for i := 0; i < b.N; i++ {
+		fmt.Sprintf("hello")
+	}
 }
 
 func TestStop(t *testing.T) {
