@@ -43,8 +43,8 @@ func getID() (string, error) {
 // validFor = Validity period for the certificate. Defaults to time.Duration max (290 years).
 // ca, caPriv = CA certificate/private key to sign the new certificate. If not given, the generated certificate will be a self-signed CA.
 // keyLength = Key length for the new certificate. Defaults to 3248 bits RSA key.
-// org, cn = Organization and common name of the certificate.
-func genCert(host string, validFor time.Duration, ca *x509.Certificate, caPriv *rsa.PrivateKey, keyLength int, org, cn string) (pemBytes, privBytes []byte, err error) {
+// cn, org = Common name and organization fields of the certificate.
+func genCert(host string, validFor time.Duration, ca *x509.Certificate, caPriv *rsa.PrivateKey, keyLength int, cn, org string) (pemBytes, privBytes []byte, err error) {
 	isCA := ca == nil
 	hosts := strings.Split(host, ",")
 	if keyLength == 0 {
@@ -69,8 +69,8 @@ func genCert(host string, validFor time.Duration, ca *x509.Certificate, caPriv *
 		IsCA:         isCA,
 		SerialNumber: serialNumber,
 		Subject: pkix.Name{
-			Organization: []string{org},
 			CommonName:   cn,
+			Organization: []string{org},
 		},
 		NotBefore:             notBefore,
 		NotAfter:              notAfter,

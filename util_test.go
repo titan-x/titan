@@ -4,6 +4,7 @@ import (
 	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"testing"
 )
 
@@ -36,8 +37,10 @@ func TestGetID(t *testing.T) {
 }
 
 func TestGenCert(t *testing.T) {
+	keyLength := 512
+
 	// CA certificate
-	pemBytes, privBytes, err := genCert("localhost", 0, nil, nil, 512, "devastator", "localhost")
+	pemBytes, privBytes, err := genCert("localhost", 0, nil, nil, keyLength, "localhost", "devastator")
 
 	if err != nil {
 		t.Fatalf("Failed to generate CA certificate or key: %v", err)
@@ -61,7 +64,7 @@ func TestGenCert(t *testing.T) {
 		t.Fatal("Failed to parse x509 certificate of CA cert to sign client-cert:", err)
 	}
 
-	pemBytes2, privBytes2, err := genCert("client.localhost", 0, pub, tlsCert.PrivateKey.(*rsa.PrivateKey), 512, "devastator", "client.localhost")
+	pemBytes2, privBytes2, err := genCert("client.localhost", 0, pub, tlsCert.PrivateKey.(*rsa.PrivateKey), keyLength, "client.localhost", "devastator")
 	if err != nil {
 		t.Fatal("Failed to generate client-certificate or key:", err)
 	}
@@ -73,5 +76,14 @@ func TestGenCert(t *testing.T) {
 	}
 	if &tlsCert2 == nil {
 		t.Fatal("Generated invalid client-certificate or key")
+	}
+
+	if keyLength == 0 {
+		fmt.Println("CA cert:")
+		fmt.Println(string(pemBytes))
+		fmt.Println(string(privBytes))
+		fmt.Println("Client cert:")
+		fmt.Println(string(pemBytes2))
+		fmt.Println(string(privBytes2))
 	}
 }
