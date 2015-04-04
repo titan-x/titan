@@ -41,17 +41,18 @@ func getID() (string, error) {
 // If no private key is provided, the certificate is marked as self-signed CA.
 // host = Comma-separated hostnames and IPs to generate a certificate for. i.e. "localhost,127.0.0.1"
 // validFor = Validity period for the certificate. Defaults to time.Duration max (290 years).
-// privKey = Defaults to self-signed CA if not given with a key lenght of 3248.
+// ca, caPriv = CA certificate/private key to sign the new certificate. If not given, the generated certificate will be a self-signed CA.
+// keyLength = Key length for the new certificate. Defaults to 3248 bits RSA key.
 // org, cn = Organization and common name of the certificate.
-func genCert(host string, validFor time.Duration, privKey *rsa.PrivateKey, keyLength int, org, cn string) (pemBytes, privBytes []byte, err error) {
+func genCert(host string, validFor time.Duration, ca *x509.Certificate, caPriv *rsa.PrivateKey, keyLength int, org, cn string) (pemBytes, privBytes []byte, err error) {
+	isCA := ca == nil
 	hosts := strings.Split(host, ",")
-	isCA := false
-	if privKey == nil {
-		if keyLength == 0 {
-			keyLength = 3248
-		}
-		privKey, err = rsa.GenerateKey(rand.Reader, keyLength)
-		isCA = true
+	if keyLength == 0 {
+		keyLength = 3248
+	}
+	privKey, err := rsa.GenerateKey(rand.Reader, keyLength)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to generate certificate private RSA key: %v", err)
 	}
 	notBefore := time.Now()
 	notAfter := notBefore.Add(290 * 365 * 24 * time.Hour) //290 years
@@ -77,10 +78,6 @@ func genCert(host string, validFor time.Duration, privKey *rsa.PrivateKey, keyLe
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
 	}
-	if isCA {
-		cert.KeyUsage |= x509.KeyUsageCertSign
-		cert.ExtKeyUsage = append(cert.ExtKeyUsage, x509.ExtKeyUsageClientAuth)
-	}
 
 	for _, h := range hosts {
 		if ip := net.ParseIP(h); ip != nil {
@@ -90,24 +87,22 @@ func genCert(host string, validFor time.Duration, privKey *rsa.PrivateKey, keyLe
 		}
 	}
 
-	derBytes, err := x509.CreateCertificate(rand.Reader, &cert, &cert, &privKey.PublicKey, privKey)
+	signerCert := &cert
+	signerPriv := privKey
+	if isCA {
+		cert.KeyUsage |= x509.KeyUsageCertSign
+		cert.ExtKeyUsage = append(cert.ExtKeyUsage, x509.ExtKeyUsageClientAuth)
+	} else {
+		signerCert = ca
+		signerPriv = caPriv
+	}
+
+	derBytes, err := x509.CreateCertificate(rand.Reader, &cert, signerCert, &privKey.PublicKey, signerPriv)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create certificate: %v", err)
 	}
 
 	pemBytes = pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
-	if isCA {
-		privBytes = pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(privKey)})
-	}
+	privBytes = pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(privKey)})
 	return
 }
-
-//
-// type Name struct {
-// 	Country, Organization, OrganizationalUnit []string
-// 	Locality, Province                        []string
-// 	StreetAddress, PostalCode                 []string
-// 	SerialNumber, CommonName                  string
-//
-// 	Names []AttributeTypeAndValue
-// }
