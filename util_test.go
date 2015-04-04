@@ -66,9 +66,6 @@ func TestGenCert(t *testing.T) {
 		t.Fatal("Failed to generate client-certificate or key:", err)
 	}
 
-	t.Log(string(pemBytes2))
-	t.Log(string(privBytes2))
-
 	tlsCert2, err := tls.X509KeyPair(pemBytes2, privBytes2)
 
 	if err != nil {
