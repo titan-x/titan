@@ -34,7 +34,7 @@ func TestGetID(t *testing.T) {
 }
 
 func TestGenCert(t *testing.T) {
-	pemBytes, privBytes, err := genCert()
+	pemBytes, privBytes, err := genCert("localhost", 0, nil, 512, "devastator", "localhost")
 
 	if err != nil {
 		t.Fatalf("Failed to generate certificate or key: %v", err)
