@@ -13,7 +13,9 @@ func TestGoogleAuth(t *testing.T) {
 }
 
 func TestClientCertAuth(t *testing.T) {
-	// c := getConn(t)
+	// s := getServer(t)
+	// c := getClientConn(t)
+
 	// t.Fatal("Authentication failed with a valid client certificate")
 	// t.Fatal("Authenticated with invalid/expired client certificate")
 	// t.Fatal("Authentication was not ACKed")
@@ -88,7 +90,7 @@ func TestDisconnect(t *testing.T) {
 	// t.Fatal("Server disconnect was not handled gracefully")
 }
 
-func getConn(t *testing.T) *Conn {
+func getClientConn(t *testing.T) *Conn {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
 	}
@@ -96,10 +98,18 @@ func getConn(t *testing.T) *Conn {
 	host := "localhost:" + Conf.App.Port
 	c, err := Dial(host, []byte(caCert))
 	if err != nil {
-		t.Fatal("Cannot connect to server:", err)
+		t.Fatalf("Cannot connect to server host %v with error: %v", host, err)
 	}
 
 	return c
+}
+
+func getServer(t *testing.T) *Server {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short testing mode")
+	}
+
+	return nil
 }
 
 const (

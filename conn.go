@@ -41,10 +41,13 @@ func NewConn(conn *tls.Conn, maxMsgSize int, readDeadline int) (*Conn, error) {
 
 // Dial creates a new client side connection to a given host with optional root CA (PEM encoded X.509 certificate).
 func Dial(host string, rootCA []byte) (*Conn, error) {
-	roots := x509.NewCertPool()
-	ok := roots.AppendCertsFromPEM(rootCA)
-	if !ok {
-		return nil, errors.New("failed to parse root certificate")
+	var roots *x509.CertPool
+	if rootCA != nil {
+		roots = x509.NewCertPool()
+		ok := roots.AppendCertsFromPEM(rootCA)
+		if !ok {
+			return nil, errors.New("failed to parse root certificate")
+		}
 	}
 
 	c, err := tls.Dial("tcp", host, &tls.Config{RootCAs: roots})
