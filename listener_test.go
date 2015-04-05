@@ -42,7 +42,8 @@ func TestListener(t *testing.T) {
 		panic("failed to parse root certificate")
 	}
 
-	conn, err := tls.Dial("tcp", host, &tls.Config{RootCAs: roots})
+	tlsConf := &tls.Config{RootCAs: roots}
+	conn, err := tls.Dial("tcp", host, tlsConf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,6 +54,10 @@ func TestListener(t *testing.T) {
 	send(t, conn, "64\nNunc urna enim, cursus varius aliquet ac, imperdiet eget tellus.")
 	send(t, conn, "45000\n"+randString(45000))
 	send(t, conn, "5\nclose")
+
+	// t.Logf("\nconn:\n%+v\n\n", conn)
+	// t.Logf("\nconn.ConnectionState():\n%+v\n\n", conn.ConnectionState())
+	// t.Logf("\ntls.Config:\n%+v\n\n", tlsConf)
 
 	wg.Wait()
 	time.Sleep(1000 * time.Millisecond) // todo: a more proper wait..

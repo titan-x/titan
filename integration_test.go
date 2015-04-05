@@ -32,7 +32,7 @@ func BenchmarkAuth(b *testing.B) {
 }
 
 func BenchmarkClientCertAuth(b *testing.B) {
-	// for various certificate key sizes (512....4096) and with/without resumed handshake / session tickets
+	// for various certificate key sizes (512....4096) and ECDSA, and with/without resumed handshake / session tickets
 	for i := 0; i < b.N; i++ {
 		fmt.Sprintf("hello")
 	}
