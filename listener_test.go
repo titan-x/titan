@@ -23,6 +23,7 @@ func TestListener(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer listener.Close()
 
 	go listener.Accept(func(conn *tls.Conn, session *Session, msg []byte) {
 		wg.Add(1)
@@ -47,6 +48,7 @@ func TestListener(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer conn.Close()
 
 	send(t, conn, "4\nping")
 	send(t, conn, "56\nLorem ipsum dolor sit amet, consectetur adipiscing elit.")
@@ -61,8 +63,6 @@ func TestListener(t *testing.T) {
 
 	wg.Wait()
 	time.Sleep(1000 * time.Millisecond) // todo: a more proper wait..
-	conn.Close()
-	listener.Close()
 }
 
 func send(t *testing.T, conn *tls.Conn, msg string) {

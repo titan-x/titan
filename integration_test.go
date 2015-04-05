@@ -5,6 +5,13 @@ import (
 	"testing"
 )
 
+var (
+	caCertBytes     = []byte(caCert)
+	caKeyBytes      = []byte(caKey)
+	clientCertBytes = []byte(clientCert)
+	clientKeyBytes  = []byte(clientKey)
+)
+
 func TestGoogleAuth(t *testing.T) {
 	// t.Fatal("Google+ first sign-in (registration) failed with valid credentials")
 	// t.Fatal("Google+ second sign-in (regular) failed with valid credentials")
@@ -13,8 +20,10 @@ func TestGoogleAuth(t *testing.T) {
 }
 
 func TestClientCertAuth(t *testing.T) {
-	// s := getServer(t)
-	// c := getClientConn(t)
+	s := getServer(t)
+	defer s.Stop()
+	c := getClientConn(t)
+	defer c.Close()
 
 	// t.Fatal("Authentication failed with a valid client certificate")
 	// t.Fatal("Authenticated with invalid/expired client certificate")
@@ -95,10 +104,10 @@ func getClientConn(t *testing.T) *Conn {
 		t.Skip("Skipping integration test in short testing mode")
 	}
 
-	host := "localhost:" + Conf.App.Port
-	c, err := Dial(host, []byte(caCert))
+	addr := "localhost:" + Conf.App.Port
+	c, err := Dial(addr, caCertBytes)
 	if err != nil {
-		t.Fatalf("Cannot connect to server host %v with error: %v", host, err)
+		t.Fatalf("Cannot connect to server address %v with error: %v", addr, err)
 	}
 
 	return c
@@ -109,7 +118,13 @@ func getServer(t *testing.T) *Server {
 		t.Skip("Skipping integration test in short testing mode")
 	}
 
-	return nil
+	laddr := "localhost:" + Conf.App.Port
+	s, err := NewServer(caCertBytes, caKeyBytes, laddr, Conf.App.Debug)
+	if err != nil {
+		t.Fatal("Failed to create server", err)
+	}
+
+	return s
 }
 
 const (
