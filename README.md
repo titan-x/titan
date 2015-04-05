@@ -73,6 +73,8 @@ Client-server communication sequence is pretty similar to that of XMPP, except w
 +                                  +
 ```
 
+Any message that was not acknowledged will be delivered to the client again (hence at-least-once delivery princinple), unless TTL of the message was reached.
+
 Testing
 -------
 

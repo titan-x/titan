@@ -124,6 +124,7 @@ func getServer(t *testing.T) *Server {
 		t.Fatal("Failed to create server", err)
 	}
 
+	go s.Start()
 	return s
 }
 

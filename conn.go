@@ -40,7 +40,7 @@ func NewConn(conn *tls.Conn, maxMsgSize int, readDeadline int) (*Conn, error) {
 }
 
 // Dial creates a new client side connection to a given network address with optional root CA (PEM encoded X.509 certificate).
-func Dial(addr string, rootCA []byte) (*Conn, error) {
+func Dial(addr string, clientCert []byte, rootCA []byte) (*Conn, error) {
 	var roots *x509.CertPool
 	if rootCA != nil {
 		roots = x509.NewCertPool()
