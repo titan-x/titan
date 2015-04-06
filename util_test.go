@@ -37,7 +37,7 @@ func TestGetID(t *testing.T) {
 }
 
 func TestGenCert(t *testing.T) {
-	keyLength := 0
+	keyLength := 512
 
 	// CA certificate
 	pemBytes, privBytes, err := genCert("localhost", 0, nil, nil, keyLength, "localhost", "devastator")

@@ -1,6 +1,9 @@
 package main
 
 import (
+	"crypto/rsa"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"testing"
 )
@@ -20,6 +23,20 @@ func TestGoogleAuth(t *testing.T) {
 }
 
 func TestClientCertAuth(t *testing.T) {
+	keyLength := 512
+	pemBytes, privBytes, err := genCert("localhost", 0, nil, nil, keyLength, "localhost", "devastator")
+	tlsCert, err := tls.X509KeyPair(pemBytes, privBytes)
+	pub, err := x509.ParseCertificate(tlsCert.Certificate[0])
+	pemBytes2, privBytes2, err := genCert("client.localhost", 0, pub, tlsCert.PrivateKey.(*rsa.PrivateKey), keyLength, "client.localhost", "devastator")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	caCertBytes = pemBytes
+	caKeyBytes = privBytes
+	clientCertBytes = pemBytes2
+	clientKeyBytes = privBytes2
+
 	s := getServer(t)
 	defer s.Stop()
 	c := getClientConn(t, true)
