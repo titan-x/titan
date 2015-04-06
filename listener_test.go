@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"sync"
 	"testing"
-	"time"
 )
 
 func TestLen(t *testing.T) {
@@ -62,7 +61,6 @@ func TestListener(t *testing.T) {
 	// t.Logf("\ntls.Config:\n%+v\n\n", tlsConf)
 
 	wg.Wait()
-	time.Sleep(1000 * time.Millisecond) // todo: a more proper wait..
 }
 
 func send(t *testing.T, conn *tls.Conn, msg string) {

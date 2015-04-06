@@ -10,6 +10,7 @@ import (
 	"log"
 	"net"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -22,6 +23,7 @@ var (
 type Listener struct {
 	debug    bool
 	listener net.Listener
+	wg       sync.WaitGroup
 }
 
 // Listen creates a TCP listener with the given PEM encoded X.509 certificate and the private key on the local network address laddr.
@@ -76,14 +78,17 @@ func (l *Listener) Accept(handleMsg func(conn *tls.Conn, session *Session, msg [
 		if l.debug {
 			log.Println("Client connected: listening for messages from client IP:", conn.RemoteAddr())
 		}
-		go handleClient(tlsconn, l.debug, handleMsg, handleDisconn)
+		go handleClient(&l.wg, tlsconn, l.debug, handleMsg, handleDisconn)
 	}
 }
 
 // handleClient waits for messages from the connected client and forwards the client message/disconnect
 // events to provided handlers in a new goroutine.
 // This function never returns, unless there is an error while reading from the channel or the client disconnects.
-func handleClient(conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, session *Session, msg []byte), handleDisconn func(conn *tls.Conn, session *Session)) {
+func handleClient(wg *sync.WaitGroup, conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, session *Session, msg []byte), handleDisconn func(conn *tls.Conn, session *Session)) {
+	wg.Add(1)
+	defer wg.Done()
+
 	session := &Session{}
 	reader := bufio.NewReader(conn)
 
@@ -153,16 +158,25 @@ func handleClient(conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, ses
 			continue // send back pong?
 		}
 		if n == 5 && bytes.Equal(msg, closed) {
-			go handleDisconn(conn, session)
+			go func() {
+				wg.Add(1)
+				defer wg.Done()
+				handleDisconn(conn, session)
+			}()
 			return
 		}
 
-		go handleMsg(conn, session, msg)
+		go func() {
+			wg.Add(1)
+			defer wg.Done()
+			handleMsg(conn, session, msg)
+		}()
 	}
 }
 
 // Close closes the listener.
 func (l *Listener) Close() error {
+	l.wg.Wait()
 	if l.debug {
 		defer log.Println("Listener was closed on local network address:", l.listener.Addr())
 	}

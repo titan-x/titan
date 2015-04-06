@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"testing"
-	"time"
 )
 
 var (
@@ -94,11 +93,10 @@ func TestDisconnect(t *testing.T) {
 	if err := c.Close(); err != nil {
 		t.Fatal("Failed to close the client connection:", err)
 	}
-	time.Sleep(100 * time.Millisecond) // todo: use wg internally instead to do graceful shutdown
 	if err := s.Stop(); err != nil {
 		t.Fatal("Failed to stop the server gradefully:", err)
 	}
-	time.Sleep(100 * time.Millisecond)
+
 	// t.Fatal("Client method.close request was not handled properly")
 	// t.Fatal("Client disconnect was not handled gracefully")
 	// t.Fatal("Server method.close request was not handled properly")
