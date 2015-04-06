@@ -74,7 +74,7 @@ func genCert(host string, validFor time.Duration, ca *x509.Certificate, caPriv *
 		},
 		NotBefore:             notBefore,
 		NotAfter:              notAfter,
-		KeyUsage:              x509.KeyUsageDigitalSignature,
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 		BasicConstraintsValid: true,
 	}
 
@@ -89,8 +89,8 @@ func genCert(host string, validFor time.Duration, ca *x509.Certificate, caPriv *
 	signerCert := &cert
 	signerPriv := privKey
 	if isCA {
-		cert.KeyUsage |= x509.KeyUsageKeyEncipherment | x509.KeyUsageCertSign
-		cert.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}
+		cert.KeyUsage |= x509.KeyUsageCertSign
+		cert.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth}
 	} else {
 		cert.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth}
 		signerCert = ca
