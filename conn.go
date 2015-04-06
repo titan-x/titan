@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -69,7 +70,17 @@ func Dial(addr string, rootCA []byte, clientCert []byte, clientCertKey []byte) (
 
 // Write given message to the connection.
 func (c *Conn) Write(msg *interface{}) error {
-	return nil
+	data, err := json.Marshal(msg)
+	if err != nil {
+		return fmt.Errorf("Failed to serialize the given message: %v", err)
+	}
+
+	n, err := c.conn.Write(data)
+	if n != len(data) {
+		return errors.New("Given message data length and sent bytes length did not match")
+	}
+
+	return err
 }
 
 // Read waits for and reads the next message of the TLS connection.
