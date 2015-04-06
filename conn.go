@@ -67,13 +67,13 @@ func Dial(addr string, rootCA []byte, clientCert []byte, clientCertKey []byte) (
 	return NewConn(c, 0, 0)
 }
 
-// SendMsg sends a message to the connected mobile client.
-func (c *Conn) SendMsg(msg *interface{}) error {
+// Write given message to the connection.
+func (c *Conn) Write(msg *interface{}) error {
 	return nil
 }
 
-// ReadMsg waits for and reads the next message of the TLS connection.
-func (c *Conn) ReadMsg() (msg []byte, err error) {
+// Read waits for and reads the next message of the TLS connection.
+func (c *Conn) Read() (msg []byte, err error) {
 	if err = c.conn.SetReadDeadline(time.Now().Add(c.readDeadline)); err != nil {
 		return
 	}

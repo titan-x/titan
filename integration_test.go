@@ -94,7 +94,7 @@ func TestDisconnect(t *testing.T) {
 		t.Fatal("Failed to close the client connection:", err)
 	}
 	if err := s.Stop(); err != nil {
-		t.Fatal("Failed to stop the server gradefully:", err)
+		t.Fatal("Failed to stop the server gracefully:", err)
 	}
 
 	// t.Fatal("Client method.close request was not handled properly")
