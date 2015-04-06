@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"strconv"
@@ -55,9 +56,10 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 
 // Session is a generic session data store for client handlers.
 type Session struct {
-	UserID uint32
-	Error  string
-	Data   interface{}
+	UserID       uint32
+	Error        string
+	Data         interface{}
+	Disconnected bool
 }
 
 // Accept waits for incoming connections and forwards the client connect/message/disconnect events to provided handlers in a new goroutine.
@@ -82,13 +84,19 @@ func (l *Listener) Accept(handleMsg func(conn *tls.Conn, session *Session, msg [
 // events to provided handlers in a new goroutine.
 // This function never returns, unless there is an error while reading from the channel or the client disconnects.
 func handleClient(conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, session *Session, msg []byte), handleDisconn func(conn *tls.Conn, session *Session)) {
-	defer conn.Close()
-	if debug {
-		defer log.Println("Closed connection to client with IP:", conn.RemoteAddr())
-	}
-
 	session := &Session{}
 	reader := bufio.NewReader(conn)
+
+	if debug {
+		defer func() {
+			if session.Disconnected {
+				log.Println("Client disconnected on IP:", conn.RemoteAddr())
+			} else {
+				log.Println("Closed connection to client with IP:", conn.RemoteAddr())
+			}
+		}()
+	}
+	defer conn.Close() // todo: handle close error, store the error in conn object and return it to handleMsg/handleErr/handleDisconn or one level up (to server)
 
 	for {
 		if session.Error != "" {
@@ -101,14 +109,19 @@ func handleClient(conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, ses
 		// read the content length header
 		line, err := reader.ReadSlice('\n')
 		if err != nil {
-			log.Fatalln("Client read error: ", err)
-			break
+			if err == io.EOF {
+				session.Disconnected = true
+				break
+			} else {
+				log.Fatalln("Client read error:", err)
+				break
+			}
 		}
 
 		// calculate the content length
 		n, err := strconv.Atoi(string(line[:len(line)-1]))
 		if err != nil || n == 0 {
-			log.Fatalln("Client read error: invalid content lenght header sent or content lenght mismatch: ", err)
+			log.Fatalln("Client read error: invalid content lenght header sent or content lenght mismatch:", err)
 			break
 		}
 

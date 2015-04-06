@@ -15,6 +15,7 @@ const headerSize = 4
 type Conn struct {
 	UserID       uint32
 	conn         *tls.Conn
+	isClient     bool
 	maxMsgSize   int
 	readDeadline time.Duration
 	header       []byte
