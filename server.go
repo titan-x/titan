@@ -15,6 +15,7 @@ var users = make(map[uint32]*User)
 // Server wraps a listener instance and registers default connection and message handlers with the listener.
 type Server struct {
 	debug    bool
+	err      error
 	listener *Listener
 }
 
@@ -34,14 +35,18 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 // Start starts accepting connections on the internal listener and handles connections with registered onnection and message handlers.
 // This function blocks and never returns, unless there is an error while accepting a new connection.
 func (s *Server) Start() error {
-	err := s.listener.Accept(handleMsg, handleDisconn)
+	s.err = s.listener.Accept(handleMsg, handleDisconn)
 	// todo: blocking listen on internal channel for the stop signal, if default listener.Close() is not graceful (not sure about that)
-	return err
+	return s.err
 }
 
 // Stop stops a server instance gracefully, waiting for remaining data to be written on open connections.
 func (s *Server) Stop() error {
-	return s.listener.Close()
+	err := s.listener.Close()
+	if s.err != nil {
+		return s.err
+	}
+	return err
 }
 
 // handleMsg handles incoming client messages.

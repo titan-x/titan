@@ -89,9 +89,13 @@ func TestPing(t *testing.T) {
 
 func TestDisconnect(t *testing.T) {
 	s := getServer(t, false)
-	defer s.Stop()
 	c := getClientConn(t, true)
-	defer c.Close()
+	if err := c.Close(); err != nil {
+		t.Fatal("Failed to close client connection:", err)
+	}
+	if err := s.Stop(); err != nil {
+		t.Fatal("Failed to stop the server:", err)
+	}
 	// t.Fatal("Client method.close request was not handled properly")
 	// t.Fatal("Client disconnect was not handled gracefully")
 	// t.Fatal("Server method.close request was not handled properly")
