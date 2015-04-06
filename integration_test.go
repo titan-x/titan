@@ -20,11 +20,6 @@ func TestGoogleAuth(t *testing.T) {
 }
 
 func TestClientCertAuth(t *testing.T) {
-	s := getServer(t, false)
-	defer s.Stop()
-	c := getClientConn(t, true)
-	defer c.Close()
-
 	// t.Fatal("Authentication failed with a valid client certificate")
 	// t.Fatal("Authenticated with invalid/expired client certificate")
 	// t.Fatal("Authentication was not ACKed")
@@ -93,6 +88,10 @@ func TestPing(t *testing.T) {
 }
 
 func TestDisconnect(t *testing.T) {
+	s := getServer(t, false)
+	defer s.Stop()
+	c := getClientConn(t, true)
+	defer c.Close()
 	// t.Fatal("Client method.close request was not handled properly")
 	// t.Fatal("Client disconnect was not handled gracefully")
 	// t.Fatal("Server method.close request was not handled properly")
@@ -104,8 +103,7 @@ func getClientConn(t *testing.T, useClientCert bool) *Conn {
 		t.Skip("Skipping integration test in short testing mode")
 	}
 
-	var cert []byte
-	var key []byte
+	var cert, key []byte
 	if useClientCert {
 		cert = clientCertBytes
 		key = clientKeyBytes
