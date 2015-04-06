@@ -39,51 +39,68 @@ func TestGetID(t *testing.T) {
 func TestGenCert(t *testing.T) {
 	keyLength := 512
 
+	caCert, caKey, clientCert, clientKey, err := genTestCertPair(keyLength)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if keyLength == 0 {
+		fmt.Println("CA cert:")
+		fmt.Println(string(caCert))
+		fmt.Println(string(caKey))
+		fmt.Println("Client cert:")
+		fmt.Println(string(clientCert))
+		fmt.Println(string(clientKey))
+	}
+}
+
+func genTestCertPair(keyLength int) (caCert, caKey, clientCert, clientKey []byte, err error) {
 	// CA certificate
-	pemBytes, privBytes, err := genCert("localhost", 0, nil, nil, keyLength, "localhost", "devastator")
+	caCert, caKey, err = genCert("localhost", 0, nil, nil, keyLength, "localhost", "devastator")
 
 	if err != nil {
-		t.Fatalf("Failed to generate CA certificate or key: %v", err)
+		err = fmt.Errorf("Failed to generate CA certificate or key: %v", err)
+		return
 	}
-	if pemBytes == nil || privBytes == nil {
-		t.Fatal("Generated empty CA certificate or key")
+	if caCert == nil || caKey == nil {
+		err = fmt.Errorf("Generated empty CA certificate or key")
+		return
 	}
 
-	tlsCert, err := tls.X509KeyPair(pemBytes, privBytes)
+	tlsCert, err := tls.X509KeyPair(caCert, caKey)
 
 	if err != nil {
-		t.Fatalf("Generated invalid CA certificate or key: %v", err)
+		err = fmt.Errorf("Generated invalid CA certificate or key: %v", err)
+		return
 	}
 	if &tlsCert == nil {
-		t.Fatal("Generated invalid CA certificate or key")
+		err = fmt.Errorf("Generated invalid CA certificate or key")
+		return
 	}
 
 	// client certificate
 	pub, err := x509.ParseCertificate(tlsCert.Certificate[0])
 	if err != nil {
-		t.Fatal("Failed to parse x509 certificate of CA cert to sign client-cert:", err)
+		err = fmt.Errorf("Failed to parse x509 certificate of CA cert to sign client-cert: %v", err)
+		return
 	}
 
-	pemBytes2, privBytes2, err := genCert("client.localhost", 0, pub, tlsCert.PrivateKey.(*rsa.PrivateKey), keyLength, "client.localhost", "devastator")
+	clientCert, clientKey, err = genCert("client.localhost", 0, pub, tlsCert.PrivateKey.(*rsa.PrivateKey), keyLength, "client.localhost", "devastator")
 	if err != nil {
-		t.Fatal("Failed to generate client-certificate or key:", err)
+		err = fmt.Errorf("Failed to generate client-certificate or key: %v", err)
+		return
 	}
 
-	tlsCert2, err := tls.X509KeyPair(pemBytes2, privBytes2)
+	tlsCert2, err := tls.X509KeyPair(clientCert, clientKey)
 
 	if err != nil {
-		t.Fatalf("Generated invalid client-certificate or key: %v", err)
+		err = fmt.Errorf("Generated invalid client-certificate or key: %v", err)
+		return
 	}
 	if &tlsCert2 == nil {
-		t.Fatal("Generated invalid client-certificate or key")
+		err = fmt.Errorf("Generated invalid client-certificate or key")
+		return
 	}
 
-	if keyLength == 0 {
-		fmt.Println("CA cert:")
-		fmt.Println(string(pemBytes))
-		fmt.Println(string(privBytes))
-		fmt.Println("Client cert:")
-		fmt.Println(string(pemBytes2))
-		fmt.Println(string(privBytes2))
-	}
+	return
 }
