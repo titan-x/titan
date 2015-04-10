@@ -93,7 +93,7 @@ export GOOGLE_PREPROD_API_KEY=
 Performance Notes
 -----------------
 
-The messaging server is designed to make max usage of available CPU resources. However exceeding 100% CPU usage will cause a memory usage spike as marshalled/unmarshalled messages and other allocated byte buffers will have to reside in memory much longer. Ideally, server process' memory usage should never exceed 95% of overall system CPU resources. Currently there is no clustering support but it is a top priority.
+The messaging server is designed to make max usage of available CPU resources. However exceeding 100% CPU usage will cause a memory usage spike as marshalled/unmarshalled messages and other allocated byte buffers will have to reside in memory much longer. Ideally, server process' CPU usage should never exceed 95% of overall system CPU resources. Currently there is no clustering support but it is a top priority.
 
 License
 -------
