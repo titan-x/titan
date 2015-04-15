@@ -38,7 +38,13 @@ Following is the overview of the server application's components:
 Client-Server Protocol
 ----------------------
 
-Client server communication protocol is based on [JSON RPC](http://www.jsonrpc.org/specification) 2.0 specs. Mobile devices connect with the TLS endpoint and the Web browsers utilizes the WebSocket endpoint.
+Client server communication protocol is based on [JSON RPC](http://www.jsonrpc.org/specification) 2.0 specs. Mobile devices connect with the TLS endpoint and the Web browsers utilizes the WebSocket endpoint. The message framing on the TLS endpoint is quite simple:
+
+[uint32] 4 Bytes Content Length Header + [JSON] Message Body
+
+Following is a valid TLS message frame for connecting mobile devices (except the header, which should be a 4 byte binary encoded uint32):
+
+xxxx{method: "ping"}
 
 Client Authentication
 ---------------------
