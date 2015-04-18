@@ -14,12 +14,10 @@ const headerSize = 4
 
 // Conn is a mobile client connection.
 type Conn struct {
-	UserID       uint32
 	conn         *tls.Conn
 	isClient     bool
 	maxMsgSize   int
 	readDeadline time.Duration
-	header       []byte
 }
 
 // NewConn creates a new server-side connection object. Default values for maxMsgSize and readDeadline are
@@ -34,7 +32,6 @@ func NewConn(conn *tls.Conn, maxMsgSize int, readDeadline int) (*Conn, error) {
 	}
 
 	return &Conn{
-		header:       make([]byte, headerSize), // todo: use a regular byte array rather than a slice?
 		conn:         conn,
 		maxMsgSize:   maxMsgSize,
 		readDeadline: time.Second * time.Duration(readDeadline),
@@ -90,7 +87,8 @@ func (c *Conn) Read() (msg []byte, err error) {
 	}
 
 	// first 4 bytes (uint32) is message length header with a maximum of 4294967295 bytes of message body (4GB) or the hard-cap defined by the user
-	n, err := c.conn.Read(c.header)
+	h := make([]byte, headerSize)
+	n, err := c.conn.Read(h)
 	if err != nil {
 		return
 	}
@@ -98,7 +96,7 @@ func (c *Conn) Read() (msg []byte, err error) {
 		return nil, fmt.Errorf("failed to read %v bytes message header, instead only read %v bytes", headerSize, n)
 	}
 
-	n = int(binary.LittleEndian.Uint32(c.header))
+	n = int(binary.LittleEndian.Uint32(h))
 	r := 0
 	msg = make([]byte, n)
 	for r != n {
