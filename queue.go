@@ -9,3 +9,6 @@ func (q *Queue) Send() {}
 
 // Queue .
 func (q *Queue) Queue() {}
+
+// LocalQueue is an in-memory queue.
+type LocalQueue struct{}
