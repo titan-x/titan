@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"time"
 )
 
@@ -22,7 +23,7 @@ type Conn struct {
 
 // NewConn creates a new server-side connection object. Default values for maxMsgSize and readDeadline are
 // 4294967295 bytes (4GB) and 300 seconds, respectively.
-func NewConn(conn *tls.Conn, maxMsgSize int, readDeadline int) (*Conn, error) {
+func NewConn(conn *tls.Conn, maxMsgSize int, readDeadline int) *Conn {
 	if maxMsgSize == 0 {
 		maxMsgSize = 4294967295
 	}
@@ -35,7 +36,7 @@ func NewConn(conn *tls.Conn, maxMsgSize int, readDeadline int) (*Conn, error) {
 		conn:         conn,
 		maxMsgSize:   maxMsgSize,
 		readDeadline: time.Second * time.Duration(readDeadline),
-	}, nil
+	}
 }
 
 // Dial creates a new client side connection to a given network address with optional root CA and/or a client certificate (PEM encoded X.509 cert/key).
@@ -62,22 +63,7 @@ func Dial(addr string, rootCA []byte, clientCert []byte, clientCertKey []byte) (
 		return nil, err
 	}
 
-	return NewConn(c, 0, 0)
-}
-
-// Write given message to the connection.
-func (c *Conn) Write(msg *interface{}) error {
-	data, err := json.Marshal(msg)
-	if err != nil {
-		return fmt.Errorf("Failed to serialize the given message: %v", err)
-	}
-
-	n, err := c.conn.Write(data)
-	if n != len(data) {
-		return errors.New("Given message data length and sent bytes length did not match")
-	}
-
-	return err
+	return NewConn(c, 0, 0), nil
 }
 
 // Read waits for and reads the next message of the TLS connection.
@@ -100,20 +86,65 @@ func (c *Conn) Read() (msg []byte, err error) {
 	r := 0
 	msg = make([]byte, n)
 	for r != n {
-		for r != n {
-			i, err := c.conn.Read(msg[r:])
-			if err != nil {
-				return nil, fmt.Errorf("errored while reading incoming message: %v", err)
-			}
-			r += i
+		i, err := c.conn.Read(msg[r:])
+		if err != nil {
+			return nil, fmt.Errorf("errored while reading incoming message: %v", err)
 		}
+		r += i
 	}
 
 	return
+}
+
+// WriteMsg serializes and writes given message to the connection with appropriate header.
+func (c *Conn) WriteMsg(msg *interface{}) error {
+	data, err := json.Marshal(msg)
+	if err != nil {
+		return fmt.Errorf("failed to serialize the given message: %v", err)
+	}
+
+	return c.Write(data)
+}
+
+// Write writes given message to the connection with appropriate header.
+func (c *Conn) Write(msg []byte) error {
+	l := len(msg)
+	h := getHeader(l)
+
+	msg = append(h, msg...)
+	l = l + headerSize
+
+	// todo: loop might be unnecessary in writes
+	w := 0
+	for w != l {
+		n, err := c.conn.Write(msg)
+		if err != nil {
+			return fmt.Errorf("errored while writing outgoing message: %v", err)
+		}
+		w += n
+	}
+
+	return nil
+}
+
+// ConnectionState returns basic TLS details about the connection.
+func (c *Conn) ConnectionState() tls.ConnectionState {
+	return c.conn.ConnectionState()
+}
+
+// RemoteAddr returns the remote network address.
+func (c *Conn) RemoteAddr() net.Addr {
+	return c.conn.RemoteAddr()
 }
 
 // Close closes a connection.
 func (c *Conn) Close() error {
 	// todo: if session.err is nil, send a close req and wait ack then close? (or even wait for everything else to finish?)
 	return c.conn.Close()
+}
+
+func getHeader(i int) []byte {
+	b := make([]byte, 4)
+	binary.LittleEndian.PutUint32(b, uint32(i))
+	return b
 }
