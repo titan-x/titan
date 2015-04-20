@@ -66,7 +66,7 @@ func Dial(addr string, rootCA []byte, clientCert []byte, clientCertKey []byte) (
 	return NewConn(c, 0, 0), nil
 }
 
-// Write given message to the connection.
+// Write given message to the connection with appropriate header.
 func (c *Conn) Write(msg *interface{}) error {
 	data, err := json.Marshal(msg)
 	if err != nil {
@@ -80,6 +80,10 @@ func (c *Conn) Write(msg *interface{}) error {
 
 	return err
 }
+
+WriteMsg
+
+ReadMsg
 
 // Read waits for and reads the next message of the TLS connection.
 func (c *Conn) Read() (msg []byte, err error) {

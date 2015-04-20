@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"io"
 	"strconv"
 	"sync"
@@ -24,7 +23,7 @@ func TestListener(t *testing.T) {
 	}
 	defer listener.Close()
 
-	go listener.Accept(func(conn *tls.Conn, session *Session, msg []byte) {
+	go listener.Accept(func(conn *Conn, session *Session, msg []byte) {
 		wg.Add(1)
 		defer wg.Done()
 		// todo: compare sent/incoming messages for equality
@@ -33,17 +32,10 @@ func TestListener(t *testing.T) {
 		if len(certs) > 0 {
 			t.Logf("Client connected with client certificate subject: %v\n", certs[0].Subject)
 		}
-	}, func(conn *tls.Conn, session *Session) {
+	}, func(conn *Conn, session *Session) {
 	})
 
-	roots := x509.NewCertPool()
-	ok := roots.AppendCertsFromPEM(cert)
-	if !ok {
-		panic("failed to parse root certificate")
-	}
-
-	tlsConf := &tls.Config{RootCAs: roots}
-	conn, err := tls.Dial("tcp", host, tlsConf)
+	conn, err := Dial(host, cert)
 	if err != nil {
 		t.Fatal(err)
 	}
