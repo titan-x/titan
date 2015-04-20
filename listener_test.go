@@ -2,7 +2,6 @@ package main
 
 import (
 	"strconv"
-	"sync"
 	"testing"
 )
 
@@ -12,7 +11,6 @@ func TestLen(t *testing.T) {
 }
 
 func TestListener(t *testing.T) {
-	var wg sync.WaitGroup
 	host := "localhost:" + Conf.App.Port
 	cert, privKey, _ := genCert("localhost", 0, nil, nil, 512, "localhost", "devastator")
 	listener, err := Listen(cert, privKey, host, Conf.App.Debug)
@@ -22,8 +20,6 @@ func TestListener(t *testing.T) {
 	defer listener.Close()
 
 	go listener.Accept(func(conn *Conn, session *Session, msg []byte) {
-		wg.Add(1)
-		defer wg.Done()
 		// todo: compare sent/incoming messages for equality
 
 		certs := conn.ConnectionState().PeerCertificates
@@ -39,15 +35,21 @@ func TestListener(t *testing.T) {
 	}
 	defer conn.Close()
 
-	conn.Write([]byte("ping"))
-	conn.Write([]byte("Lorem ipsum dolor sit amet, consectetur adipiscing elit."))
-	conn.Write([]byte("In sit amet lectus felis, at pellentesque turpis."))
-	conn.Write([]byte("Nunc urna enim, cursus varius aliquet ac, imperdiet eget tellus."))
-	// conn.Write([]byte(randString(45000)))
-	conn.Write([]byte("close"))
+	send(t, conn, "ping")
+	send(t, conn, "Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
+	send(t, conn, "Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
+	send(t, conn, "In sit amet lectus felis, at pellentesque turpis.")
+	send(t, conn, "Nunc urna enim, cursus varius aliquet ac, imperdiet eget tellus.")
+	send(t, conn, randString(45000))
+	send(t, conn, "close")
 
 	t.Logf("\nconn:\n%+v\n\n", conn)
 	t.Logf("\nconn.ConnectionState():\n%+v\n\n", conn.ConnectionState())
+}
 
-	wg.Wait()
+func send(t *testing.T, conn *Conn, msg string) {
+	err := conn.Write([]byte(msg))
+	if err != nil {
+		t.Fatal(err)
+	}
 }

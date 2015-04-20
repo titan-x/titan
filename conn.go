@@ -114,6 +114,7 @@ func (c *Conn) Write(msg []byte) error {
 	msg = append(h, msg...)
 	l = l + headerSize
 
+	// todo: loop might be unnecessary in writes
 	w := 0
 	for w != l {
 		n, err := c.conn.Write(msg)
