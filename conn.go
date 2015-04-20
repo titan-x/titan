@@ -36,6 +36,7 @@ func NewConn(conn *tls.Conn, maxMsgSize int, readDeadline int) *Conn {
 		conn:         conn,
 		maxMsgSize:   maxMsgSize,
 		readDeadline: time.Second * time.Duration(readDeadline),
+		// todo: write deadline
 	}
 }
 

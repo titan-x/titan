@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"crypto/tls"
 	"crypto/x509"
@@ -9,9 +8,7 @@ import (
 	"io"
 	"log"
 	"net"
-	"strconv"
 	"sync"
-	"time"
 )
 
 var (
@@ -90,7 +87,7 @@ func handleClient(wg *sync.WaitGroup, conn *tls.Conn, debug bool, handleMsg func
 	defer wg.Done()
 
 	session := &Session{}
-	reader := bufio.NewReader(conn)
+	newconn := NewConn(conn, 0, 0)
 
 	if debug {
 		defer func() {
@@ -109,43 +106,14 @@ func handleClient(wg *sync.WaitGroup, conn *tls.Conn, debug bool, handleMsg func
 			return
 		}
 
-		err := conn.SetReadDeadline(time.Now().Add(time.Minute * 5))
-
-		// read the content length header
-		line, err := reader.ReadSlice('\n')
+		msg, err := newconn.Read()
+		n := len(msg)
 		if err != nil {
 			if err == io.EOF {
 				session.Disconnected = true
 				break
-			} else {
-				log.Fatalln("Client read error:", err)
-				break
 			}
-		}
 
-		// calculate the content length
-		n, err := strconv.Atoi(string(line[:len(line)-1]))
-		if err != nil || n == 0 {
-			log.Fatalln("Client read error: invalid content lenght header sent or content lenght mismatch:", err)
-			break
-		}
-
-		// read the message content
-		if debug {
-			log.Println("Starting to read message content of bytes:", n)
-		}
-		msg := make([]byte, n)
-		total := 0
-		for total != n {
-			// todo: log here in case it gets stuck, or there is a dos attack, pumping up cpu usage!
-			i, err := reader.Read(msg[total:])
-			if err != nil {
-				log.Fatalln("Error while reading incoming message:", err)
-				break
-			}
-			total += i
-		}
-		if err != nil {
 			log.Fatalln("Error while reading incoming message:", err)
 			break
 		}

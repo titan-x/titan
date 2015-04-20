@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"io"
 	"strconv"
 	"testing"
 )
@@ -53,13 +52,13 @@ func TestListener(t *testing.T) {
 	}
 	defer conn.Close()
 
-	send(t, conn, "4\nping")
-	send(t, conn, "56\n"+msg1)
-	send(t, conn, "56\n"+msg1)
-	send(t, conn, "49\n"+msg2)
-	send(t, conn, "64\n"+msg3)
-	send(t, conn, "45000\n"+msg4)
-	send(t, conn, "5\nclose")
+	send(t, conn, "ping")
+	send(t, conn, msg1)
+	send(t, conn, msg1)
+	send(t, conn, msg2)
+	send(t, conn, msg3)
+	send(t, conn, msg4)
+	send(t, conn, "close")
 
 	// t.Logf("\nconn:\n%+v\n\n", conn)
 	// t.Logf("\nconn.ConnectionState():\n%+v\n\n", conn.ConnectionState())
@@ -67,9 +66,11 @@ func TestListener(t *testing.T) {
 }
 
 func send(t *testing.T, conn *tls.Conn, msg string) {
-	n, err := io.WriteString(conn, msg)
+	newconn := NewConn(conn, 0, 0)
+	m := []byte(msg)
+	err := newconn.Write(m)
 	if err != nil {
 		t.Fatalf("Error while writing message to connection %v", err)
 	}
-	t.Logf("Sending message to listener from client: %v (%v bytes)", msg, n)
+	t.Logf("Sending message to listener from client: %v (%v bytes)", msg, len(m))
 }
