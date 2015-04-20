@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"io"
 	"strconv"
-	"sync"
 	"testing"
 )
 
@@ -15,7 +14,6 @@ func TestLen(t *testing.T) {
 }
 
 func TestListener(t *testing.T) {
-	var wg sync.WaitGroup
 	host := "localhost:" + Conf.App.Port
 	cert, privKey, _ := genCert("localhost", 0, nil, nil, 512, "localhost", "devastator")
 	listener, err := Listen(cert, privKey, host, Conf.App.Debug)
@@ -25,10 +23,7 @@ func TestListener(t *testing.T) {
 	defer listener.Close()
 
 	go listener.Accept(func(conn *tls.Conn, session *Session, msg []byte) {
-		wg.Add(1)
-		defer wg.Done()
 		// todo: compare sent/incoming messages for equality
-
 		certs := conn.ConnectionState().PeerCertificates
 		if len(certs) > 0 {
 			t.Logf("Client connected with client certificate subject: %v\n", certs[0].Subject)
@@ -59,8 +54,6 @@ func TestListener(t *testing.T) {
 	// t.Logf("\nconn:\n%+v\n\n", conn)
 	// t.Logf("\nconn.ConnectionState():\n%+v\n\n", conn.ConnectionState())
 	// t.Logf("\ntls.Config:\n%+v\n\n", tlsConf)
-
-	wg.Wait()
 }
 
 func send(t *testing.T, conn *tls.Conn, msg string) {
