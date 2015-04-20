@@ -66,24 +66,31 @@ func Dial(addr string, rootCA []byte, clientCert []byte, clientCertKey []byte) (
 	return NewConn(c, 0, 0), nil
 }
 
-// Write given message to the connection with appropriate header.
-func (c *Conn) Write(msg *interface{}) error {
-	data, err := json.Marshal(msg)
-	if err != nil {
-		return fmt.Errorf("Failed to serialize the given message: %v", err)
-	}
+// Write writes given message to the connection with appropriate header.
+func (c *Conn) Write(msg []byte) error {
+	l := len(msg)
+	h := getHeader(l)
 
-	n, err := c.conn.Write(data)
-	if n != len(data) {
-		return errors.New("Given message data length and sent bytes length did not match")
+	msg = append(h, msg...)
+	l = l + headerSize
+
+	n, err := c.conn.Write(msg)
+	if n != l {
+		return fmt.Errorf("given message data length and sent bytes length did not match, expected %v got %v", l, n)
 	}
 
 	return err
 }
 
-WriteMsg
+// WriteMsg serializes and writes given message to the connection with appropriate header.
+func (c *Conn) WriteMsg(msg *interface{}) error {
+	data, err := json.Marshal(msg)
+	if err != nil {
+		return fmt.Errorf("failed to serialize the given message: %v", err)
+	}
 
-ReadMsg
+	return c.Write(data)
+}
 
 // Read waits for and reads the next message of the TLS connection.
 func (c *Conn) Read() (msg []byte, err error) {
@@ -131,4 +138,10 @@ func (c *Conn) RemoteAddr() net.Addr {
 func (c *Conn) Close() error {
 	// todo: if session.err is nil, send a close req and wait ack then close? (or even wait for everything else to finish?)
 	return c.conn.Close()
+}
+
+func getHeader(i int) []byte {
+	b := make([]byte, 4)
+	binary.LittleEndian.PutUint32(b, uint32(i))
+	return b
 }
