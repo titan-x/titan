@@ -66,32 +66,6 @@ func Dial(addr string, rootCA []byte, clientCert []byte, clientCertKey []byte) (
 	return NewConn(c, 0, 0), nil
 }
 
-// Write writes given message to the connection with appropriate header.
-func (c *Conn) Write(msg []byte) error {
-	l := len(msg)
-	h := getHeader(l)
-
-	msg = append(h, msg...)
-	l = l + headerSize
-
-	n, err := c.conn.Write(msg)
-	if n != l {
-		return fmt.Errorf("given message data length and sent bytes length did not match, expected %v got %v", l, n)
-	}
-
-	return err
-}
-
-// WriteMsg serializes and writes given message to the connection with appropriate header.
-func (c *Conn) WriteMsg(msg *interface{}) error {
-	data, err := json.Marshal(msg)
-	if err != nil {
-		return fmt.Errorf("failed to serialize the given message: %v", err)
-	}
-
-	return c.Write(data)
-}
-
 // Read waits for and reads the next message of the TLS connection.
 func (c *Conn) Read() (msg []byte, err error) {
 	if err = c.conn.SetReadDeadline(time.Now().Add(c.readDeadline)); err != nil {
@@ -112,16 +86,44 @@ func (c *Conn) Read() (msg []byte, err error) {
 	r := 0
 	msg = make([]byte, n)
 	for r != n {
-		for r != n {
-			i, err := c.conn.Read(msg[r:])
-			if err != nil {
-				return nil, fmt.Errorf("errored while reading incoming message: %v", err)
-			}
-			r += i
+		i, err := c.conn.Read(msg[r:])
+		if err != nil {
+			return nil, fmt.Errorf("errored while reading incoming message: %v", err)
 		}
+		r += i
 	}
 
 	return
+}
+
+// WriteMsg serializes and writes given message to the connection with appropriate header.
+func (c *Conn) WriteMsg(msg *interface{}) error {
+	data, err := json.Marshal(msg)
+	if err != nil {
+		return fmt.Errorf("failed to serialize the given message: %v", err)
+	}
+
+	return c.Write(data)
+}
+
+// Write writes given message to the connection with appropriate header.
+func (c *Conn) Write(msg []byte) error {
+	l := len(msg)
+	h := getHeader(l)
+
+	msg = append(h, msg...)
+	l = l + headerSize
+
+	w := 0
+	for w != l {
+		n, err := c.conn.Write(msg)
+		if err != nil {
+			return fmt.Errorf("errored while writing outgoing message: %v", err)
+		}
+		w += n
+	}
+
+	return nil
 }
 
 // ConnectionState returns basic TLS details about the connection.

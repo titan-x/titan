@@ -43,7 +43,7 @@ func TestListener(t *testing.T) {
 	conn.Write([]byte("Lorem ipsum dolor sit amet, consectetur adipiscing elit."))
 	conn.Write([]byte("In sit amet lectus felis, at pellentesque turpis."))
 	conn.Write([]byte("Nunc urna enim, cursus varius aliquet ac, imperdiet eget tellus."))
-	conn.Write([]byte(randString(45000)))
+	// conn.Write([]byte(randString(45000)))
 	conn.Write([]byte("close"))
 
 	t.Logf("\nconn:\n%+v\n\n", conn)

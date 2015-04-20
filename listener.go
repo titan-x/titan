@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"sync"
@@ -110,6 +111,11 @@ func handleClient(wg *sync.WaitGroup, conn *Conn, debug bool, handleMsg func(con
 
 		msg, err := conn.Read()
 		if err != nil {
+			if err == io.EOF {
+				session.Disconnected = true
+				break
+			}
+
 			log.Fatalln("Error while reading incoming message:", err)
 			break
 		}
