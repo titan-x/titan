@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"time"
 )
 
@@ -22,7 +23,7 @@ type Conn struct {
 
 // NewConn creates a new server-side connection object. Default values for maxMsgSize and readDeadline are
 // 4294967295 bytes (4GB) and 300 seconds, respectively.
-func NewConn(conn *tls.Conn, maxMsgSize int, readDeadline int) (*Conn, error) {
+func NewConn(conn *tls.Conn, maxMsgSize int, readDeadline int) *Conn {
 	if maxMsgSize == 0 {
 		maxMsgSize = 4294967295
 	}
@@ -35,7 +36,7 @@ func NewConn(conn *tls.Conn, maxMsgSize int, readDeadline int) (*Conn, error) {
 		conn:         conn,
 		maxMsgSize:   maxMsgSize,
 		readDeadline: time.Second * time.Duration(readDeadline),
-	}, nil
+	}
 }
 
 // Dial creates a new client side connection to a given network address with optional root CA and/or a client certificate (PEM encoded X.509 cert/key).
@@ -62,7 +63,7 @@ func Dial(addr string, rootCA []byte, clientCert []byte, clientCertKey []byte) (
 		return nil, err
 	}
 
-	return NewConn(c, 0, 0)
+	return NewConn(c, 0, 0), nil
 }
 
 // Write given message to the connection.
@@ -110,6 +111,16 @@ func (c *Conn) Read() (msg []byte, err error) {
 	}
 
 	return
+}
+
+// ConnectionState returns basic TLS details about the connection.
+func (c *Conn) ConnectionState() tls.ConnectionState {
+	return c.conn.ConnectionState()
+}
+
+// RemoteAddr returns the remote network address.
+func (c *Conn) RemoteAddr() net.Addr {
+	return c.conn.RemoteAddr()
 }
 
 // Close closes a connection.
