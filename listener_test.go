@@ -34,7 +34,7 @@ func TestListener(t *testing.T) {
 
 		m := string(msg)
 		if m != msg1 && m != msg2 && m != msg3 && m != msg4 {
-			t.Fatal("Send and incoming message did not match for message:", m)
+			t.Fatal("Sent and incoming message did not match for message:", m)
 		}
 	}, func(conn *tls.Conn, session *Session) {
 	})
@@ -58,6 +58,9 @@ func TestListener(t *testing.T) {
 	send(t, conn, msg2)
 	send(t, conn, msg3)
 	send(t, conn, msg4)
+	send(t, conn, msg1)
+	send(t, conn, msg4)
+	send(t, conn, msg1)
 	send(t, conn, "close")
 
 	// t.Logf("\nconn:\n%+v\n\n", conn)
