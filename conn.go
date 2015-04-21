@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -67,26 +66,12 @@ func Dial(addr string, rootCA []byte, clientCert []byte, clientCertKey []byte) (
 	return NewConn(c, 0, 0), nil
 }
 
-// Write given message to the connection.
-func (c *Conn) Write(msg *interface{}) error {
-	data, err := json.Marshal(msg)
-	if err != nil {
-		return fmt.Errorf("Failed to serialize the given message: %v", err)
-	}
-
-	if err = c.conn.SetReadDeadline(time.Now().Add(c.readWriteDeadline)); err != nil {
-		return err
-	}
-
-	n, err := c.conn.Write(data)
-	if n != len(data) {
-		return errors.New("Given message data length and sent bytes length did not match")
-	}
-
-	return err
+// Write writes given message to the connection.
+func (c *Conn) Write(msg []byte) (n int, err error) {
+	return c.conn.Write(msg)
 }
 
-// Read waits for and reads the next message of the TLS connection.
+// Read waits for and reads the next incoming message from the TLS connection.
 func (c *Conn) Read() (msg []byte, err error) {
 	if err = c.conn.SetReadDeadline(time.Now().Add(c.readWriteDeadline)); err != nil {
 		return

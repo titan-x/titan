@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"io"
 	"strconv"
 	"testing"
 )
@@ -49,24 +48,26 @@ func TestListener(t *testing.T) {
 	}
 	defer conn.Close()
 
-	send(t, conn, "4\nping")
-	send(t, conn, "56\n"+msg1)
-	send(t, conn, "56\n"+msg1)
-	send(t, conn, "49\n"+msg2)
-	send(t, conn, "64\n"+msg3)
-	send(t, conn, "45000\n"+msg4)
-	send(t, conn, "56\n"+msg1)
-	send(t, conn, "500000\n"+msg5)
-	send(t, conn, "56\n"+msg1)
-	send(t, conn, "5\nclose")
+	newconn := NewConn(conn, 0, 0)
+
+	send(t, newconn, "4\nping")
+	send(t, newconn, "56\n"+msg1)
+	send(t, newconn, "56\n"+msg1)
+	send(t, newconn, "49\n"+msg2)
+	send(t, newconn, "64\n"+msg3)
+	send(t, newconn, "45000\n"+msg4)
+	send(t, newconn, "56\n"+msg1)
+	send(t, newconn, "500000\n"+msg5)
+	send(t, newconn, "56\n"+msg1)
+	send(t, newconn, "5\nclose")
 
 	// t.Logf("\nconn:\n%+v\n\n", conn)
 	// t.Logf("\nconn.ConnectionState():\n%+v\n\n", conn.ConnectionState())
 	// t.Logf("\ntls.Config:\n%+v\n\n", tlsConf)
 }
 
-func send(t *testing.T, conn *tls.Conn, msg string) {
-	n, err := io.WriteString(conn, msg)
+func send(t *testing.T, conn *Conn, msg string) {
+	n, err := conn.Write([]byte(msg))
 	if err != nil {
 		t.Fatalf("Error while writing message to connection %v", err)
 	}
