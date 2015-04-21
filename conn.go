@@ -136,9 +136,17 @@ func (c *Conn) WriteMsg(msg *interface{}) (n int, err error) {
 func (c *Conn) Write(msg []byte) (n int, err error) {
 	l := len(msg)
 	h := makeHeaderBytes(l, c.headerSize)
-	l += c.headerSize
-	msg = append(h, msg...)
 
+	// write the header
+	n, err = c.conn.Write(h)
+	if err != nil {
+		return
+	}
+	if n != c.headerSize {
+		err = fmt.Errorf("expected to write %v bytes but only wrote %v bytes", l, n)
+	}
+
+	// write the body
 	n, err = c.conn.Write(msg)
 	if err != nil {
 		return

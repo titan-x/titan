@@ -66,7 +66,7 @@ func TestListener(t *testing.T) {
 	// t.Logf("\nconn.ConnectionState():\n%+v\n\n", conn.ConnectionState())
 	// t.Logf("\ntls.Config:\n%+v\n\n", tlsConf)
 
-	time.Sleep(1 * time.Nanosecond)
+	time.Sleep(time.Nanosecond)
 }
 
 func send(t *testing.T, conn *Conn, msg string) {
