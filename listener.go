@@ -65,6 +65,7 @@ type Session struct {
 // Accept waits for incoming connections and forwards the client connect/message/disconnect events to provided handlers in a new goroutine.
 // This function blocks and never returns, unless there is an error while accepting a new connection.
 func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) error {
+	defer l.wg.Wait()
 	for {
 		conn, err := l.listener.Accept()
 		if err != nil {
@@ -79,6 +80,7 @@ func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byt
 		if l.debug {
 			log.Println("Client connected: listening for messages from client IP:", conn.RemoteAddr())
 		}
+		l.wg.Add(1)
 		go handleClient(&l.wg, NewConn(tlsconn, 0, 0, 0), l.debug, handleMsg, handleDisconn)
 	}
 }
@@ -87,7 +89,6 @@ func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byt
 // events to provided handlers in a new goroutine.
 // This function never returns, unless there is an error while reading from the channel or the client disconnects.
 func handleClient(wg *sync.WaitGroup, conn *Conn, debug bool, handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) {
-	wg.Add(1)
 	defer wg.Done()
 
 	session := &Session{}
@@ -124,16 +125,16 @@ func handleClient(wg *sync.WaitGroup, conn *Conn, debug bool, handleMsg func(con
 			continue // send back pong?
 		}
 		if n == 5 && bytes.Equal(msg, closed) {
+			wg.Add(1)
 			go func() {
-				wg.Add(1)
 				defer wg.Done()
 				handleDisconn(conn, session)
 			}()
 			return
 		}
 
+		wg.Add(1)
 		go func() {
-			wg.Add(1)
 			defer wg.Done()
 			handleMsg(conn, session, msg)
 		}()
@@ -142,7 +143,7 @@ func handleClient(wg *sync.WaitGroup, conn *Conn, debug bool, handleMsg func(con
 
 // Close closes the listener.
 func (l *Listener) Close() error {
-	l.wg.Wait()
+
 	if l.debug {
 		defer log.Println("Listener was closed on local network address:", l.listener.Addr())
 	}
