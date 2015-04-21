@@ -1,17 +1,14 @@
 package main
 
 import (
-	"bufio"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"net"
-	"strconv"
 	"time"
 )
 
@@ -39,6 +36,7 @@ func NewConn(conn *tls.Conn, headerSize, maxMsgSize, readWriteDeadline int) *Con
 
 	return &Conn{
 		conn:              conn,
+		headerSize:        headerSize,
 		maxMsgSize:        maxMsgSize,
 		readWriteDeadline: time.Second * time.Duration(readWriteDeadline),
 	}
@@ -92,27 +90,25 @@ func (c *Conn) Read() (n int, msg []byte, err error) {
 	}
 
 	// read the content length header
-	reader := bufio.NewReader(c.conn)
-	line, err := reader.ReadSlice('\n')
+	h := make([]byte, c.headerSize)
+	n, err = c.conn.Read(h)
 	if err != nil {
-		if err == io.EOF {
-			return
-		}
-
-		log.Fatalln("Client read error:", err)
+		return
+	}
+	if n != c.headerSize {
+		err = fmt.Errorf("expected to read header size %v bytes but instead read %v bytes", c.headerSize, n)
+		return
 	}
 
 	// calculate the content length
-	if n, err = strconv.Atoi(string(line[:len(line)-1])); err != nil || n == 0 {
-		log.Fatalln("Client read error: invalid content lenght header sent or content lenght mismatch:", err)
-	}
+	n = readHeaderBytes(h)
 
 	// read the message content
 	msg = make([]byte, n)
 	total := 0
 	for total != n {
 		// todo: log here in case it gets stuck, or there is a dos attack, pumping up cpu usage!
-		i, err := reader.Read(msg[total:])
+		i, err := c.conn.Read(msg[total:])
 		if err != nil {
 			log.Fatalln("Error while reading incoming message:", err)
 			break
@@ -138,11 +134,20 @@ func (c *Conn) WriteMsg(msg *interface{}) (n int, err error) {
 
 // Write writes given message to the connection.
 func (c *Conn) Write(msg []byte) (n int, err error) {
-	l := strconv.Itoa(len(msg))
-	h := append([]byte(l), []byte("\n")...)
+	l := len(msg)
+	h := makeHeaderBytes(l, c.headerSize)
+	l += c.headerSize
 	msg = append(h, msg...)
 
-	return c.conn.Write(msg)
+	n, err = c.conn.Write(msg)
+	if err != nil {
+		return
+	}
+	if n != l {
+		err = fmt.Errorf("expected to write %v bytes but only wrote %v bytes", l, n)
+	}
+
+	return
 }
 
 // RemoteAddr returns the remote network address.
@@ -161,9 +166,9 @@ func (c *Conn) Close() error {
 	return c.conn.Close()
 }
 
-func makeHeaderBytes(i int) []byte {
-	b := make([]byte, 4)
-	binary.LittleEndian.PutUint32(b, uint32(i))
+func makeHeaderBytes(h, size int) []byte {
+	b := make([]byte, size)
+	binary.LittleEndian.PutUint32(b, uint32(h))
 	return b
 }
 
