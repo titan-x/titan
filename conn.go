@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"strconv"
 	"time"
 )
@@ -135,6 +136,16 @@ func (c *Conn) WriteMsg(msg *interface{}) (n int, err error) {
 // Write writes given message to the connection.
 func (c *Conn) Write(msg []byte) (n int, err error) {
 	return c.conn.Write(msg)
+}
+
+// RemoteAddr returns the remote network address.
+func (c *Conn) RemoteAddr() net.Addr {
+	return c.conn.RemoteAddr()
+}
+
+// ConnectionState returns basic TLS details about the connection.
+func (c *Conn) ConnectionState() tls.ConnectionState {
+	return c.conn.ConnectionState()
 }
 
 // Close closes a connection.

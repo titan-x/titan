@@ -1,7 +1,5 @@
 package main
 
-import "crypto/tls"
-
 // User is a mobile user.
 type User struct {
 	ID              uint32
@@ -10,7 +8,7 @@ type User struct {
 	APNSDeviceToken string
 	Name            string
 	Picture         []byte
-	Conn            *tls.Conn
+	Conn            *Conn
 
 	// MsgQueue may contain request, response, or notification messages.
 	MsgQueue []interface{}

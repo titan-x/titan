@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
 	"errors"
@@ -50,7 +49,7 @@ func (s *Server) Stop() error {
 }
 
 // handleMsg handles incoming client messages.
-func handleMsg(conn *tls.Conn, session *Session, msg []byte) {
+func handleMsg(conn *Conn, session *Session, msg []byte) {
 	// authenticate the session if not already done
 	if session.UserID == 0 {
 		userID, err := auth(conn.ConnectionState().PeerCertificates, msg)
@@ -111,6 +110,6 @@ func auth(peerCerts []*x509.Certificate, msg []byte) (userID uint32, err error) 
 	}
 }
 
-func handleDisconn(conn *tls.Conn, session *Session) {
+func handleDisconn(conn *Conn, session *Session) {
 	users[session.UserID].Conn = nil
 }

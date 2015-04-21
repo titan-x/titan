@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -63,7 +64,7 @@ type Session struct {
 
 // Accept waits for incoming connections and forwards the client connect/message/disconnect events to provided handlers in a new goroutine.
 // This function blocks and never returns, unless there is an error while accepting a new connection.
-func (l *Listener) Accept(handleMsg func(conn *tls.Conn, session *Session, msg []byte), handleDisconn func(conn *tls.Conn, session *Session)) error {
+func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) error {
 	for {
 		conn, err := l.listener.Accept()
 		if err != nil {
@@ -71,18 +72,21 @@ func (l *Listener) Accept(handleMsg func(conn *tls.Conn, session *Session, msg [
 			// todo: it might not be appropriate to break the loop on recoverable errors (like client disconnect during handshake)
 			// the underlying fd.accept() does some basic recovery though we might need more: http://golang.org/src/net/fd_unix.go
 		}
-		tlsconn, _ := conn.(*tls.Conn) // todo: check ok
+		tlsconn, ok := conn.(*tls.Conn)
+		if !ok {
+			return errors.New("cannot cast net.Conn interface to tls.Conn type")
+		}
 		if l.debug {
 			log.Println("Client connected: listening for messages from client IP:", conn.RemoteAddr())
 		}
-		go handleClient(&l.wg, tlsconn, l.debug, handleMsg, handleDisconn)
+		go handleClient(&l.wg, NewConn(tlsconn, 0, 0), l.debug, handleMsg, handleDisconn)
 	}
 }
 
 // handleClient waits for messages from the connected client and forwards the client message/disconnect
 // events to provided handlers in a new goroutine.
 // This function never returns, unless there is an error while reading from the channel or the client disconnects.
-func handleClient(wg *sync.WaitGroup, conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, session *Session, msg []byte), handleDisconn func(conn *tls.Conn, session *Session)) {
+func handleClient(wg *sync.WaitGroup, conn *Conn, debug bool, handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) {
 	wg.Add(1)
 	defer wg.Done()
 
@@ -105,8 +109,7 @@ func handleClient(wg *sync.WaitGroup, conn *tls.Conn, debug bool, handleMsg func
 			return
 		}
 
-		newconn := NewConn(conn, 0, 0)
-		n, msg, err := newconn.Read()
+		n, msg, err := conn.Read()
 		if err != nil {
 			if err == io.EOF {
 				session.Disconnected = true
