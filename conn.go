@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -135,6 +136,10 @@ func (c *Conn) WriteMsg(msg *interface{}) (n int, err error) {
 
 // Write writes given message to the connection.
 func (c *Conn) Write(msg []byte) (n int, err error) {
+	l := strconv.Itoa(len(msg))
+	h := append([]byte(l), []byte("\n")...)
+	msg = append(h, msg...)
+
 	return c.conn.Write(msg)
 }
 
@@ -152,4 +157,10 @@ func (c *Conn) ConnectionState() tls.ConnectionState {
 func (c *Conn) Close() error {
 	// todo: if session.err is nil, send a close req and wait ack then close? (or even wait for everything else to finish?)
 	return c.conn.Close()
+}
+
+func getHeader(i int) []byte {
+	b := make([]byte, 4)
+	binary.LittleEndian.PutUint32(b, uint32(i))
+	return b
 }
