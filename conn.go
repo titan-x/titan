@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -66,13 +67,22 @@ func Dial(addr string, rootCA []byte, clientCert []byte, clientCertKey []byte) (
 	return NewConn(c, 0, 0), nil
 }
 
-// Write writes given message to the connection.
-func (c *Conn) Write(msg []byte) (n int, err error) {
-	return c.conn.Write(msg)
+// ReadMsg waits for and reads the next incoming message from the TLS connection and deserializes it into the given message object.
+func (c *Conn) ReadMsg(msg interface{}) (n int, err error) {
+	n, data, err := c.Read()
+	if err != nil {
+		return
+	}
+
+	if err = json.Unmarshal(data, msg); err != nil {
+		return
+	}
+
+	return
 }
 
 // Read waits for and reads the next incoming message from the TLS connection.
-func (c *Conn) Read() (msg []byte, err error) {
+func (c *Conn) Read() (n int, msg []byte, err error) {
 	if err = c.conn.SetReadDeadline(time.Now().Add(c.readWriteDeadline)); err != nil {
 		return
 	}
@@ -89,8 +99,7 @@ func (c *Conn) Read() (msg []byte, err error) {
 	}
 
 	// calculate the content length
-	n, err := strconv.Atoi(string(line[:len(line)-1]))
-	if err != nil || n == 0 {
+	if n, err = strconv.Atoi(string(line[:len(line)-1])); err != nil || n == 0 {
 		log.Fatalln("Client read error: invalid content lenght header sent or content lenght mismatch:", err)
 	}
 
@@ -111,6 +120,21 @@ func (c *Conn) Read() (msg []byte, err error) {
 	}
 
 	return
+}
+
+// WriteMsg serializes and writes given message to the connection with appropriate header.
+func (c *Conn) WriteMsg(msg *interface{}) (n int, err error) {
+	data, err := json.Marshal(msg)
+	if err != nil {
+		return 0, fmt.Errorf("failed to serialize the given message: %v", err)
+	}
+
+	return c.Write(data)
+}
+
+// Write writes given message to the connection.
+func (c *Conn) Write(msg []byte) (n int, err error) {
+	return c.conn.Write(msg)
 }
 
 // Close closes a connection.

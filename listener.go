@@ -106,7 +106,7 @@ func handleClient(wg *sync.WaitGroup, conn *tls.Conn, debug bool, handleMsg func
 		}
 
 		newconn := NewConn(conn, 0, 0)
-		msg, err := newconn.Read()
+		n, msg, err := newconn.Read()
 		if err != nil {
 			if err == io.EOF {
 				session.Disconnected = true
@@ -115,7 +115,6 @@ func handleClient(wg *sync.WaitGroup, conn *tls.Conn, debug bool, handleMsg func
 
 			log.Fatal("errored while reading:", err)
 		}
-		n := len(msg)
 
 		// shortcut 'ping' and 'close' messages, saves some processing time
 		if n == 4 && bytes.Equal(msg, ping) {
