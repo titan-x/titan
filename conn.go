@@ -15,22 +15,24 @@ import (
 	"time"
 )
 
-const headerSize = 4
-
 // Conn is a mobile client connection.
 type Conn struct {
 	conn              *tls.Conn
+	headerSize        int
 	maxMsgSize        int
 	readWriteDeadline time.Duration
 }
 
-// NewConn creates a new server-side connection object. Default values for maxMsgSize and readWriteDeadline are
-// 4294967295 bytes (4GB) and 300 seconds, respectively.
-func NewConn(conn *tls.Conn, maxMsgSize int, readWriteDeadline int) *Conn {
+// NewConn creates a new server-side connection object.
+// Default values for headerSize, maxMsgSize, and readWriteDeadline
+// are 4 bytes, 4294967295 bytes (4GB), and 300 seconds, respectively.
+func NewConn(conn *tls.Conn, headerSize, maxMsgSize, readWriteDeadline int) *Conn {
+	if headerSize == 0 {
+		headerSize = 4
+	}
 	if maxMsgSize == 0 {
 		maxMsgSize = 4294967295
 	}
-
 	if readWriteDeadline == 0 {
 		readWriteDeadline = 300
 	}
@@ -66,7 +68,7 @@ func Dial(addr string, rootCA []byte, clientCert []byte, clientCertKey []byte) (
 		return nil, err
 	}
 
-	return NewConn(c, 0, 0), nil
+	return NewConn(c, 0, 0, 0), nil
 }
 
 // ReadMsg waits for and reads the next incoming message from the TLS connection and deserializes it into the given message object.
@@ -159,8 +161,12 @@ func (c *Conn) Close() error {
 	return c.conn.Close()
 }
 
-func getHeader(i int) []byte {
+func makeHeaderBytes(i int) []byte {
 	b := make([]byte, 4)
 	binary.LittleEndian.PutUint32(b, uint32(i))
 	return b
+}
+
+func readHeaderBytes(h []byte) int {
+	return int(binary.LittleEndian.Uint32(h))
 }

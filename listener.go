@@ -79,7 +79,7 @@ func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byt
 		if l.debug {
 			log.Println("Client connected: listening for messages from client IP:", conn.RemoteAddr())
 		}
-		go handleClient(&l.wg, NewConn(tlsconn, 0, 0), l.debug, handleMsg, handleDisconn)
+		go handleClient(&l.wg, NewConn(tlsconn, 0, 0, 0), l.debug, handleMsg, handleDisconn)
 	}
 }
 

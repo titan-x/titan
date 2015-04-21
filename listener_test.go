@@ -48,7 +48,7 @@ func TestListener(t *testing.T) {
 	}
 	defer conn.Close()
 
-	newconn := NewConn(conn, 0, 0)
+	newconn := NewConn(conn, 0, 0, 0)
 
 	send(t, newconn, "ping")
 	send(t, newconn, msg1)
