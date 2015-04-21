@@ -97,6 +97,8 @@ func TestDisconnect(t *testing.T) {
 		t.Fatal("Failed to stop the server gracefully:", err)
 	}
 
+	// todo: test what happens if listener closes before all conns?
+
 	// t.Fatal("Client method.close request was not handled properly")
 	// t.Fatal("Client disconnect was not handled gracefully")
 	// t.Fatal("Server method.close request was not handled properly")

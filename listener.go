@@ -143,7 +143,6 @@ func handleClient(wg *sync.WaitGroup, conn *Conn, debug bool, handleMsg func(con
 
 // Close closes the listener.
 func (l *Listener) Close() error {
-
 	if l.debug {
 		defer log.Println("Listener was closed on local network address:", l.listener.Addr())
 	}
