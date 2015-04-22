@@ -21,12 +21,13 @@ var (
 type Listener struct {
 	debug    bool
 	listener net.Listener
-	wg       sync.WaitGroup
+	connwg   sync.WaitGroup
+	reqwg    sync.WaitGroup
 }
 
 // Listen creates a TCP listener with the given PEM encoded X.509 certificate and the private key on the local network address laddr.
 // Debug mode logs all server activity.
-func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
+func Listen(cert, privKey []byte, laddr string, connwg *sync.WaitGroup, reqwg *sync.WaitGroup, debug bool) (*Listener, error) {
 	tlsCert, err := tls.X509KeyPair(cert, privKey)
 	pool := x509.NewCertPool()
 	ok := pool.AppendCertsFromPEM(cert)
@@ -51,6 +52,8 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 	return &Listener{
 		debug:    debug,
 		listener: l,
+		connwg:   *connwg,
+		reqwg:    *reqwg,
 	}, nil
 }
 
@@ -79,16 +82,16 @@ func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byt
 		if l.debug {
 			log.Println("Client connected: listening for messages from client IP:", conn.RemoteAddr())
 		}
-		l.wg.Add(1)
-		go handleClient(&l.wg, NewConn(tlsconn, 0, 0, 0), l.debug, handleMsg, handleDisconn)
+		// l.connwg.Add(1)
+		go handleClient(&l.connwg, &l.reqwg, NewConn(tlsconn, 0, 0, 0), l.debug, handleMsg, handleDisconn)
 	}
 }
 
 // handleClient waits for messages from the connected client and forwards the client message/disconnect
 // events to provided handlers in a new goroutine.
 // This function never returns, unless there is an error while reading from the channel or the client disconnects.
-func handleClient(wg *sync.WaitGroup, conn *Conn, debug bool, handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) {
-	defer wg.Done()
+func handleClient(connwg *sync.WaitGroup, reqwg *sync.WaitGroup, conn *Conn, debug bool, handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) {
+	// defer connwg.Done()
 
 	session := &Session{}
 
@@ -124,17 +127,17 @@ func handleClient(wg *sync.WaitGroup, conn *Conn, debug bool, handleMsg func(con
 			continue // send back pong?
 		}
 		if n == 5 && bytes.Equal(msg, closed) {
-			wg.Add(1)
+			// reqwg.Add(1)
 			go func() {
-				defer wg.Done()
+				// defer reqwg.Done()
 				handleDisconn(conn, session)
 			}()
 			return
 		}
 
-		wg.Add(1)
+		// reqwg.Add(1)
 		go func() {
-			defer wg.Done()
+			// defer reqwg.Done()
 			handleMsg(conn, session, msg)
 		}()
 	}
@@ -142,7 +145,6 @@ func handleClient(wg *sync.WaitGroup, conn *Conn, debug bool, handleMsg func(con
 
 // Close closes the listener.
 func (l *Listener) Close() error {
-	defer l.wg.Wait()
 	if l.debug {
 		defer log.Println("Listener was closed on local network address:", l.listener.Addr())
 	}

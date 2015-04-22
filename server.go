@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"sync"
 )
 
 var users = make(map[uint32]*User)
@@ -16,11 +17,16 @@ type Server struct {
 	debug    bool
 	err      error
 	listener *Listener
+	connwg   sync.WaitGroup
+	reqwg    sync.WaitGroup
 }
 
 // NewServer creates and returns a new server instance with a listener created using given parameters.
 func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) {
-	l, err := Listen(cert, privKey, laddr, debug)
+	var connwg sync.WaitGroup
+	var reqwg sync.WaitGroup
+
+	l, err := Listen(cert, privKey, laddr, &connwg, &reqwg, debug)
 	if err != nil {
 		return nil, err
 	}
@@ -28,6 +34,8 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 	return &Server{
 		debug:    debug,
 		listener: l,
+		connwg:   connwg,
+		reqwg:    reqwg,
 	}, nil
 }
 
