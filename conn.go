@@ -119,7 +119,6 @@ func (c *Conn) Read() (n int, msg []byte, err error) {
 		log.Fatalln("Error while reading incoming message:", err)
 	}
 
-	time.Sleep(time.Nanosecond) // removing this causes EOF errors?!?
 	return
 }
 

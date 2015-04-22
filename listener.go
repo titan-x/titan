@@ -65,7 +65,6 @@ type Session struct {
 // Accept waits for incoming connections and forwards the client connect/message/disconnect events to provided handlers in a new goroutine.
 // This function blocks and never returns, unless there is an error while accepting a new connection.
 func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) error {
-	defer l.wg.Wait()
 	for {
 		conn, err := l.listener.Accept()
 		if err != nil {
@@ -143,6 +142,7 @@ func handleClient(wg *sync.WaitGroup, conn *Conn, debug bool, handleMsg func(con
 
 // Close closes the listener.
 func (l *Listener) Close() error {
+	defer l.wg.Wait()
 	if l.debug {
 		defer log.Println("Listener was closed on local network address:", l.listener.Addr())
 	}
