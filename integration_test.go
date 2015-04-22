@@ -12,22 +12,31 @@ var (
 	clientKeyBytes  = []byte(clientKey)
 )
 
-func TestDisconnect(t *testing.T) {
+func TestClientDisconnect(t *testing.T) {
 	s := getServer(t, false)
 	c := getClientConn(t, true)
+	if err := c.Close(); err != nil {
+		t.Fatal("Failed to close the client connection:", err)
+	}
+	if err := s.Stop(); err != nil {
+		t.Fatal("Failed to stop the server gracefully:", err)
+	}
 
+	// t.Fatal("Client method.close request was not handled properly")
+	// t.Fatal("Client disconnect was not handled gracefully")
+	// t.Fatal("Server method.close request was not handled properly")
+	// t.Fatal("Server disconnect was not handled gracefully")
+}
+
+func TestListenerClose(t *testing.T) {
+	s := getServer(t, false)
+	c := getClientConn(t, true)
 	if err := s.Stop(); err != nil {
 		t.Fatal("Failed to stop the server gracefully:", err)
 	}
 	if err := c.Close(); err != nil {
 		t.Fatal("Failed to close the client connection:", err)
 	}
-	// todo: test what happens if listener closes before all conns?
-
-	// t.Fatal("Client method.close request was not handled properly")
-	// t.Fatal("Client disconnect was not handled gracefully")
-	// t.Fatal("Server method.close request was not handled properly")
-	// t.Fatal("Server disconnect was not handled gracefully")
 }
 
 func TestGoogleAuth(t *testing.T) {
