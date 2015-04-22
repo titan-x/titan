@@ -15,13 +15,13 @@ var (
 func TestDisconnect(t *testing.T) {
 	s := getServer(t, false)
 	c := getClientConn(t, true)
-	if err := c.Close(); err != nil {
-		t.Fatal("Failed to close the client connection:", err)
-	}
+
 	if err := s.Stop(); err != nil {
 		t.Fatal("Failed to stop the server gracefully:", err)
 	}
-
+	if err := c.Close(); err != nil {
+		t.Fatal("Failed to close the client connection:", err)
+	}
 	// todo: test what happens if listener closes before all conns?
 
 	// t.Fatal("Client method.close request was not handled properly")
