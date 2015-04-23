@@ -21,8 +21,8 @@ var (
 type Listener struct {
 	debug    bool
 	listener net.Listener
-	connwg   sync.WaitGroup
-	reqwg    sync.WaitGroup
+	connwg   *sync.WaitGroup
+	reqwg    *sync.WaitGroup
 }
 
 // Listen creates a TCP listener with the given PEM encoded X.509 certificate and the private key on the local network address laddr.
@@ -52,8 +52,8 @@ func Listen(cert, privKey []byte, laddr string, connwg *sync.WaitGroup, reqwg *s
 	return &Listener{
 		debug:    debug,
 		listener: l,
-		connwg:   *connwg,
-		reqwg:    *reqwg,
+		connwg:   connwg,
+		reqwg:    reqwg,
 	}, nil
 }
 
@@ -82,8 +82,8 @@ func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byt
 		if l.debug {
 			log.Println("Client connected: listening for messages from client IP:", conn.RemoteAddr())
 		}
-		// l.connwg.Add(1)
-		go handleClient(&l.connwg, &l.reqwg, NewConn(tlsconn, 0, 0, 0), l.debug, handleMsg, handleDisconn)
+		l.connwg.Add(1)
+		go handleClient(l.connwg, l.reqwg, NewConn(tlsconn, 0, 0, 0), l.debug, handleMsg, handleDisconn)
 	}
 }
 
@@ -91,7 +91,8 @@ func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byt
 // events to provided handlers in a new goroutine.
 // This function never returns, unless there is an error while reading from the channel or the client disconnects.
 func handleClient(connwg *sync.WaitGroup, reqwg *sync.WaitGroup, conn *Conn, debug bool, handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) {
-	// defer connwg.Done()
+	defer connwg.Done()
+	defer log.Print("defer called")
 
 	session := &Session{}
 
@@ -127,17 +128,17 @@ func handleClient(connwg *sync.WaitGroup, reqwg *sync.WaitGroup, conn *Conn, deb
 			continue // send back pong?
 		}
 		if n == 5 && bytes.Equal(msg, closed) {
-			// reqwg.Add(1)
+			reqwg.Add(1)
 			go func() {
-				// defer reqwg.Done()
+				defer reqwg.Done()
 				handleDisconn(conn, session)
 			}()
 			return
 		}
 
-		// reqwg.Add(1)
+		reqwg.Add(1)
 		go func() {
-			// defer reqwg.Done()
+			defer reqwg.Done()
 			handleMsg(conn, session, msg)
 		}()
 	}

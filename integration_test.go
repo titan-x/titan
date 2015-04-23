@@ -14,21 +14,22 @@ var (
 	clientKeyBytes  = []byte(clientKey)
 )
 
-// func TestClientDisconnect(t *testing.T) {
-// 	s := getServer(t, false)
-// 	c := getClientConn(t, true)
-// 	if err := c.Close(); err != nil {
-// 		t.Fatal("Failed to close the client connection:", err)
-// 	}
-// 	if err := s.Stop(); err != nil {
-// 		t.Fatal("Failed to stop the server gracefully:", err)
-// 	}
-//
-// 	// t.Fatal("Client method.close request was not handled properly")
-// 	// t.Fatal("Client disconnect was not handled gracefully")
-// 	// t.Fatal("Server method.close request was not handled properly")
-// 	// t.Fatal("Server disconnect was not handled gracefully")
-// }
+func TestClientDisconnect(t *testing.T) {
+	s := getServer(t, false)
+	c := getClientConn(t, true)
+	if err := c.Close(); err != nil {
+		t.Fatal("Failed to close the client connection:", err)
+	}
+	if err := s.Stop(); err != nil {
+		t.Fatal("Failed to stop the server gracefully:", err)
+	}
+
+	// t.Fatal("Client method.close request was not handled properly")
+	// t.Fatal("Client disconnect was not handled gracefully")
+	// t.Fatal("Server method.close request was not handled properly")
+	// t.Fatal("Server disconnect was not handled gracefully")
+	// test what happens when there are outstanding connections and/or requests that are being handled
+}
 
 func TestListenerClose(t *testing.T) {
 	s := getServer(t, false)
@@ -140,7 +141,7 @@ func getClientConn(t *testing.T, useClientCert bool) *Conn {
 			t.Fatalf("Cannot connect to server address %v with error: %v", addr, err)
 		}
 
-		if i != 1 {
+		if i != 0 {
 			t.Logf("WARNING: it took %v retries to connect to the server, which might indicate code issues or slow machine.", i)
 		}
 		return c
