@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"testing"
 	"time"
 )
@@ -32,11 +33,9 @@ var (
 func TestListenerClose(t *testing.T) {
 	s := getServer(t, false)
 	c := getClientConn(t, true)
-	time.Sleep(time.Millisecond * 100)
 	if err := s.Stop(); err != nil {
 		t.Fatal("Failed to stop the server gracefully:", err)
 	}
-	time.Sleep(time.Millisecond * 100)
 	if err := c.Close(); err != nil {
 		t.Fatal("Failed to close the client connection:", err)
 	}
@@ -129,15 +128,26 @@ func getClientConn(t *testing.T, useClientCert bool) *Conn {
 	}
 
 	addr := "localhost:" + Conf.App.Port
-	c, err := Dial(addr, caCertBytes, cert, key)
-	if err != nil {
-		t.Fatalf("Cannot connect to server address %v with error: %v", addr, err)
-	}
 
-	return c
+	// retry connect in case we're operating on a very slow machine
+	for i := 0; i <= 5; i++ {
+		c, err := Dial(addr, caCertBytes, cert, key)
+		if err != nil {
+			if operr, ok := err.(*net.OpError); ok && operr.Op == "dial" && operr.Err.Error() == "connection refused" && i != 5 {
+				time.Sleep(time.Millisecond * 50)
+				continue
+			}
+			t.Fatalf("Cannot connect to server address %v with error: %v", addr, err)
+		}
+
+		if i != 1 {
+			t.Logf("WARNING: it took %v retries to connect to the server, which might indicate code issues or slow machine.", i)
+		}
+		return c
+	}
+	panic("unreachable")
 }
 
-// todo: configurable max retry as we can never say for sure when the listener is ready and accepting connections
 func getServer(t *testing.T, createNewCertPair bool) *Server {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
