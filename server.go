@@ -42,6 +42,7 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 // Start starts accepting connections on the internal listener and handles connections with registered onnection and message handlers.
 // This function blocks and never returns, unless there is an error while accepting a new connection.
 func (s *Server) Start() error {
+	// pass &err as an argument rather than blocking infinitely?
 	s.err = s.listener.Accept(handleMsg, handleDisconn)
 	return s.err
 }

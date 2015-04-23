@@ -137,6 +137,7 @@ func getClientConn(t *testing.T, useClientCert bool) *Conn {
 	return c
 }
 
+// todo: configurable max retry as we can never say for sure when the listener is ready and accepting connections
 func getServer(t *testing.T, createNewCertPair bool) *Server {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
