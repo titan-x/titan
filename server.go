@@ -43,7 +43,6 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 // This function blocks and never returns, unless there is an error while accepting a new connection.
 func (s *Server) Start() error {
 	s.err = s.listener.Accept(handleMsg, handleDisconn)
-	// todo: blocking listen on internal channel for the stop signal, if default listener.Close() is not graceful (not sure about that)
 	return s.err
 }
 
