@@ -1,17 +1,15 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net"
-	"strconv"
 	"sync"
-	"time"
 )
 
 var (
@@ -21,14 +19,16 @@ var (
 
 // Listener accepts connections from devices.
 type Listener struct {
+	Conns    []*Conn
 	debug    bool
 	listener net.Listener
-	wg       sync.WaitGroup
+	connwg   *sync.WaitGroup
+	reqwg    *sync.WaitGroup
 }
 
 // Listen creates a TCP listener with the given PEM encoded X.509 certificate and the private key on the local network address laddr.
 // Debug mode logs all server activity.
-func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
+func Listen(cert, privKey []byte, laddr string, connwg *sync.WaitGroup, reqwg *sync.WaitGroup, debug bool) (*Listener, error) {
 	tlsCert, err := tls.X509KeyPair(cert, privKey)
 	pool := x509.NewCertPool()
 	ok := pool.AppendCertsFromPEM(cert)
@@ -51,46 +51,56 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 	}
 
 	return &Listener{
+		Conns:    make([]*Conn, 0),
 		debug:    debug,
 		listener: l,
+		connwg:   connwg,
+		reqwg:    reqwg,
 	}, nil
 }
 
 // Session is a generic session data store for client handlers.
 type Session struct {
 	UserID       uint32
-	Error        string
+	Error        error
 	Data         interface{}
 	Disconnected bool
 }
 
 // Accept waits for incoming connections and forwards the client connect/message/disconnect events to provided handlers in a new goroutine.
 // This function blocks and never returns, unless there is an error while accepting a new connection.
-func (l *Listener) Accept(handleMsg func(conn *tls.Conn, session *Session, msg []byte), handleDisconn func(conn *tls.Conn, session *Session)) error {
+func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) error {
 	for {
 		conn, err := l.listener.Accept()
 		if err != nil {
+			if operr, ok := err.(*net.OpError); ok && operr.Op == "accept" && operr.Err.Error() == "use of closed network connection" {
+				return nil
+			}
 			return fmt.Errorf("error while accepting a new connection from a client: %v", err)
 			// todo: it might not be appropriate to break the loop on recoverable errors (like client disconnect during handshake)
 			// the underlying fd.accept() does some basic recovery though we might need more: http://golang.org/src/net/fd_unix.go
 		}
-		tlsconn, _ := conn.(*tls.Conn) // todo: check ok
+		tlsconn, ok := conn.(*tls.Conn)
+		if !ok {
+			return errors.New("cannot cast net.Conn interface to tls.Conn type")
+		}
 		if l.debug {
 			log.Println("Client connected: listening for messages from client IP:", conn.RemoteAddr())
 		}
-		go handleClient(&l.wg, tlsconn, l.debug, handleMsg, handleDisconn)
+		l.connwg.Add(1)
+		c := NewConn(tlsconn, 0, 0, 0)
+		l.Conns = append(l.Conns, c)
+		go handleClient(l.connwg, l.reqwg, c, l.debug, handleMsg, handleDisconn)
 	}
 }
 
 // handleClient waits for messages from the connected client and forwards the client message/disconnect
 // events to provided handlers in a new goroutine.
 // This function never returns, unless there is an error while reading from the channel or the client disconnects.
-func handleClient(wg *sync.WaitGroup, conn *tls.Conn, debug bool, handleMsg func(conn *tls.Conn, session *Session, msg []byte), handleDisconn func(conn *tls.Conn, session *Session)) {
-	wg.Add(1)
-	defer wg.Done()
+func handleClient(connwg *sync.WaitGroup, reqwg *sync.WaitGroup, conn *Conn, debug bool, handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) error {
+	defer connwg.Done()
 
 	session := &Session{}
-	reader := bufio.NewReader(conn)
 
 	if debug {
 		defer func() {
@@ -101,56 +111,27 @@ func handleClient(wg *sync.WaitGroup, conn *tls.Conn, debug bool, handleMsg func
 			}
 		}()
 	}
-	defer conn.Close() // todo: handle close error, store the error in conn object and return it to handleMsg/handleErr/handleDisconn or one level up (to server)
+	defer func() {
+		session.Error = conn.Close() // todo: handle close error, store the error in conn object and return it to handleMsg/handleErr/handleDisconn or one level up (to server)
+	}()
 
 	for {
-		if session.Error != "" {
+		if session.Error != nil {
 			// todo: send error message to user, log the error, and close the conn and return
-			return
+			return session.Error
 		}
 
-		err := conn.SetReadDeadline(time.Now().Add(time.Minute * 5))
-
-		// read the content length header
-		line, err := reader.ReadSlice('\n')
+		n, msg, err := conn.Read()
 		if err != nil {
 			if err == io.EOF {
 				session.Disconnected = true
 				break
-			} else {
-				log.Fatalln("Client read error:", err)
+			}
+			if operr, ok := err.(*net.OpError); ok && operr.Op == "read" && operr.Err.Error() == "use of closed network connection" {
+				session.Disconnected = true
 				break
 			}
-		}
-
-		// calculate the content length
-		n, err := strconv.Atoi(string(line[:len(line)-1]))
-		if err != nil || n == 0 {
-			log.Fatalln("Client read error: invalid content lenght header sent or content lenght mismatch:", err)
-			break
-		}
-
-		// read the message content
-		if debug {
-			log.Println("Starting to read message content of bytes:", n)
-		}
-		msg := make([]byte, n)
-		total := 0
-		for total != n {
-			// todo: log here in case it gets stuck, or there is a dos attack, pumping up cpu usage!
-			i, err := reader.Read(msg[total:])
-			if err != nil {
-				log.Fatalln("Error while reading incoming message:", err)
-				break
-			}
-			total += i
-		}
-		if err != nil {
-			log.Fatalln("Error while reading incoming message:", err)
-			break
-		}
-		if debug {
-			log.Printf("Read %v bytes client IP %v. Incoming message was: %v\n", n, conn.RemoteAddr(), string(msg))
+			log.Fatalln("Errored while reading:", err)
 		}
 
 		// shortcut 'ping' and 'close' messages, saves some processing time
@@ -158,25 +139,26 @@ func handleClient(wg *sync.WaitGroup, conn *tls.Conn, debug bool, handleMsg func
 			continue // send back pong?
 		}
 		if n == 5 && bytes.Equal(msg, closed) {
+			reqwg.Add(1)
 			go func() {
-				wg.Add(1)
-				defer wg.Done()
+				defer reqwg.Done()
 				handleDisconn(conn, session)
 			}()
-			return
+			return session.Error
 		}
 
+		reqwg.Add(1)
 		go func() {
-			wg.Add(1)
-			defer wg.Done()
+			defer reqwg.Done()
 			handleMsg(conn, session, msg)
 		}()
 	}
+
+	return session.Error
 }
 
 // Close closes the listener.
 func (l *Listener) Close() error {
-	l.wg.Wait()
 	if l.debug {
 		defer log.Println("Listener was closed on local network address:", l.listener.Addr())
 	}

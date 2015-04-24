@@ -40,11 +40,15 @@ Client-Server Protocol
 
 Client server communication protocol is based on [JSON RPC](http://www.jsonrpc.org/specification) 2.0 specs. Mobile devices connect with the TLS endpoint and the Web browsers utilizes the WebSocket endpoint. The message framing on the TLS endpoint is quite simple:
 
+```
 [uint32] 4 Bytes Content Length Header + [JSON] Message Body
+```
 
 Following is a valid TLS message frame for connecting mobile devices (except the header, which should be a 4 byte binary encoded uint32):
 
+```
 xxxx{method: "ping"}
+```
 
 Client Authentication
 ---------------------
@@ -84,7 +88,7 @@ Any message that was not acknowledged will be delivered to the client again (hen
 Testing
 -------
 
-All the tests can be executed by `go test -race -cover ./...` command. Optionally you can add `-v` flag to observe all connection logs. Integration tests require environment variables defined in the next section. If they are missing, integration tests are skipped.
+All the tests can be executed by `GORACE="halt_on_error=1" go test -v -race -cover ./...` command. Optionally you can add `-v` flag to observe all connection logs. Integration tests require environment variables defined in the next section. If they are missing, integration tests are skipped.
 
 Environment Variables
 ---------------------

@@ -2,7 +2,10 @@ package main
 
 import (
 	"fmt"
+	"net"
+	"sync"
 	"testing"
+	"time"
 )
 
 var (
@@ -11,6 +14,35 @@ var (
 	clientCertBytes = []byte(clientCert)
 	clientKeyBytes  = []byte(clientKey)
 )
+
+func TestClientDisconnect(t *testing.T) {
+	s := getServer(t, false)
+	c := getClientConn(t, true)
+	if err := c.Close(); err != nil {
+		t.Fatal("Failed to close the client connection:", err)
+	}
+	// todo: listener still closes before server connection is closed, though this might be the correct behavior. needs investigation
+	if err := s.Stop(); err != nil {
+		t.Fatal("Failed to stop the server gracefully:", err)
+	}
+
+	// t.Fatal("Client method.close request was not handled properly")
+	// t.Fatal("Client disconnect was not handled gracefully")
+	// t.Fatal("Server method.close request was not handled properly")
+	// t.Fatal("Server disconnect was not handled gracefully")
+	// test what happens when there are outstanding connections and/or requests that are being handled
+}
+
+func TestListenerClose(t *testing.T) {
+	s := getServer(t, false)
+	c := getClientConn(t, true)
+	if err := s.Stop(); err != nil {
+		t.Fatal("Failed to stop the server gracefully:", err)
+	}
+	if err := c.Close(); err != nil {
+		t.Fatal("Failed to close the client connection:", err)
+	}
+}
 
 func TestGoogleAuth(t *testing.T) {
 	// t.Fatal("Google+ first sign-in (registration) failed with valid credentials")
@@ -87,22 +119,6 @@ func TestPing(t *testing.T) {
 	// t.Fatal("Pong/ACK was not sent for ping")
 }
 
-func TestDisconnect(t *testing.T) {
-	s := getServer(t, false)
-	c := getClientConn(t, true)
-	if err := c.Close(); err != nil {
-		t.Fatal("Failed to close the client connection:", err)
-	}
-	if err := s.Stop(); err != nil {
-		t.Fatal("Failed to stop the server gracefully:", err)
-	}
-
-	// t.Fatal("Client method.close request was not handled properly")
-	// t.Fatal("Client disconnect was not handled gracefully")
-	// t.Fatal("Server method.close request was not handled properly")
-	// t.Fatal("Server disconnect was not handled gracefully")
-}
-
 func getClientConn(t *testing.T, useClientCert bool) *Conn {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
@@ -115,12 +131,24 @@ func getClientConn(t *testing.T, useClientCert bool) *Conn {
 	}
 
 	addr := "localhost:" + Conf.App.Port
-	c, err := Dial(addr, caCertBytes, cert, key)
-	if err != nil {
-		t.Fatalf("Cannot connect to server address %v with error: %v", addr, err)
-	}
 
-	return c
+	// retry connect in case we're operating on a very slow machine
+	for i := 0; i <= 5; i++ {
+		c, err := Dial(addr, caCertBytes, cert, key)
+		if err != nil {
+			if operr, ok := err.(*net.OpError); ok && operr.Op == "dial" && operr.Err.Error() == "connection refused" && i != 5 {
+				time.Sleep(time.Millisecond * 50)
+				continue
+			}
+			t.Fatalf("Cannot connect to server address %v with error: %v", addr, err)
+		}
+
+		if i != 0 {
+			t.Logf("WARNING: it took %v retries to connect to the server, which might indicate code issues or slow machine.", i)
+		}
+		return c
+	}
+	panic("unreachable")
 }
 
 func getServer(t *testing.T, createNewCertPair bool) *Server {
@@ -140,8 +168,10 @@ func getServer(t *testing.T, createNewCertPair bool) *Server {
 	if err != nil {
 		t.Fatal("Failed to create server", err)
 	}
-
-	go s.Start()
+	acceptwg := new(sync.WaitGroup)
+	acceptwg.Add(1)
+	go s.Start(acceptwg)
+	time.Sleep(time.Millisecond * 10)
 	return s
 }
 

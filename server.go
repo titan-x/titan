@@ -1,13 +1,13 @@
 package main
 
 import (
-	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"strconv"
+	"sync"
 )
 
 var users = make(map[uint32]*User)
@@ -17,11 +17,18 @@ type Server struct {
 	debug    bool
 	err      error
 	listener *Listener
+	acceptwg *sync.WaitGroup
+	connwg   *sync.WaitGroup
+	reqwg    *sync.WaitGroup
+	mutex    sync.Mutex
 }
 
 // NewServer creates and returns a new server instance with a listener created using given parameters.
 func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) {
-	l, err := Listen(cert, privKey, laddr, debug)
+	connwg := new(sync.WaitGroup)
+	reqwg := new(sync.WaitGroup)
+
+	l, err := Listen(cert, privKey, laddr, connwg, reqwg, debug)
 	if err != nil {
 		return nil, err
 	}
@@ -29,20 +36,59 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 	return &Server{
 		debug:    debug,
 		listener: l,
+		connwg:   connwg,
+		reqwg:    reqwg,
+		mutex:    sync.Mutex{},
 	}, nil
 }
 
 // Start starts accepting connections on the internal listener and handles connections with registered onnection and message handlers.
 // This function blocks and never returns, unless there is an error while accepting a new connection.
-func (s *Server) Start() error {
-	s.err = s.listener.Accept(handleMsg, handleDisconn)
-	// todo: blocking listen on internal channel for the stop signal, if default listener.Close() is not graceful (not sure about that)
-	return s.err
+func (s *Server) Start(acceptwg *sync.WaitGroup) error {
+	if acceptwg != nil {
+		defer acceptwg.Done()
+		s.acceptwg = acceptwg
+	}
+	err := s.listener.Accept(handleMsg, handleDisconn)
+	if err != nil && s.debug {
+		log.Fatalln("Listener returned an error while closing:", err)
+	}
+
+	s.mutex.Lock()
+	s.err = err
+	s.mutex.Unlock()
+
+	return err
 }
 
-// Stop stops a server instance gracefully, waiting for remaining data to be written on open connections.
+// Stop stops a server instance gracefully. For listener is closed to deny any new connections, then server waits for all connections to be
+// closed gracefully to deny any new requests, and finally it waits for all pending requests to be finished.
 func (s *Server) Stop() error {
+	// close the listener and wait for listener.Accept to return
 	err := s.listener.Close()
+	if s.acceptwg != nil {
+		s.acceptwg.Wait()
+	}
+
+	// close all active connections discarding any read/writes that is going on currently. this is not a problem as we always require an ACK
+	for _, user := range users {
+		err := user.Conn.Close()
+		if err != nil {
+			return err
+		}
+		user.Conn = nil
+	}
+	for _, conn := range s.listener.Conns {
+		err := conn.Close()
+		if err != nil {
+			return err
+		}
+	}
+	s.connwg.Wait()
+
+	// wait for all pending requests to be handled/finalized
+	s.reqwg.Wait()
+
 	if s.err != nil {
 		return s.err
 	}
@@ -50,12 +96,12 @@ func (s *Server) Stop() error {
 }
 
 // handleMsg handles incoming client messages.
-func handleMsg(conn *tls.Conn, session *Session, msg []byte) {
+func handleMsg(conn *Conn, session *Session, msg []byte) {
 	// authenticate the session if not already done
 	if session.UserID == 0 {
 		userID, err := auth(conn.ConnectionState().PeerCertificates, msg)
 		if err != nil {
-			session.Error = fmt.Sprintf("Cannot parse client message or method mismatched: %v", err)
+			session.Error = fmt.Errorf("Cannot parse client message or method mismatched: %v", err)
 		}
 		session.UserID = userID
 		users[userID].Conn = conn
@@ -111,6 +157,6 @@ func auth(peerCerts []*x509.Certificate, msg []byte) (userID uint32, err error) 
 	}
 }
 
-func handleDisconn(conn *tls.Conn, session *Session) {
+func handleDisconn(conn *Conn, session *Session) {
 	users[session.UserID].Conn = nil
 }
