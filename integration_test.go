@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"sync"
 	"testing"
 	"time"
 )
@@ -166,8 +167,9 @@ func getServer(t *testing.T, createNewCertPair bool) *Server {
 	if err != nil {
 		t.Fatal("Failed to create server", err)
 	}
-
-	go s.Start()
+	acceptwg := new(sync.WaitGroup)
+	acceptwg.Add(1)
+	go s.Start(acceptwg)
 	time.Sleep(time.Millisecond * 10)
 	return s
 }

@@ -17,6 +17,7 @@ type Server struct {
 	debug    bool
 	err      error
 	listener *Listener
+	acceptwg *sync.WaitGroup
 	connwg   *sync.WaitGroup
 	reqwg    *sync.WaitGroup
 }
@@ -41,17 +42,28 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 
 // Start starts accepting connections on the internal listener and handles connections with registered onnection and message handlers.
 // This function blocks and never returns, unless there is an error while accepting a new connection.
-func (s *Server) Start() error {
+func (s *Server) Start(acceptwg *sync.WaitGroup) error {
 	// pass &err as an argument rather than blocking infinitely?
 	// s.err = s.listener.Accept(handleMsg, handleDisconn)
 	// return s.err
-	return s.listener.Accept(handleMsg, handleDisconn)
+	if acceptwg != nil {
+		defer acceptwg.Done()
+		s.acceptwg = acceptwg
+	}
+	err := s.listener.Accept(handleMsg, handleDisconn)
+	if err != nil && s.debug {
+		log.Fatalln("Listener returned an error while closing:", err)
+	}
+	return err
 }
 
 // Stop stops a server instance gracefully. For listener is closed to deny any new connections, then server waits for all connections to be
 // closed gracefully to deny any new requests, and finally it waits for all pending requests to be finished.
 func (s *Server) Stop() error {
 	err := s.listener.Close()
+	if s.acceptwg != nil {
+		s.acceptwg.Wait()
+	}
 	s.connwg.Wait()
 	s.reqwg.Wait()
 	// if s.err != nil {

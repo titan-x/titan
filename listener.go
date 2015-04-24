@@ -71,6 +71,9 @@ func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byt
 	for {
 		conn, err := l.listener.Accept()
 		if err != nil {
+			if operr, ok := err.(*net.OpError); ok && operr.Op == "accept" && operr.Err.Error() == "use of closed network connection" {
+				return nil
+			}
 			return fmt.Errorf("error while accepting a new connection from a client: %v", err)
 			// todo: it might not be appropriate to break the loop on recoverable errors (like client disconnect during handshake)
 			// the underlying fd.accept() does some basic recovery though we might need more: http://golang.org/src/net/fd_unix.go
@@ -92,7 +95,6 @@ func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byt
 // This function never returns, unless there is an error while reading from the channel or the client disconnects.
 func handleClient(connwg *sync.WaitGroup, reqwg *sync.WaitGroup, conn *Conn, debug bool, handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) {
 	defer connwg.Done()
-	defer log.Print("defer called")
 
 	session := &Session{}
 
