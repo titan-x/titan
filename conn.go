@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net"
 	"time"
 )
@@ -106,17 +105,17 @@ func (c *Conn) Read() (n int, msg []byte, err error) {
 	// read the message content
 	msg = make([]byte, n)
 	total := 0
-	for total != n {
+	for total < n {
 		// todo: log here in case it gets stuck, or there is a dos attack, pumping up cpu usage!
 		i, err := c.conn.Read(msg[total:])
 		if err != nil {
-			log.Fatalln("Error while reading incoming message:", err)
+			err = fmt.Errorf("errored while reading incoming message: %v", err)
 			break
 		}
 		total += i
 	}
-	if err != nil {
-		log.Fatalln("Error while reading incoming message:", err)
+	if total != n {
+		err = fmt.Errorf("expected to read %v bytes instead read %v bytes", n, total)
 	}
 
 	return
