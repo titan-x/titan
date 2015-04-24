@@ -85,7 +85,7 @@ func handleMsg(conn *Conn, session *Session, msg []byte) {
 	if session.UserID == 0 {
 		userID, err := auth(conn.ConnectionState().PeerCertificates, msg)
 		if err != nil {
-			session.Error = fmt.Sprintf("Cannot parse client message or method mismatched: %v", err)
+			session.Error = fmt.Errorf("Cannot parse client message or method mismatched: %v", err)
 		}
 		session.UserID = userID
 		users[userID].Conn = conn

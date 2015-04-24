@@ -60,7 +60,7 @@ func Listen(cert, privKey []byte, laddr string, connwg *sync.WaitGroup, reqwg *s
 // Session is a generic session data store for client handlers.
 type Session struct {
 	UserID       uint32
-	Error        string
+	Error        error
 	Data         interface{}
 	Disconnected bool
 }
@@ -93,7 +93,7 @@ func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byt
 // handleClient waits for messages from the connected client and forwards the client message/disconnect
 // events to provided handlers in a new goroutine.
 // This function never returns, unless there is an error while reading from the channel or the client disconnects.
-func handleClient(connwg *sync.WaitGroup, reqwg *sync.WaitGroup, conn *Conn, debug bool, handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) {
+func handleClient(connwg *sync.WaitGroup, reqwg *sync.WaitGroup, conn *Conn, debug bool, handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) error {
 	defer connwg.Done()
 
 	session := &Session{}
@@ -107,12 +107,14 @@ func handleClient(connwg *sync.WaitGroup, reqwg *sync.WaitGroup, conn *Conn, deb
 			}
 		}()
 	}
-	defer conn.Close() // todo: handle close error, store the error in conn object and return it to handleMsg/handleErr/handleDisconn or one level up (to server)
+	defer func() {
+		session.Error = conn.Close() // todo: handle close error, store the error in conn object and return it to handleMsg/handleErr/handleDisconn or one level up (to server)
+	}()
 
 	for {
-		if session.Error != "" {
+		if session.Error != nil {
 			// todo: send error message to user, log the error, and close the conn and return
-			return
+			return session.Error
 		}
 
 		n, msg, err := conn.Read()
@@ -135,7 +137,7 @@ func handleClient(connwg *sync.WaitGroup, reqwg *sync.WaitGroup, conn *Conn, deb
 				defer reqwg.Done()
 				handleDisconn(conn, session)
 			}()
-			return
+			return session.Error
 		}
 
 		reqwg.Add(1)
@@ -144,6 +146,8 @@ func handleClient(connwg *sync.WaitGroup, reqwg *sync.WaitGroup, conn *Conn, deb
 			handleMsg(conn, session, msg)
 		}()
 	}
+
+	return session.Error
 }
 
 // Close closes the listener.
