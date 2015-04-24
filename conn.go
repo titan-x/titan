@@ -159,6 +159,12 @@ func (c *Conn) Write(msg []byte) (n int, err error) {
 	return
 }
 
+// Close closes a connection.
+func (c *Conn) Close() error {
+	// todo: if session.err is nil, send a close req and wait ack then close? (or even wait for everything else to finish?)
+	return c.conn.Close()
+}
+
 // RemoteAddr returns the remote network address.
 func (c *Conn) RemoteAddr() net.Addr {
 	return c.conn.RemoteAddr()
@@ -167,12 +173,6 @@ func (c *Conn) RemoteAddr() net.Addr {
 // ConnectionState returns basic TLS details about the connection.
 func (c *Conn) ConnectionState() tls.ConnectionState {
 	return c.conn.ConnectionState()
-}
-
-// Close closes a connection.
-func (c *Conn) Close() error {
-	// todo: if session.err is nil, send a close req and wait ack then close? (or even wait for everything else to finish?)
-	return c.conn.Close()
 }
 
 func makeHeaderBytes(h, size int) []byte {
