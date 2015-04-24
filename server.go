@@ -20,6 +20,7 @@ type Server struct {
 	acceptwg *sync.WaitGroup
 	connwg   *sync.WaitGroup
 	reqwg    *sync.WaitGroup
+	mutex    sync.Mutex
 }
 
 // NewServer creates and returns a new server instance with a listener created using given parameters.
@@ -37,6 +38,7 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 		listener: l,
 		connwg:   connwg,
 		reqwg:    reqwg,
+		mutex:    sync.Mutex{},
 	}, nil
 }
 
@@ -54,6 +56,11 @@ func (s *Server) Start(acceptwg *sync.WaitGroup) error {
 	if err != nil && s.debug {
 		log.Fatalln("Listener returned an error while closing:", err)
 	}
+
+	s.mutex.Lock()
+	s.err = err
+	s.mutex.Unlock()
+
 	return err
 }
 
@@ -66,9 +73,9 @@ func (s *Server) Stop() error {
 	}
 	s.connwg.Wait()
 	s.reqwg.Wait()
-	// if s.err != nil {
-	// 	return s.err
-	// }
+	if s.err != nil {
+		return s.err
+	}
 	return err
 }
 
