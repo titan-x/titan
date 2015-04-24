@@ -21,6 +21,7 @@ func TestClientDisconnect(t *testing.T) {
 	if err := c.Close(); err != nil {
 		t.Fatal("Failed to close the client connection:", err)
 	}
+	// todo: listener still closes before server connection is closed, though this might be the correct behavior. needs investigation
 	if err := s.Stop(); err != nil {
 		t.Fatal("Failed to stop the server gracefully:", err)
 	}

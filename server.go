@@ -45,9 +45,6 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 // Start starts accepting connections on the internal listener and handles connections with registered onnection and message handlers.
 // This function blocks and never returns, unless there is an error while accepting a new connection.
 func (s *Server) Start(acceptwg *sync.WaitGroup) error {
-	// pass &err as an argument rather than blocking infinitely?
-	// s.err = s.listener.Accept(handleMsg, handleDisconn)
-	// return s.err
 	if acceptwg != nil {
 		defer acceptwg.Done()
 		s.acceptwg = acceptwg
@@ -67,12 +64,31 @@ func (s *Server) Start(acceptwg *sync.WaitGroup) error {
 // Stop stops a server instance gracefully. For listener is closed to deny any new connections, then server waits for all connections to be
 // closed gracefully to deny any new requests, and finally it waits for all pending requests to be finished.
 func (s *Server) Stop() error {
+	// close the listener and wait for listener.Accept to return
 	err := s.listener.Close()
 	if s.acceptwg != nil {
 		s.acceptwg.Wait()
 	}
+
+	// close all active connections discarding any read/writes that is going on currently. this is not a problem as we always require an ACK
+	for _, user := range users {
+		err := user.Conn.Close()
+		if err != nil {
+			return err
+		}
+		user.Conn = nil
+	}
+	for _, conn := range s.listener.Conns {
+		err := conn.Close()
+		if err != nil {
+			return err
+		}
+	}
 	s.connwg.Wait()
+
+	// wait for all pending requests to be handled/finalized
 	s.reqwg.Wait()
+
 	if s.err != nil {
 		return s.err
 	}

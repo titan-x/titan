@@ -19,6 +19,7 @@ var (
 
 // Listener accepts connections from devices.
 type Listener struct {
+	Conns    []*Conn
 	debug    bool
 	listener net.Listener
 	connwg   *sync.WaitGroup
@@ -50,6 +51,7 @@ func Listen(cert, privKey []byte, laddr string, connwg *sync.WaitGroup, reqwg *s
 	}
 
 	return &Listener{
+		Conns:    make([]*Conn, 0),
 		debug:    debug,
 		listener: l,
 		connwg:   connwg,
@@ -86,7 +88,9 @@ func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byt
 			log.Println("Client connected: listening for messages from client IP:", conn.RemoteAddr())
 		}
 		l.connwg.Add(1)
-		go handleClient(l.connwg, l.reqwg, NewConn(tlsconn, 0, 0, 0), l.debug, handleMsg, handleDisconn)
+		c := NewConn(tlsconn, 0, 0, 0)
+		l.Conns = append(l.Conns, c)
+		go handleClient(l.connwg, l.reqwg, c, l.debug, handleMsg, handleDisconn)
 	}
 }
 
@@ -123,8 +127,11 @@ func handleClient(connwg *sync.WaitGroup, reqwg *sync.WaitGroup, conn *Conn, deb
 				session.Disconnected = true
 				break
 			}
-
-			log.Fatal("errored while reading:", err)
+			if operr, ok := err.(*net.OpError); ok && operr.Op == "read" && operr.Err.Error() == "use of closed network connection" {
+				session.Disconnected = true
+				break
+			}
+			log.Fatalln("Errored while reading:", err)
 		}
 
 		// shortcut 'ping' and 'close' messages, saves some processing time
