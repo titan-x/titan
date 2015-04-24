@@ -78,8 +78,9 @@ func TestListener(t *testing.T) {
 }
 
 func send(t *testing.T, conn *Conn, msg string) {
-	_, err := conn.Write([]byte(msg))
+	n, err := conn.Write([]byte(msg))
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Logf("Sent message to listener from client: %v (%v bytes)", msg, n)
 }
