@@ -147,6 +147,7 @@ func (c *Conn) Write(msg []byte) (n int, err error) {
 	}
 
 	// write the body
+	// todo: do we need a loop? bufio uses a loop but it might be due to buff length limitation
 	n, err = c.conn.Write(msg)
 	if err != nil {
 		return
