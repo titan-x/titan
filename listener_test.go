@@ -36,6 +36,11 @@ func TestListener(t *testing.T) {
 		if len(certs) > 0 {
 			t.Logf("Client connected with client certificate subject: %v\n", certs[0].Subject)
 		}
+
+		m := string(msg)
+		if m != msg1 && m != msg2 && m != msg3 && m != msg4 && m != msg5 {
+			t.Fatal("Sent and incoming message did not match for message:", m)
+		}
 	}, func(conn *Conn, session *Session) {
 	})
 
