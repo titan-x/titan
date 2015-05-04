@@ -80,13 +80,16 @@ func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byt
 			// todo: it might not be appropriate to break the loop on recoverable errors (like client disconnect during handshake)
 			// the underlying fd.accept() does some basic recovery though we might need more: http://golang.org/src/net/fd_unix.go
 		}
+
 		tlsconn, ok := conn.(*tls.Conn)
 		if !ok {
+			conn.Close()
 			return errors.New("cannot cast net.Conn interface to tls.Conn type")
 		}
 		if l.debug {
 			log.Println("Client connected: listening for messages from client IP:", conn.RemoteAddr())
 		}
+
 		l.connwg.Add(1)
 		c := NewConn(tlsconn, 0, 0, 0)
 		l.Conns = append(l.Conns, c)
