@@ -60,6 +60,7 @@ func Dial(addr string, rootCA []byte, clientCert []byte, clientCertKey []byte) (
 		certs = []tls.Certificate{tlsCert}
 	}
 
+	// todo: dial timeout like that of net.Conn.DialTimeout
 	c, err := tls.Dial("tcp", addr, &tls.Config{RootCAs: roots, Certificates: certs})
 	if err != nil {
 		return nil, err
