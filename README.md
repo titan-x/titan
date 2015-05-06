@@ -5,10 +5,10 @@ Devastator
 
 Devastator is a messaging server for delivering chat messages to mobile and Web clients. For each delivery target, the server uses different protocol. i.e. GCM for Android apps, WebSockets for browsers, etc. The server is completely written in Go and makes huge use of goroutines and channels.
 
-Tech Stack
-----------
+Example
+-------
 
-GCM CCS (for message delivery and retrieval from Android clients), GAE Sockets API (CCS XMPP delivery protocol, used in place of plain TCP on AppEngine)
+ToDo
 
 Architecture
 ------------
