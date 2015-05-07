@@ -59,14 +59,6 @@ func Listen(cert, privKey []byte, laddr string, connwg *sync.WaitGroup, reqwg *s
 	}, nil
 }
 
-// Session is a generic session data store for client handlers.
-type Session struct {
-	UserID       uint32
-	Error        error
-	Data         interface{}
-	Disconnected bool
-}
-
 // Accept waits for incoming connections and forwards the client connect/message/disconnect events to provided handlers in a new goroutine.
 // This function blocks and never returns, unless there is an error while accepting a new connection.
 func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) error {
