@@ -37,7 +37,8 @@ func TestGetID(t *testing.T) {
 }
 
 func TestGenCert(t *testing.T) {
-	keyLength := 0
+	// keyLength := 0 // used for internal test cert generation
+	keyLength := 512
 
 	caCert, caKey, clientCert, clientKey, err := genTestCertPair(keyLength)
 	if err != nil {
