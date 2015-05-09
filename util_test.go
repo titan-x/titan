@@ -37,7 +37,7 @@ func TestGetID(t *testing.T) {
 }
 
 func TestGenCert(t *testing.T) {
-	keyLength := 512
+	keyLength := 0
 
 	caCert, caKey, clientCert, clientKey, err := genTestCertPair(keyLength)
 	if err != nil {
@@ -56,7 +56,7 @@ func TestGenCert(t *testing.T) {
 
 func genTestCertPair(keyLength int) (caCert, caKey, clientCert, clientKey []byte, err error) {
 	// CA certificate
-	caCert, caKey, err = genCert("localhost", 0, nil, nil, keyLength, "localhost", "devastator")
+	caCert, caKey, err = genCert("127.0.0.1", 0, nil, nil, keyLength, "127.0.0.1", "devastator")
 
 	if err != nil {
 		err = fmt.Errorf("Failed to generate CA certificate or key: %v", err)
@@ -85,7 +85,7 @@ func genTestCertPair(keyLength int) (caCert, caKey, clientCert, clientKey []byte
 		return
 	}
 
-	clientCert, clientKey, err = genCert("client.localhost", 0, pub, tlsCert.PrivateKey.(*rsa.PrivateKey), keyLength, "client.localhost", "devastator")
+	clientCert, clientKey, err = genCert("client.127.0.0.1", 0, pub, tlsCert.PrivateKey.(*rsa.PrivateKey), keyLength, "client.127.0.0.1", "devastator")
 	if err != nil {
 		err = fmt.Errorf("Failed to generate client-certificate or key: %v", err)
 		return
