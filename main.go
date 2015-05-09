@@ -1,5 +1,9 @@
 package main
 
+import "expvar"
+
+var queueLength = expvar.NewInt("queue-length")
+
 // "google.golang.org/appengine/datastore"
 // * "google.golang.org/cloud/datastore"
 // "code.google.com/p/google-api-go-client/datastore/v1beta2"

@@ -9,11 +9,6 @@ type ReqMsg struct {
 	Params json.RawMessage `json:"params,omitempty"`
 }
 
-// AuthGoogReqParams is the Google+ OAuth token wrapper.
-type AuthGoogReqParams struct {
-	token string
-}
-
 // ResMsg is a JSON RPC 2.0 response object. Version field is ommited for brevity.
 type ResMsg struct {
 	ID     string      `json:"id"`

@@ -98,12 +98,12 @@ func (s *Server) Stop() error {
 // handleMsg handles incoming client messages.
 func handleMsg(conn *Conn, session *Session, msg []byte) {
 	// authenticate the session if not already done
-	if session.UserID == 0 {
+	if session.Get("userid") == 0 {
 		userID, err := auth(conn.ConnectionState().PeerCertificates, msg)
 		if err != nil {
 			session.Error = fmt.Errorf("Cannot parse client message or method mismatched: %v", err)
 		}
-		session.UserID = userID
+		session.Set("userid", userID)
 		users[userID].Conn = conn
 		// todo: ack auth message, start sending other queued messages one by one
 		// can have 2 approaches here
@@ -158,5 +158,5 @@ func auth(peerCerts []*x509.Certificate, msg []byte) (userID uint32, err error) 
 }
 
 func handleDisconn(conn *Conn, session *Session) {
-	users[session.UserID].Conn = nil
+	users[session.Get("userid").(uint32)].Conn = nil
 }

@@ -47,7 +47,7 @@ func Listen(cert, privKey []byte, laddr string, connwg *sync.WaitGroup, reqwg *s
 		return nil, fmt.Errorf("failed to create TLS listener no network address %v: %v", laddr, err)
 	}
 	if debug {
-		log.Printf("Listener created with local network address: %v\n", laddr)
+		log.Printf("Listener created: %v\n", laddr)
 	}
 
 	return &Listener{
@@ -57,14 +57,6 @@ func Listen(cert, privKey []byte, laddr string, connwg *sync.WaitGroup, reqwg *s
 		connwg:   connwg,
 		reqwg:    reqwg,
 	}, nil
-}
-
-// Session is a generic session data store for client handlers.
-type Session struct {
-	UserID       uint32
-	Error        error
-	Data         interface{}
-	Disconnected bool
 }
 
 // Accept waits for incoming connections and forwards the client connect/message/disconnect events to provided handlers in a new goroutine.
@@ -80,13 +72,16 @@ func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byt
 			// todo: it might not be appropriate to break the loop on recoverable errors (like client disconnect during handshake)
 			// the underlying fd.accept() does some basic recovery though we might need more: http://golang.org/src/net/fd_unix.go
 		}
+
 		tlsconn, ok := conn.(*tls.Conn)
 		if !ok {
+			conn.Close()
 			return errors.New("cannot cast net.Conn interface to tls.Conn type")
 		}
 		if l.debug {
-			log.Println("Client connected: listening for messages from client IP:", conn.RemoteAddr())
+			log.Println("Client connected:", conn.RemoteAddr())
 		}
+
 		l.connwg.Add(1)
 		c := NewConn(tlsconn, 0, 0, 0)
 		l.Conns = append(l.Conns, c)
@@ -105,9 +100,9 @@ func handleClient(connwg *sync.WaitGroup, reqwg *sync.WaitGroup, conn *Conn, deb
 	if debug {
 		defer func() {
 			if session.Disconnected {
-				log.Println("Client disconnected on IP:", conn.RemoteAddr())
+				log.Println("Client disconnected:", conn.RemoteAddr())
 			} else {
-				log.Println("Closed connection to client with IP:", conn.RemoteAddr())
+				log.Println("Closed client connection:", conn.RemoteAddr())
 			}
 		}()
 	}
@@ -160,7 +155,7 @@ func handleClient(connwg *sync.WaitGroup, reqwg *sync.WaitGroup, conn *Conn, deb
 // Close closes the listener.
 func (l *Listener) Close() error {
 	if l.debug {
-		defer log.Println("Listener was closed on local network address:", l.listener.Addr())
+		defer log.Println("Listener closed:", l.listener.Addr())
 	}
 	return l.listener.Close()
 }
