@@ -26,14 +26,19 @@ func TestClientDisconnect(t *testing.T) {
 		t.Fatal("Failed to stop the server gracefully:", err)
 	}
 
-	// t.Fatal("Client method.close request was not handled properly")
-	// t.Fatal("Client disconnect was not handled gracefully")
 	// t.Fatal("Server method.close request was not handled properly")
-	// t.Fatal("Server disconnect was not handled gracefully")
 	// test what happens when there are outstanding connections and/or requests that are being handled
 }
 
-func TestListenerClose(t *testing.T) {
+func TestClientClose(t *testing.T) {
+	// t.Fatal("Client method.close request was not handled properly")
+}
+
+func TestServerDisconnect(t *testing.T) {
+	// t.Fatal("Server disconnect was not handled gracefully")
+}
+
+func TestServerClose(t *testing.T) {
 	s := getServer(t, false)
 	c := getClientConn(t, true)
 	if err := s.Stop(); err != nil {
