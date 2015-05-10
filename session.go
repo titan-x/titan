@@ -2,7 +2,7 @@ package main
 
 import "sync"
 
-// Session is a generic session data store for client handlers. All operations on session are thread safe.
+// Session is a session data store for connections. All operations on session are thread safe.
 type Session struct {
 	Error        error // todo: use mutex or remove these in favor of data. could stay if these end up being listener internal only
 	Disconnected bool

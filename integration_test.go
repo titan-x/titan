@@ -21,17 +21,17 @@ func TestClientDisconnect(t *testing.T) {
 	if err := c.Close(); err != nil {
 		t.Fatal("Failed to close the client connection:", err)
 	}
-	// todo: listener still closes before server connection is closed, though this might be the correct behavior. needs investigation
 	if err := s.Stop(); err != nil {
 		t.Fatal("Failed to stop the server gracefully:", err)
 	}
-
-	// t.Fatal("Server method.close request was not handled properly")
-	// test what happens when there are outstanding connections and/or requests that are being handled
 }
 
 func TestClientClose(t *testing.T) {
 	// t.Fatal("Client method.close request was not handled properly")
+}
+
+func TestSendClose(t *testing.T) {
+	// t.Fatal("Server method.close request was not handled properly")
 }
 
 func TestServerDisconnect(t *testing.T) {
@@ -47,6 +47,9 @@ func TestServerClose(t *testing.T) {
 	if err := c.Close(); err != nil {
 		t.Fatal("Failed to close the client connection:", err)
 	}
+
+	// test what happens when there are outstanding connections and/or requests that are being handled
+	// destroying queues and other stuff during Close() might cause existing request handles to malfunction
 }
 
 func TestGoogleAuth(t *testing.T) {
