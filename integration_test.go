@@ -16,8 +16,8 @@ var (
 )
 
 func TestClientDisconnect(t *testing.T) {
-	s := getServer(t, false)
-	c := getClientConn(t, true)
+	s := getServer(t)
+	c := getClientConnWithClientCert(t)
 	if err := c.Close(); err != nil {
 		t.Fatal("Failed to close the client connection:", err)
 	}
@@ -39,8 +39,8 @@ func TestServerDisconnect(t *testing.T) {
 }
 
 func TestServerClose(t *testing.T) {
-	s := getServer(t, false)
-	c := getClientConn(t, true)
+	s := getServer(t)
+	c := getClientConnWithClientCert(t)
 	if err := s.Stop(); err != nil {
 		t.Fatal("Failed to stop the server gracefully:", err)
 	}
@@ -127,7 +127,11 @@ func TestPing(t *testing.T) {
 	// t.Fatal("Pong/ACK was not sent for ping")
 }
 
-func getClientConn(t *testing.T, useClientCert bool) *Conn {
+func getClientConnWithClientCert(t *testing.T) *Conn {
+	return _getClientConn(t, true)
+}
+
+func _getClientConn(t *testing.T, useClientCert bool) *Conn {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
 	}
@@ -159,7 +163,11 @@ func getClientConn(t *testing.T, useClientCert bool) *Conn {
 	panic("unreachable")
 }
 
-func getServer(t *testing.T, createNewCertPair bool) *Server {
+func getServer(t *testing.T) *Server {
+	return _getServer(t, false)
+}
+
+func _getServer(t *testing.T, createNewCertPair bool) *Server {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
 	}
