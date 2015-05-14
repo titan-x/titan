@@ -24,6 +24,7 @@ type Server struct {
 }
 
 // NewServer creates and returns a new server instance with a listener created using given parameters.
+// Debug mode dumps raw TCP data to stderr (log.Println() default).
 func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) {
 	connwg := new(sync.WaitGroup)
 	reqwg := new(sync.WaitGroup)
