@@ -1,5 +1,9 @@
 package main
 
+// todo: should package be different to make this into a true integration test from a client perspective?
+
+// this is the integration test package from a real client perspective.
+
 import (
 	"fmt"
 	"net"
@@ -16,6 +20,8 @@ var (
 )
 
 func TestClientDisconnect(t *testing.T) {
+	// todo: we need to verify that events occur in the order that we want them (either via event hooks or log analysis)
+	// this seems like a listener test than a integration test from a client perspective
 	s := getServer(t)
 	c := getClientConnWithClientCert(t)
 	if err := c.Close(); err != nil {
