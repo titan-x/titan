@@ -1,4 +1,4 @@
-package main
+package devastator
 
 // todo: should package be different to make this into a true integration test from a client perspective?
 

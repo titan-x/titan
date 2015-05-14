@@ -1,4 +1,4 @@
-package main
+package devastator
 
 // Queue is a message queue for connected devices.
 // Messages are mapped from user ID to []interface{} array which may contain request, response, or notification messages.

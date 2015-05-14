@@ -1,4 +1,4 @@
-package main
+package devastator
 
 // User is a mobile user.
 type User struct {

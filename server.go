@@ -1,4 +1,4 @@
-package main
+package devastator
 
 import (
 	"crypto/x509"

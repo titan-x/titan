@@ -1,13 +1,10 @@
-package main_test
+package devastator_test
 
 // import "github.com/nbusy/devastator"
-
-// todo: add server.go setup example
-
-// Example demonstrating the use of Devastator server.
-func Example() {
-	go handleMessage()
-}
-
-func handleMessage() {
-}
+//
+// // todo: add server.go setup example
+//
+// // Example demonstrating the use of Devastator server.
+// func Example() {
+// 	s := devastator.NewServer(nil, nil, "", false)
+// }
