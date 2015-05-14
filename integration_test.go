@@ -1,4 +1,4 @@
-package devastator
+package devastator_test
 
 // todo: should package be different to make this into a true integration test from a client perspective?
 
@@ -10,6 +10,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/nbusy/devastator"
 )
 
 var (
@@ -133,11 +135,11 @@ func TestPing(t *testing.T) {
 	// t.Fatal("Pong/ACK was not sent for ping")
 }
 
-func getClientConnWithClientCert(t *testing.T) *Conn {
+func getClientConnWithClientCert(t *testing.T) *devastator.Conn {
 	return _getClientConn(t, true)
 }
 
-func _getClientConn(t *testing.T, useClientCert bool) *Conn {
+func _getClientConn(t *testing.T, useClientCert bool) *devastator.Conn {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
 	}
@@ -148,11 +150,11 @@ func _getClientConn(t *testing.T, useClientCert bool) *Conn {
 		key = clientKeyBytes
 	}
 
-	addr := "127.0.0.1:" + Conf.App.Port
+	addr := "127.0.0.1:" + devastator.Conf.App.Port
 
 	// retry connect in case we're operating on a very slow machine
 	for i := 0; i <= 5; i++ {
-		c, err := Dial(addr, caCertBytes, cert, key)
+		c, err := devastator.Dial(addr, caCertBytes, cert, key)
 		if err != nil {
 			if operr, ok := err.(*net.OpError); ok && operr.Op == "dial" && operr.Err.Error() == "connection refused" && i != 5 {
 				time.Sleep(time.Millisecond * 50)
@@ -169,24 +171,13 @@ func _getClientConn(t *testing.T, useClientCert bool) *Conn {
 	panic("unreachable")
 }
 
-func getServer(t *testing.T) *Server {
-	return _getServer(t, false)
-}
-
-func _getServer(t *testing.T, createNewCertPair bool) *Server {
+func getServer(t *testing.T) *devastator.Server {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
 	}
 
-	if createNewCertPair {
-		var err error
-		if caCertBytes, caKeyBytes, clientCertBytes, clientKeyBytes, err = genTestCertPair(512); err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	laddr := "127.0.0.1:" + Conf.App.Port
-	s, err := NewServer(caCertBytes, caKeyBytes, laddr, Conf.App.Debug)
+	laddr := "127.0.0.1:" + devastator.Conf.App.Port
+	s, err := devastator.NewServer(caCertBytes, caKeyBytes, laddr, devastator.Conf.App.Debug)
 	if err != nil {
 		t.Fatal("Failed to create server", err)
 	}
