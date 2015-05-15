@@ -1,4 +1,4 @@
-package main
+package devastator
 
 // Token is an encrypted identifier for connecting devices.
 type Token struct {

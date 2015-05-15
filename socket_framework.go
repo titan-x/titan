@@ -1,7 +1,11 @@
-package main
+package devastator
 
-var middleware []*func(int, int) int
+// todo: this is a candidate for a Koa like middleware library
 
+// package neptulon
+//
+// var middleware []*func(ctx Context, req Request, msg byte[], next Middleware) int
+//
 // type (
 // 	Handler func (w http.ResponseWriter, r *http.Request) (error)
 // )

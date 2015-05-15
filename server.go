@@ -1,4 +1,4 @@
-package main
+package devastator
 
 import (
 	"crypto/x509"
@@ -24,6 +24,7 @@ type Server struct {
 }
 
 // NewServer creates and returns a new server instance with a listener created using given parameters.
+// Debug mode dumps raw TCP data to stderr (log.Println() default).
 func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) {
 	connwg := new(sync.WaitGroup)
 	reqwg := new(sync.WaitGroup)
@@ -98,12 +99,12 @@ func (s *Server) Stop() error {
 // handleMsg handles incoming client messages.
 func handleMsg(conn *Conn, session *Session, msg []byte) {
 	// authenticate the session if not already done
-	if session.Get("userid") == 0 {
+	if session.UserID == 0 {
 		userID, err := auth(conn.ConnectionState().PeerCertificates, msg)
 		if err != nil {
 			session.Error = fmt.Errorf("Cannot parse client message or method mismatched: %v", err)
 		}
-		session.Set("userid", userID)
+		session.UserID = userID
 		users[userID].Conn = conn
 		// todo: ack auth message, start sending other queued messages one by one
 		// can have 2 approaches here
@@ -158,5 +159,5 @@ func auth(peerCerts []*x509.Certificate, msg []byte) (userID uint32, err error) 
 }
 
 func handleDisconn(conn *Conn, session *Session) {
-	users[session.Get("userid").(uint32)].Conn = nil
+	users[session.UserID].Conn = nil
 }

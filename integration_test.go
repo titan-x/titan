@@ -1,4 +1,8 @@
-package main
+package devastator_test
+
+// todo: should package be different to make this into a true integration test from a client perspective?
+
+// this is the integration test package from a real client perspective.
 
 import (
 	"fmt"
@@ -6,6 +10,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/nbusy/devastator"
 )
 
 var (
@@ -16,32 +22,42 @@ var (
 )
 
 func TestClientDisconnect(t *testing.T) {
-	s := getServer(t, false)
-	c := getClientConn(t, true)
+	// todo: we need to verify that events occur in the order that we want them (either via event hooks or log analysis)
+	// this seems like a listener test than a integration test from a client perspective
+	s := getServer(t)
+	c := getClientConnWithClientCert(t)
 	if err := c.Close(); err != nil {
 		t.Fatal("Failed to close the client connection:", err)
 	}
-	// todo: listener still closes before server connection is closed, though this might be the correct behavior. needs investigation
 	if err := s.Stop(); err != nil {
 		t.Fatal("Failed to stop the server gracefully:", err)
 	}
-
-	// t.Fatal("Client method.close request was not handled properly")
-	// t.Fatal("Client disconnect was not handled gracefully")
-	// t.Fatal("Server method.close request was not handled properly")
-	// t.Fatal("Server disconnect was not handled gracefully")
-	// test what happens when there are outstanding connections and/or requests that are being handled
 }
 
-func TestListenerClose(t *testing.T) {
-	s := getServer(t, false)
-	c := getClientConn(t, true)
+func TestClientClose(t *testing.T) {
+	// t.Fatal("Client method.close request was not handled properly")
+}
+
+func TestSendClose(t *testing.T) {
+	// t.Fatal("Server method.close request was not handled properly")
+}
+
+func TestServerDisconnect(t *testing.T) {
+	// t.Fatal("Server disconnect was not handled gracefully")
+}
+
+func TestServerClose(t *testing.T) {
+	s := getServer(t)
+	c := getClientConnWithClientCert(t)
 	if err := s.Stop(); err != nil {
 		t.Fatal("Failed to stop the server gracefully:", err)
 	}
 	if err := c.Close(); err != nil {
 		t.Fatal("Failed to close the client connection:", err)
 	}
+
+	// test what happens when there are outstanding connections and/or requests that are being handled
+	// destroying queues and other stuff during Close() might cause existing request handles to malfunction
 }
 
 func TestGoogleAuth(t *testing.T) {
@@ -119,7 +135,11 @@ func TestPing(t *testing.T) {
 	// t.Fatal("Pong/ACK was not sent for ping")
 }
 
-func getClientConn(t *testing.T, useClientCert bool) *Conn {
+func getClientConnWithClientCert(t *testing.T) *devastator.Conn {
+	return _getClientConn(t, true)
+}
+
+func _getClientConn(t *testing.T, useClientCert bool) *devastator.Conn {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
 	}
@@ -130,11 +150,11 @@ func getClientConn(t *testing.T, useClientCert bool) *Conn {
 		key = clientKeyBytes
 	}
 
-	addr := "127.0.0.1:" + Conf.App.Port
+	addr := "127.0.0.1:" + devastator.Conf.App.Port
 
 	// retry connect in case we're operating on a very slow machine
 	for i := 0; i <= 5; i++ {
-		c, err := Dial(addr, caCertBytes, cert, key)
+		c, err := devastator.Dial(addr, caCertBytes, cert, key)
 		if err != nil {
 			if operr, ok := err.(*net.OpError); ok && operr.Op == "dial" && operr.Err.Error() == "connection refused" && i != 5 {
 				time.Sleep(time.Millisecond * 50)
@@ -151,20 +171,13 @@ func getClientConn(t *testing.T, useClientCert bool) *Conn {
 	panic("unreachable")
 }
 
-func getServer(t *testing.T, createNewCertPair bool) *Server {
+func getServer(t *testing.T) *devastator.Server {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
 	}
 
-	if createNewCertPair {
-		var err error
-		if caCertBytes, caKeyBytes, clientCertBytes, clientKeyBytes, err = genTestCertPair(512); err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	laddr := "127.0.0.1:" + Conf.App.Port
-	s, err := NewServer(caCertBytes, caKeyBytes, laddr, Conf.App.Debug)
+	laddr := "127.0.0.1:" + devastator.Conf.App.Port
+	s, err := devastator.NewServer(caCertBytes, caKeyBytes, laddr, devastator.Conf.App.Debug)
 	if err != nil {
 		t.Fatal("Failed to create server", err)
 	}

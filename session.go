@@ -1,23 +1,24 @@
-package main
+package devastator
 
 import "sync"
 
-// Session is a generic session data store for client handlers. All operations on session are thread safe.
+// Session is a session data store for connections.
 type Session struct {
-	Error        error // todo: use mutex or remove these in favor of data. could stay if these end up being listener internal only
+	UserID       uint32
+	Error        error
 	Disconnected bool
 	data         map[string]interface{}
 	mutex        sync.RWMutex
 }
 
-// Set stores a value for a given key in the session.
+// Set stores a value for a given key in the session. This method is thread safe.
 func (s *Session) Set(key string, val interface{}) {
 	s.mutex.Lock()
 	s.data[key] = val
 	s.mutex.Unlock()
 }
 
-// Get retrieves a value for a given key in the session.
+// Get retrieves a value for a given key in the session. This method is thread safe.
 func (s *Session) Get(key string) interface{} {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
