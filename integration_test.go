@@ -60,6 +60,10 @@ func TestServerClose(t *testing.T) {
 	// destroying queues and other stuff during Close() might cause existing request handles to malfunction
 }
 
+func TestAuth(t *testing.T) {
+	// t.Fatal("Unauthorized clients cannot call any function other than method.auth.")
+}
+
 func TestGoogleAuth(t *testing.T) {
 	// t.Fatal("Google+ first sign-in (registration) failed with valid credentials")
 	// t.Fatal("Google+ second sign-in (regular) failed with valid credentials")
@@ -137,6 +141,10 @@ func TestPing(t *testing.T) {
 
 func getClientConnWithClientCert(t *testing.T) *devastator.Conn {
 	return _getClientConn(t, true)
+}
+
+func getAnonymousClientConn(t *testing.T) *devastator.Conn {
+	return _getClientConn(t, false)
 }
 
 func _getClientConn(t *testing.T, useClientCert bool) *devastator.Conn {

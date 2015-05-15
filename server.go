@@ -71,7 +71,8 @@ func (s *Server) Stop() error {
 		s.acceptwg.Wait()
 	}
 
-	// close all active connections discarding any read/writes that is going on currently. this is not a problem as we always require an ACK
+	// close all active connections discarding any read/writes that is going on currently
+	// this is not a problem as we always require an ACK but it will also mean that message deliveries will be at-least-once
 	for _, user := range users {
 		err := user.Conn.Close()
 		if err != nil {
