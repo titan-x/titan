@@ -13,5 +13,6 @@ func Example() {
 	s, err := devastator.NewServer(nil, nil, "", debug)
 	if err == nil && s != nil {
 		log.Println("Connected")
+		// Output: Connected
 	}
 }
