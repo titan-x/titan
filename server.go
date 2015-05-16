@@ -44,7 +44,7 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 }
 
 // Start starts accepting connections on the internal listener and handles connections with registered onnection and message handlers.
-// This function blocks and never returns, unless there is an error while accepting a new connection.
+// This function blocks and never returns, unless there is an error while accepting a new connection or server was closed.
 func (s *Server) Start(acceptwg *sync.WaitGroup) error {
 	if acceptwg != nil {
 		defer acceptwg.Done()
@@ -62,13 +62,12 @@ func (s *Server) Start(acceptwg *sync.WaitGroup) error {
 	return err
 }
 
-// Stop stops a server instance gracefully. For listener is closed to deny any new connections, then server waits for all connections to be
-// closed gracefully to deny any new requests, and finally it waits for all pending requests to be finished.
+// Stop stops a server instance.
 func (s *Server) Stop() error {
 	// close the listener and wait for listener.Accept to return
 	err := s.listener.Close()
 	if s.acceptwg != nil {
-		s.acceptwg.Wait()
+		// s.acceptwg.Wait()
 	}
 
 	// close all active connections discarding any read/writes that is going on currently
@@ -86,14 +85,16 @@ func (s *Server) Stop() error {
 			return err
 		}
 	}
-	s.connwg.Wait()
+	// s.connwg.Wait()
 
 	// wait for all pending requests to be handled/finalized
-	s.reqwg.Wait()
+	// s.reqwg.Wait()
 
+	s.mutex.Lock()
 	if s.err != nil {
 		return s.err
 	}
+	s.mutex.Unlock()
 	return err
 }
 
