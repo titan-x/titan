@@ -9,7 +9,6 @@ import (
 	"io"
 	"log"
 	"net"
-	"sync"
 )
 
 var (
@@ -22,13 +21,11 @@ type Listener struct {
 	Conns    []*Conn
 	debug    bool
 	listener net.Listener
-	connwg   *sync.WaitGroup
-	reqwg    *sync.WaitGroup
 }
 
 // Listen creates a TCP listener with the given PEM encoded X.509 certificate and the private key on the local network address laddr.
 // Debug mode logs all server activity.
-func Listen(cert, privKey []byte, laddr string, connwg *sync.WaitGroup, reqwg *sync.WaitGroup, debug bool) (*Listener, error) {
+func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 	tlsCert, err := tls.X509KeyPair(cert, privKey)
 	pool := x509.NewCertPool()
 	ok := pool.AppendCertsFromPEM(cert)
@@ -54,8 +51,6 @@ func Listen(cert, privKey []byte, laddr string, connwg *sync.WaitGroup, reqwg *s
 		Conns:    make([]*Conn, 0),
 		debug:    debug,
 		listener: l,
-		connwg:   connwg,
-		reqwg:    reqwg,
 	}, nil
 }
 
@@ -82,19 +77,16 @@ func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byt
 			log.Println("Client connected:", conn.RemoteAddr())
 		}
 
-		l.connwg.Add(1)
 		c := NewConn(tlsconn, 0, 0, 0)
 		l.Conns = append(l.Conns, c)
-		go handleClient(l.connwg, l.reqwg, c, l.debug, handleMsg, handleDisconn)
+		go handleClient(c, l.debug, handleMsg, handleDisconn)
 	}
 }
 
 // handleClient waits for messages from the connected client and forwards the client message/disconnect
 // events to provided handlers in a new goroutine.
 // This function never returns, unless there is an error while reading from the channel or the client disconnects.
-func handleClient(connwg *sync.WaitGroup, reqwg *sync.WaitGroup, conn *Conn, debug bool, handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) error {
-	defer connwg.Done()
-
+func handleClient(conn *Conn, debug bool, handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) error {
 	session := &Session{}
 
 	if debug {
@@ -134,17 +126,13 @@ func handleClient(connwg *sync.WaitGroup, reqwg *sync.WaitGroup, conn *Conn, deb
 			continue // send back pong?
 		}
 		if n == 5 && bytes.Equal(msg, closed) {
-			reqwg.Add(1)
 			go func() {
-				defer reqwg.Done()
 				handleDisconn(conn, session)
 			}()
 			return session.Error
 		}
 
-		reqwg.Add(1)
 		go func() {
-			defer reqwg.Done()
 			handleMsg(conn, session, msg)
 		}()
 	}

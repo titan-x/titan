@@ -7,7 +7,6 @@ package devastator_test
 import (
 	"fmt"
 	"net"
-	"sync"
 	"testing"
 	"time"
 
@@ -189,9 +188,8 @@ func getServer(t *testing.T) *devastator.Server {
 	if err != nil {
 		t.Fatal("Failed to create server", err)
 	}
-	acceptwg := new(sync.WaitGroup)
-	acceptwg.Add(1)
-	go s.Start(acceptwg)
+
+	go s.Start()
 	return s
 }
 

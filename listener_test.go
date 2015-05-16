@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"strconv"
-	"sync"
 	"testing"
 	"time"
 )
@@ -23,9 +22,7 @@ func TestListener(t *testing.T) {
 
 	host := "localhost:" + Conf.App.Port
 	cert, privKey, _ := genCert("localhost", 0, nil, nil, 512, "localhost", "devastator")
-	connwg := new(sync.WaitGroup)
-	reqwg := new(sync.WaitGroup)
-	listener, err := Listen(cert, privKey, host, connwg, reqwg, Conf.App.Debug)
+	listener, err := Listen(cert, privKey, host, Conf.App.Debug)
 	if err != nil {
 		t.Fatal(err)
 	}
