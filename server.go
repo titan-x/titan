@@ -72,7 +72,7 @@ func (s *Server) Stop() error {
 	}
 
 	// close all active connections discarding any read/writes that is going on currently
-	// this is not a problem as we always require an ACK but it will also mean that message deliveries will be at-least-once
+	// this is not a problem as we always require an ACK but it will also mean that message deliveries will be at-least-once; to-and-from the server
 	for _, user := range users {
 		err := user.Conn.Close()
 		if err != nil {
