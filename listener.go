@@ -43,7 +43,7 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 
 	l, err := tls.Listen("tcp", laddr, &conf)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create TLS listener no network address %v: %v", laddr, err)
+		return nil, fmt.Errorf("failed to create TLS listener on network address %v with error: %v", laddr, err)
 	}
 	if debug {
 		log.Printf("Listener created: %v\n", laddr)

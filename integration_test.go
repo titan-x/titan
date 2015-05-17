@@ -186,7 +186,7 @@ func getServer(t *testing.T) *devastator.Server {
 	laddr := "127.0.0.1:" + devastator.Conf.App.Port
 	s, err := devastator.NewServer(caCertBytes, caKeyBytes, laddr, devastator.Conf.App.Debug)
 	if err != nil {
-		t.Fatal("Failed to create server", err)
+		t.Fatal("Failed to create server:", err)
 	}
 
 	go s.Start()
