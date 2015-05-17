@@ -22,7 +22,7 @@ type Listener struct {
 	Conns    []*Conn
 	debug    bool
 	listener net.Listener
-	connwg   *sync.WaitGroup
+	connWG   sync.WaitGroup
 }
 
 // Listen creates a TCP listener with the given PEM encoded X.509 certificate and the private key on the local network address laddr.
@@ -76,23 +76,25 @@ func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byt
 			return errors.New("cannot cast net.Conn interface to tls.Conn type")
 		}
 		if l.debug {
+			l.connWG.Add(1)
 			log.Println("Client connected:", conn.RemoteAddr())
 		}
 
 		c := NewConn(tlsconn, 0, 0, 0)
 		l.Conns = append(l.Conns, c)
-		go handleClient(c, l.debug, handleMsg, handleDisconn)
+		go handleClient(l, c, handleMsg, handleDisconn)
 	}
 }
 
 // handleClient waits for messages from the connected client and forwards the client message/disconnect
 // events to provided handlers in a new goroutine.
 // This function never returns, unless there is an error while reading from the channel or the client disconnects.
-func handleClient(conn *Conn, debug bool, handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) error {
+func handleClient(l *Listener, conn *Conn, handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) error {
 	session := &Session{}
 
-	if debug {
+	if l.debug {
 		defer func() {
+			l.connWG.Done()
 			if session.Disconnected {
 				log.Println("Client disconnected:", conn.RemoteAddr())
 			} else {
