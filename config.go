@@ -13,9 +13,9 @@ const (
 	devastatorPort  = "DEVASTATOR_PORT"
 
 	// possible DEVASTATOR_ENV values
-	dev  = "development"
-	test = "test"
-	prod = "production"
+	envDev  = "development"
+	envTest = "test"
+	envProd = "production"
 
 	// GCM environment variables
 	gcmSenderID = "GCM_SENDER_ID"
@@ -59,18 +59,22 @@ func (gcm *GCM) APIKey() string {
 	return os.Getenv(googleAPIKey)
 }
 
-func init() {
-	debug := os.Getenv(devastatorDebug) != ""
-	env := os.Getenv(devastatorEnv)
+// InitConf initializes application configuration.
+// If given, env parameter overrides environment configuration. This is useful for testing.
+func InitConf(env string) {
+	if env == "" {
+		env = os.Getenv(devastatorEnv)
+	}
 	if env == "" {
 		if env = os.Getenv(goEnv); env == "" {
-			env = dev
+			env = envDev
 		}
 	}
+	debug := os.Getenv(devastatorDebug) != "" || (env != envProd)
 	port := os.Getenv(devastatorPort)
 	if port == "" {
 		switch env {
-		case test:
+		case envTest:
 			port = portTest
 		default:
 			port = portDefault

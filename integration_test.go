@@ -7,12 +7,18 @@ package devastator_test
 import (
 	"fmt"
 	"net"
+	"os"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/nbusy/devastator"
 )
+
+func TestMain(m *testing.M) {
+	devastator.InitConf("test")
+	os.Exit(m.Run())
+}
 
 var (
 	wg              sync.WaitGroup
