@@ -69,9 +69,6 @@ func (s *Server) Stop() error {
 			return err
 		}
 	}
-	if s.debug {
-		s.listener.WaitConnClose()
-	}
 
 	s.mutex.Lock()
 	if s.err != nil {

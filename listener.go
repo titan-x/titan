@@ -59,6 +59,9 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 // Accept waits for incoming connections and forwards the client connect/message/disconnect events to provided handlers in a new goroutine.
 // This function blocks and never returns, unless there is an error while accepting a new connection.
 func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) error {
+	if l.debug {
+		defer log.Println("Listener closed:", l.listener.Addr())
+	}
 	for {
 		conn, err := l.listener.Accept()
 		if err != nil {
@@ -146,13 +149,5 @@ func handleClient(l *Listener, conn *Conn, handleMsg func(conn *Conn, session *S
 
 // Close closes the listener.
 func (l *Listener) Close() error {
-	if l.debug {
-		defer log.Println("Listener closed:", l.listener.Addr())
-	}
 	return l.listener.Close()
-}
-
-// WaitConnClose blocks until all the client connections are closed.
-func (l *Listener) WaitConnClose() {
-	l.connWG.Wait()
 }

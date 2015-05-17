@@ -52,7 +52,7 @@ func TestListener(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer l.WaitConnClose()
+	defer l.connWG.Wait()
 	defer conn.Close()
 
 	newconn := NewConn(conn, 0, 0, 0)

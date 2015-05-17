@@ -7,6 +7,7 @@ package devastator_test
 import (
 	"fmt"
 	"net"
+	"sync"
 	"testing"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 )
 
 var (
+	wg              sync.WaitGroup
 	caCertBytes     = []byte(caCert)
 	caKeyBytes      = []byte(caKey)
 	clientCertBytes = []byte(clientCert)
@@ -31,6 +33,7 @@ func TestClientDisconnect(t *testing.T) {
 	if err := s.Stop(); err != nil {
 		t.Fatal("Failed to stop the server:", err)
 	}
+	wg.Wait()
 }
 
 func TestClientClose(t *testing.T) {
@@ -54,6 +57,7 @@ func TestServerClose(t *testing.T) {
 	if err := c.Close(); err != nil {
 		t.Fatal("Failed to close the client connection:", err)
 	}
+	wg.Wait()
 
 	// test what happens when there are outstanding connections and/or requests that are being handled
 	// destroying queues and other stuff during Close() might cause existing request handles to malfunction
@@ -189,7 +193,12 @@ func getServer(t *testing.T) *devastator.Server {
 		t.Fatal("Failed to create server:", err)
 	}
 
-	go s.Start()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		s.Start()
+	}()
+
 	return s
 }
 
