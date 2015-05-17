@@ -45,9 +45,7 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create TLS listener on network address %v with error: %v", laddr, err)
 	}
-	if debug {
-		log.Printf("Listener created: %v\n", laddr)
-	}
+	log.Printf("Listener created: %v\n", laddr)
 
 	return &Listener{
 		Conns:    make([]*Conn, 0),
@@ -59,9 +57,7 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 // Accept waits for incoming connections and forwards the client connect/message/disconnect events to provided handlers in a new goroutine.
 // This function blocks and never returns, unless there is an error while accepting a new connection.
 func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) error {
-	if l.debug {
-		defer log.Println("Listener closed:", l.listener.Addr())
-	}
+	defer log.Println("Listener closed:", l.listener.Addr())
 	for {
 		conn, err := l.listener.Accept()
 		if err != nil {
@@ -78,12 +74,11 @@ func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byt
 			conn.Close()
 			return errors.New("cannot cast net.Conn interface to tls.Conn type")
 		}
-		if l.debug {
-			l.connWG.Add(1)
-			log.Println("Client connected:", conn.RemoteAddr())
-		}
 
-		c := NewConn(tlsconn, 0, 0, 0)
+		l.connWG.Add(1)
+		log.Println("Client connected:", conn.RemoteAddr())
+
+		c := NewConn(tlsconn, 0, 0, 0, l.debug)
 		l.Conns = append(l.Conns, c)
 		go handleClient(l, c, handleMsg, handleDisconn)
 	}
@@ -95,18 +90,14 @@ func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byt
 func handleClient(l *Listener, conn *Conn, handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) error {
 	session := &Session{}
 
-	if l.debug {
-		defer func() {
-			l.connWG.Done()
-			if session.Disconnected {
-				log.Println("Client disconnected:", conn.RemoteAddr())
-			} else {
-				log.Println("Closed client connection:", conn.RemoteAddr())
-			}
-		}()
-	}
 	defer func() {
 		session.Error = conn.Close() // todo: handle close error, store the error in conn object and return it to handleMsg/handleErr/handleDisconn or one level up (to server)
+		l.connWG.Done()
+		if session.Disconnected {
+			log.Println("Client disconnected:", conn.RemoteAddr())
+		} else {
+			log.Println("Closed client connection:", conn.RemoteAddr())
+		}
 	}()
 
 	for {

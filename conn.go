@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"time"
 )
@@ -17,12 +18,13 @@ type Conn struct {
 	headerSize        int
 	maxMsgSize        int
 	readWriteDeadline time.Duration
+	debug             bool
 }
 
 // NewConn creates a new server-side connection object.
-// Default values for headerSize, maxMsgSize, and readWriteDeadline
-// are 4 bytes, 4294967295 bytes (4GB), and 300 seconds, respectively.
-func NewConn(conn *tls.Conn, headerSize, maxMsgSize, readWriteDeadline int) *Conn {
+// Default values for headerSize, maxMsgSize, and readWriteDeadline are 4 bytes, 4294967295 bytes (4GB), and 300 seconds, respectively.
+// Debug mode logs all raw TCP communication.
+func NewConn(conn *tls.Conn, headerSize, maxMsgSize, readWriteDeadline int, debug bool) *Conn {
 	if headerSize == 0 {
 		headerSize = 4
 	}
@@ -38,11 +40,13 @@ func NewConn(conn *tls.Conn, headerSize, maxMsgSize, readWriteDeadline int) *Con
 		headerSize:        headerSize,
 		maxMsgSize:        maxMsgSize,
 		readWriteDeadline: time.Second * time.Duration(readWriteDeadline),
+		debug:             debug,
 	}
 }
 
 // Dial creates a new client side connection to a given network address with optional root CA and/or a client certificate (PEM encoded X.509 cert/key).
-func Dial(addr string, rootCA []byte, clientCert []byte, clientCertKey []byte) (*Conn, error) {
+// Debug mode logs all raw TCP communication.
+func Dial(addr string, rootCA []byte, clientCert []byte, clientCertKey []byte, debug bool) (*Conn, error) {
 	var roots *x509.CertPool
 	var certs []tls.Certificate
 	if rootCA != nil {
@@ -66,7 +70,7 @@ func Dial(addr string, rootCA []byte, clientCert []byte, clientCertKey []byte) (
 		return nil, err
 	}
 
-	return NewConn(c, 0, 0, 0), nil
+	return NewConn(c, 0, 0, 0, debug), nil
 }
 
 // ReadMsg waits for and reads the next incoming message from the TLS connection and deserializes it into the given message object.
@@ -117,6 +121,10 @@ func (c *Conn) Read() (n int, msg []byte, err error) {
 	}
 	if total != n {
 		err = fmt.Errorf("expected to read %v bytes instead read %v bytes", n, total)
+	}
+
+	if c.debug {
+		log.Println("Incoming message:", string(msg))
 	}
 
 	return
