@@ -151,3 +151,8 @@ func (l *Listener) Close() error {
 	}
 	return l.listener.Close()
 }
+
+// WaitConnClose blocks until all the client connections are closed.
+func (l *Listener) WaitConnClose() {
+	l.connWG.Wait()
+}
