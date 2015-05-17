@@ -80,8 +80,5 @@ func init() {
 	app := App{Env: env, Debug: debug, Port: port}
 	gcm := GCM{CCSHost: os.Getenv(gcmCcsHost), SenderID: os.Getenv(gcmSenderID)}
 	Conf = Config{App: app, GCM: gcm}
-
-	if debug {
-		log.Printf("Server config initialized with values: %+v\n", Conf)
-	}
+	log.Printf("Server config initialized with values: %+v\n", Conf)
 }
