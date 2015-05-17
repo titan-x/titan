@@ -22,13 +22,13 @@ func TestListener(t *testing.T) {
 
 	host := "localhost:" + Conf.App.Port
 	cert, privKey, _ := genCert("localhost", 0, nil, nil, 512, "localhost", "devastator")
-	listener, err := Listen(cert, privKey, host, Conf.App.Debug)
+	l, err := Listen(cert, privKey, host, Conf.App.Debug)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer listener.Close()
+	defer l.Close()
 
-	go listener.Accept(func(conn *Conn, session *Session, msg []byte) {
+	go l.Accept(func(conn *Conn, session *Session, msg []byte) {
 		certs := conn.ConnectionState().PeerCertificates
 		if len(certs) > 0 {
 			t.Logf("Client connected with client certificate subject: %v\n", certs[0].Subject)
@@ -52,6 +52,7 @@ func TestListener(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer l.WaitConnClose()
 	defer conn.Close()
 
 	newconn := NewConn(conn, 0, 0, 0)
