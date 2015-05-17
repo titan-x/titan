@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"sync"
 )
 
 var (
@@ -21,6 +22,7 @@ type Listener struct {
 	Conns    []*Conn
 	debug    bool
 	listener net.Listener
+	connwg   *sync.WaitGroup
 }
 
 // Listen creates a TCP listener with the given PEM encoded X.509 certificate and the private key on the local network address laddr.
