@@ -2,15 +2,24 @@ package devastator
 
 import "testing"
 
-func init() {
-	Conf.App.Env = test
-	Conf.App.Debug = true
-}
-
 func TestConfig(t *testing.T) {
-	if Conf.App.Env != "test" || !Conf.App.Debug {
-		t.Error("Config file is not initialized properly for development environment")
+	// at this point, configuration must have been initialized with test environment defaults
+	if Conf.App.Env != "test" || !Conf.App.Debug || Conf.App.Port != "3001" {
+		t.Fatal("Config file is not initialized properly for testing environment")
 	}
+
+	InitConf("development")
+	if Conf.App.Env != "development" || !Conf.App.Debug || Conf.App.Port != "3000" {
+		t.Fatal("Config file is not initialized properly for development environment")
+	}
+
+	InitConf("production")
+	if Conf.App.Env != "production" || Conf.App.Debug || Conf.App.Port != "3000" {
+		t.Fatal("Config file is not initialized properly for production environment")
+	}
+
+	// testore test environment defaults
+	InitConf("test")
 }
 
 func TestGoEnv(t *testing.T) {

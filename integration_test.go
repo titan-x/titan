@@ -7,6 +7,7 @@ package devastator_test
 import (
 	"fmt"
 	"net"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -14,7 +15,13 @@ import (
 	"github.com/nbusy/devastator"
 )
 
+func TestMain(m *testing.M) {
+	devastator.InitConf("test")
+	os.Exit(m.Run())
+}
+
 var (
+	wg              sync.WaitGroup
 	caCertBytes     = []byte(caCert)
 	caKeyBytes      = []byte(caKey)
 	clientCertBytes = []byte(clientCert)
@@ -30,8 +37,9 @@ func TestClientDisconnect(t *testing.T) {
 		t.Fatal("Failed to close the client connection:", err)
 	}
 	if err := s.Stop(); err != nil {
-		t.Fatal("Failed to stop the server gracefully:", err)
+		t.Fatal("Failed to stop the server:", err)
 	}
+	wg.Wait()
 }
 
 func TestClientClose(t *testing.T) {
@@ -50,14 +58,19 @@ func TestServerClose(t *testing.T) {
 	s := getServer(t)
 	c := getClientConnWithClientCert(t)
 	if err := s.Stop(); err != nil {
-		t.Fatal("Failed to stop the server gracefully:", err)
+		t.Fatal("Failed to stop the server:", err)
 	}
 	if err := c.Close(); err != nil {
 		t.Fatal("Failed to close the client connection:", err)
 	}
+	wg.Wait()
 
 	// test what happens when there are outstanding connections and/or requests that are being handled
 	// destroying queues and other stuff during Close() might cause existing request handles to malfunction
+}
+
+func TestAuth(t *testing.T) {
+	// t.Fatal("Unauthorized clients cannot call any function other than method.auth.")
 }
 
 func TestGoogleAuth(t *testing.T) {
@@ -121,8 +134,8 @@ func BenchmarkParallelThroughput(b *testing.B) {
 
 func TestStop(t *testing.T) {
 	// todo: this should be a listener/queue test if we don't use any goroutines in the Server struct methods
-	// t.Fatal("Failed to stop the server gracefully: not all the goroutines were terminated properly")
-	// t.Fatal("Failed to stop the server gracefully: server did not wait for ongoing read/write operations")
+	// t.Fatal("Failed to stop the server: not all the goroutines were terminated properly")
+	// t.Fatal("Failed to stop the server: server did not wait for ongoing read/write operations")
 }
 
 func TestConnTimeout(t *testing.T) {
@@ -137,6 +150,10 @@ func TestPing(t *testing.T) {
 
 func getClientConnWithClientCert(t *testing.T) *devastator.Conn {
 	return _getClientConn(t, true)
+}
+
+func getAnonymousClientConn(t *testing.T) *devastator.Conn {
+	return _getClientConn(t, false)
 }
 
 func _getClientConn(t *testing.T, useClientCert bool) *devastator.Conn {
@@ -154,7 +171,7 @@ func _getClientConn(t *testing.T, useClientCert bool) *devastator.Conn {
 
 	// retry connect in case we're operating on a very slow machine
 	for i := 0; i <= 5; i++ {
-		c, err := devastator.Dial(addr, caCertBytes, cert, key)
+		c, err := devastator.Dial(addr, caCertBytes, cert, key, false) // no need for debug mode on client conn
 		if err != nil {
 			if operr, ok := err.(*net.OpError); ok && operr.Op == "dial" && operr.Err.Error() == "connection refused" && i != 5 {
 				time.Sleep(time.Millisecond * 50)
@@ -179,12 +196,15 @@ func getServer(t *testing.T) *devastator.Server {
 	laddr := "127.0.0.1:" + devastator.Conf.App.Port
 	s, err := devastator.NewServer(caCertBytes, caKeyBytes, laddr, devastator.Conf.App.Debug)
 	if err != nil {
-		t.Fatal("Failed to create server", err)
+		t.Fatal("Failed to create server:", err)
 	}
-	acceptwg := new(sync.WaitGroup)
-	acceptwg.Add(1)
-	go s.Start(acceptwg)
-	time.Sleep(time.Millisecond * 10)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		s.Start()
+	}()
+
 	return s
 }
 

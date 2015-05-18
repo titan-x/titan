@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"strconv"
-	"sync"
 	"testing"
 	"time"
 )
@@ -14,6 +13,7 @@ func TestLen(t *testing.T) {
 	t.Log(a)
 }
 
+// todo: if we are going to expose raw Listener, this should be in integration tests, otherwise Listener should be private
 func TestListener(t *testing.T) {
 	msg1 := "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
 	msg2 := "In sit amet lectus felis, at pellentesque turpis."
@@ -23,15 +23,13 @@ func TestListener(t *testing.T) {
 
 	host := "localhost:" + Conf.App.Port
 	cert, privKey, _ := genCert("localhost", 0, nil, nil, 512, "localhost", "devastator")
-	connwg := new(sync.WaitGroup)
-	reqwg := new(sync.WaitGroup)
-	listener, err := Listen(cert, privKey, host, connwg, reqwg, Conf.App.Debug)
+	l, err := Listen(cert, privKey, host, false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer listener.Close()
+	defer l.Close()
 
-	go listener.Accept(func(conn *Conn, session *Session, msg []byte) {
+	go l.Accept(func(conn *Conn, session *Session, msg []byte) {
 		certs := conn.ConnectionState().PeerCertificates
 		if len(certs) > 0 {
 			t.Logf("Client connected with client certificate subject: %v\n", certs[0].Subject)
@@ -55,9 +53,10 @@ func TestListener(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer l.connWG.Wait()
 	defer conn.Close()
 
-	newconn := NewConn(conn, 0, 0, 0)
+	newconn := NewConn(conn, 0, 0, 0, false)
 
 	send(t, newconn, "ping")
 	send(t, newconn, msg1)
@@ -82,5 +81,9 @@ func send(t *testing.T, conn *Conn, msg string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("Sent message to listener from client: %v (%v bytes)", msg, n)
+	if n < 100 {
+		t.Logf("Sent message to listener from client: %v (%v bytes)", msg, n)
+	} else {
+		t.Logf("Sent message to listener from client: ... (%v bytes)", n)
+	}
 }

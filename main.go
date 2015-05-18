@@ -1,6 +1,6 @@
 package devastator
 
-// todo: move this into a sub directory as a tool
+// todo: move this into a sub directory as a tool and use Conf object to initialize Server instance
 
 // package main
 //

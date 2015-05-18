@@ -17,19 +17,13 @@ type Server struct {
 	debug    bool
 	err      error
 	listener *Listener
-	acceptwg *sync.WaitGroup
-	connwg   *sync.WaitGroup
-	reqwg    *sync.WaitGroup
 	mutex    sync.Mutex
 }
 
 // NewServer creates and returns a new server instance with a listener created using given parameters.
 // Debug mode dumps raw TCP data to stderr (log.Println() default).
 func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) {
-	connwg := new(sync.WaitGroup)
-	reqwg := new(sync.WaitGroup)
-
-	l, err := Listen(cert, privKey, laddr, connwg, reqwg, debug)
+	l, err := Listen(cert, privKey, laddr, debug)
 	if err != nil {
 		return nil, err
 	}
@@ -37,19 +31,13 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 	return &Server{
 		debug:    debug,
 		listener: l,
-		connwg:   connwg,
-		reqwg:    reqwg,
 		mutex:    sync.Mutex{},
 	}, nil
 }
 
 // Start starts accepting connections on the internal listener and handles connections with registered onnection and message handlers.
-// This function blocks and never returns, unless there is an error while accepting a new connection.
-func (s *Server) Start(acceptwg *sync.WaitGroup) error {
-	if acceptwg != nil {
-		defer acceptwg.Done()
-		s.acceptwg = acceptwg
-	}
+// This function blocks and never returns, unless there was an error while accepting a new connection or the server was closed.
+func (s *Server) Start() error {
 	err := s.listener.Accept(handleMsg, handleDisconn)
 	if err != nil && s.debug {
 		log.Fatalln("Listener returned an error while closing:", err)
@@ -62,16 +50,12 @@ func (s *Server) Start(acceptwg *sync.WaitGroup) error {
 	return err
 }
 
-// Stop stops a server instance gracefully. For listener is closed to deny any new connections, then server waits for all connections to be
-// closed gracefully to deny any new requests, and finally it waits for all pending requests to be finished.
+// Stop stops a server instance.
 func (s *Server) Stop() error {
-	// close the listener and wait for listener.Accept to return
 	err := s.listener.Close()
-	if s.acceptwg != nil {
-		s.acceptwg.Wait()
-	}
 
-	// close all active connections discarding any read/writes that is going on currently. this is not a problem as we always require an ACK
+	// close all active connections discarding any read/writes that is going on currently
+	// this is not a problem as we always require an ACK but it will also mean that message deliveries will be at-least-once; to-and-from the server
 	for _, user := range users {
 		err := user.Conn.Close()
 		if err != nil {
@@ -85,14 +69,12 @@ func (s *Server) Stop() error {
 			return err
 		}
 	}
-	s.connwg.Wait()
 
-	// wait for all pending requests to be handled/finalized
-	s.reqwg.Wait()
-
+	s.mutex.Lock()
 	if s.err != nil {
 		return s.err
 	}
+	s.mutex.Unlock()
 	return err
 }
 
