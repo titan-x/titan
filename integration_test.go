@@ -171,7 +171,7 @@ func _getClientConn(t *testing.T, useClientCert bool) *devastator.Conn {
 
 	// retry connect in case we're operating on a very slow machine
 	for i := 0; i <= 5; i++ {
-		c, err := devastator.Dial(addr, caCertBytes, cert, key, false)
+		c, err := devastator.Dial(addr, caCertBytes, cert, key, false) // no need for debug mode on client conn
 		if err != nil {
 			if operr, ok := err.(*net.OpError); ok && operr.Op == "dial" && operr.Err.Error() == "connection refused" && i != 5 {
 				time.Sleep(time.Millisecond * 50)

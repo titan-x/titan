@@ -23,6 +23,7 @@ type Listener struct {
 	debug    bool
 	listener net.Listener
 	connWG   sync.WaitGroup
+	reqWG    sync.WaitGroup
 }
 
 // Listen creates a TCP listener with the given PEM encoded X.509 certificate and the private key on the local network address laddr.
@@ -124,13 +125,17 @@ func handleClient(l *Listener, conn *Conn, handleMsg func(conn *Conn, session *S
 			continue // send back pong?
 		}
 		if n == 5 && bytes.Equal(msg, closed) {
+			l.reqWG.Add(1)
 			go func() {
+				defer l.reqWG.Done()
 				handleDisconn(conn, session)
 			}()
 			return session.Error
 		}
 
+		l.reqWG.Add(1)
 		go func() {
+			defer l.reqWG.Done()
 			handleMsg(conn, session, msg)
 		}()
 	}
