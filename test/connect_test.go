@@ -5,7 +5,7 @@ import "testing"
 func TestClientDisconnect(t *testing.T) {
 	s := getServer(t)
 	c := getClientConnWithClientCert(t)
-	closeConn(t, c)
+	closeClientConn(t, c)
 	stopServer(t, s)
 }
 

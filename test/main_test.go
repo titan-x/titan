@@ -11,27 +11,50 @@ import (
 	"github.com/nbusy/devastator"
 )
 
+// TestMain is the top level test runner with top level setup and teardown functions.
+// These setup and teardown instructions are executed exactly once before and after all tests are run.
+// http://golang.org/pkg/testing/#hdr-Main
 func TestMain(m *testing.M) {
+	// setup
 	devastator.InitConf("test")
-	os.Exit(m.Run())
+	// execute tests
+	res := m.Run()
+	// teardown
+	// ...
+	os.Exit(res)
 }
 
 var (
-	wg              sync.WaitGroup
-	caCertBytes     = []byte(caCert)
-	caKeyBytes      = []byte(caKey)
+	// server listener goroutine wait group
+	wg sync.WaitGroup
+
+	// server certificates
+	caCertBytes = []byte(caCert)
+	caKeyBytes  = []byte(caKey)
+
+	// client certificates
 	clientCertBytes = []byte(clientCert)
 	clientKeyBytes  = []byte(clientKey)
 )
 
+// getClientConnWithClientCert creates and returns a client connection to local testing server with valid client cert for authentication.
 func getClientConnWithClientCert(t *testing.T) *devastator.Conn {
 	return _getClientConn(t, true)
 }
 
+// getClientConnWithClientCert creates and returns an unauthenticated client connection to local testing server.
 func getAnonymousClientConn(t *testing.T) *devastator.Conn {
 	return _getClientConn(t, false)
 }
 
+// closeClientConn closes a client connection with error checking.
+func closeClientConn(t *testing.T, c *devastator.Conn) {
+	if err := c.Close(); err != nil {
+		t.Fatal("Failed to close the client connection:", err)
+	}
+}
+
+// _getClientConn is used by other top level test helper methods to create authenticated/unauthenticated client connections with error checking.
 func _getClientConn(t *testing.T, useClientCert bool) *devastator.Conn {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
@@ -64,6 +87,7 @@ func _getClientConn(t *testing.T, useClientCert bool) *devastator.Conn {
 	panic("unreachable")
 }
 
+// getServer creates a local testing server instance with error checking and starts listening for incoming connections.
 func getServer(t *testing.T) *devastator.Server {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
@@ -84,12 +108,7 @@ func getServer(t *testing.T) *devastator.Server {
 	return s
 }
 
-func closeConn(t *testing.T, c *devastator.Conn) {
-	if err := c.Close(); err != nil {
-		t.Fatal("Failed to close the client connection:", err)
-	}
-}
-
+// stopServer stops a server instance with error checking.
 func stopServer(t *testing.T, s *devastator.Server) {
 	if err := s.Stop(); err != nil {
 		t.Fatal("Failed to stop the server:", err)
