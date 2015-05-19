@@ -76,6 +76,20 @@ func TestListener(t *testing.T) {
 	// t.Logf("\ntls.Config:\n%+v\n\n", tlsConf)
 }
 
+// func TestClientDisconnect(t *testing.T) {
+// 	// todo: we need to verify that events occur in the order that we want them (either via event hooks or log analysis)
+// 	// this seems like a listener test than a integration test from a client perspective
+// 	s := getServer(t)
+// 	c := getClientConnWithClientCert(t)
+// 	if err := c.Close(); err != nil {
+// 		t.Fatal("Failed to close the client connection:", err)
+// 	}
+// 	if err := s.Stop(); err != nil {
+// 		t.Fatal("Failed to stop the server:", err)
+// 	}
+// 	wg.Wait()
+// }
+
 func send(t *testing.T, conn *Conn, msg string) {
 	n, err := conn.Write([]byte(msg))
 	if err != nil {

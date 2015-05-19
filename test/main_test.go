@@ -84,6 +84,19 @@ func getServer(t *testing.T) *devastator.Server {
 	return s
 }
 
+func closeConn(t *testing.T, c *devastator.Conn) {
+	if err := c.Close(); err != nil {
+		t.Fatal("Failed to close the client connection:", err)
+	}
+}
+
+func stopServer(t *testing.T, s *devastator.Server) {
+	if err := s.Stop(); err != nil {
+		t.Fatal("Failed to stop the server:", err)
+	}
+	wg.Wait()
+}
+
 const (
 	// host = 127.0.0.1, cn = 127.0.0.1, org = devastator
 	caCert = `-----BEGIN CERTIFICATE-----

@@ -3,17 +3,10 @@ package test
 import "testing"
 
 func TestClientDisconnect(t *testing.T) {
-	// todo: we need to verify that events occur in the order that we want them (either via event hooks or log analysis)
-	// this seems like a listener test than a integration test from a client perspective
 	s := getServer(t)
 	c := getClientConnWithClientCert(t)
-	if err := c.Close(); err != nil {
-		t.Fatal("Failed to close the client connection:", err)
-	}
-	if err := s.Stop(); err != nil {
-		t.Fatal("Failed to stop the server:", err)
-	}
-	wg.Wait()
+	closeConn(t, c)
+	stopServer(t, s)
 }
 
 func TestClientClose(t *testing.T) {
