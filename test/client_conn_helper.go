@@ -85,9 +85,6 @@ wMPdFOfTgO2SHkI2MbmapQ+SLcmwddvzpo1BqkvLi4pMwn9uY+ngcEic
 	clientKeyBytes  = []byte(clientKey)
 )
 
-// testClientConn is a devastator.Conn type with error checking.
-type clientConnHelper *devastator.Conn
-
 // getClientConnWithClientCert creates and returns a client connection to local testing server with valid client cert for authentication.
 func getClientConnWithClientCert(t *testing.T) *devastator.Conn {
 	return _getClientConn(t, true)
@@ -105,7 +102,7 @@ func closeClientConn(t *testing.T, c *devastator.Conn) {
 	}
 }
 
-func _getClientConn(t *testing.T, useClientCert bool) clientConnHelper {
+func _getClientConn(t *testing.T, useClientCert bool) *devastator.Conn {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
 	}
@@ -132,7 +129,7 @@ func _getClientConn(t *testing.T, useClientCert bool) clientConnHelper {
 		if i != 0 {
 			t.Logf("WARNING: it took %v retries to connect to the server, which might indicate code issues or slow machine.", i)
 		}
-		return clientConnHelper(c)
+		return c
 	}
 	panic("unreachable")
 }
