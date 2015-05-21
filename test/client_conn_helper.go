@@ -102,6 +102,15 @@ func closeClientConn(t *testing.T, c *devastator.Conn) {
 	}
 }
 
+// writeMsg writes a message to a client connection with error checking.
+func writeMsg(t *testing.T, c *devastator.Conn, msg interface{}) {
+	if n, err := c.WriteMsg(msg); err != nil {
+		t.Fatal("Failed to write message on client connection:", err)
+	} else if n == 0 {
+		t.Fatal("Failed to write message on client connection. Only 0 byte was written.")
+	}
+}
+
 func _getClientConn(t *testing.T, useClientCert bool) *devastator.Conn {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")

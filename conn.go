@@ -131,7 +131,7 @@ func (c *Conn) Read() (n int, msg []byte, err error) {
 }
 
 // WriteMsg serializes and writes given message to the connection with appropriate header.
-func (c *Conn) WriteMsg(msg *interface{}) (n int, err error) {
+func (c *Conn) WriteMsg(msg interface{}) (n int, err error) {
 	data, err := json.Marshal(msg)
 	if err != nil {
 		return 0, fmt.Errorf("failed to serialize the given message: %v", err)

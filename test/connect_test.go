@@ -1,6 +1,10 @@
 package test
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/nbusy/devastator"
+)
 
 func TestClientDisconnect(t *testing.T) {
 	s := getServer(t)
@@ -10,7 +14,12 @@ func TestClientDisconnect(t *testing.T) {
 }
 
 func TestClientClose(t *testing.T) {
+	s := getServer(t)
+	c := getClientConnWithClientCert(t)
+	writeMsg(t, c, devastator.ReqMsg{ID: "123", Method: "close"})
 	// t.Fatal("Client method.close request was not handled properly")
+	closeClientConn(t, c)
+	stopServer(t, s)
 }
 
 func TestSendClose(t *testing.T) {
