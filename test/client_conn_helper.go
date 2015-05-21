@@ -111,6 +111,15 @@ func writeMsg(t *testing.T, c *devastator.Conn, msg interface{}) {
 	}
 }
 
+// readMsg reads a message off of a client connection into the given msg parameter with error checking.
+func readMsg(t *testing.T, c *devastator.Conn, msg interface{}) {
+	if n, err := c.ReadMsg(msg); err != nil {
+		t.Fatal("Failed to read message from client connection:", err)
+	} else if n == 0 {
+		t.Fatal("Failed to read message from client connection. Only 0 byte was read.")
+	}
+}
+
 func _getClientConn(t *testing.T, useClientCert bool) *devastator.Conn {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")

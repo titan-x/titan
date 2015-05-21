@@ -9,38 +9,34 @@ import (
 func TestClientDisconnect(t *testing.T) {
 	s := getServer(t)
 	c := getClientConnWithClientCert(t)
-	closeClientConn(t, c)
-	stopServer(t, s)
-}
-
-func TestClientClose(t *testing.T) {
-	s := getServer(t)
-	c := getClientConnWithClientCert(t)
-
-	writeMsg(t, c, devastator.ReqMsg{ID: "123", Method: "close"})
-	// t.Fatal("Client method.close request was not handled properly")
 
 	closeClientConn(t, c)
 	stopServer(t, s)
-}
-
-func TestSendClose(t *testing.T) {
-	// t.Fatal("Server method.close request was not handled properly")
 }
 
 func TestServerDisconnect(t *testing.T) {
-	// t.Fatal("Server disconnect was not handled gracefully")
-}
-
-func TestServerClose(t *testing.T) {
 	s := getServer(t)
 	c := getClientConnWithClientCert(t)
 
 	// test what happens when there are outstanding connections and/or requests that are being handled
 	// destroying queues and other stuff during Close() might cause existing request handles to malfunction
 
+	stopServer(t, s)
+	closeClientConn(t, c)
+}
+
+func TestClientClose(t *testing.T) {
+	s := getServer(t)
+	c := getClientConnWithClientCert(t)
+
+	writeMsg(t, c, devastator.ReqMsg{Method: "close"})
+
 	closeClientConn(t, c)
 	stopServer(t, s)
+}
+
+func TestServerClose(t *testing.T) {
+	// t.Fatal("Server method.close request was not handled properly")
 }
 
 func TestStop(t *testing.T) {

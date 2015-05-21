@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"strconv"
 	"testing"
-	"time"
 )
 
 func TestLen(t *testing.T) {
@@ -68,8 +67,6 @@ func TestListener(t *testing.T) {
 	send(t, newconn, msg5)
 	send(t, newconn, msg1)
 	send(t, newconn, "close")
-
-	time.Sleep(time.Millisecond * 100)
 
 	// t.Logf("\nconn:\n%+v\n\n", conn)
 	// t.Logf("\nconn.ConnectionState():\n%+v\n\n", conn.ConnectionState())
