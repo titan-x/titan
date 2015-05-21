@@ -16,8 +16,10 @@ func TestClientDisconnect(t *testing.T) {
 func TestClientClose(t *testing.T) {
 	s := getServer(t)
 	c := getClientConnWithClientCert(t)
+
 	writeMsg(t, c, devastator.ReqMsg{ID: "123", Method: "close"})
 	// t.Fatal("Client method.close request was not handled properly")
+
 	closeClientConn(t, c)
 	stopServer(t, s)
 }
@@ -33,16 +35,12 @@ func TestServerDisconnect(t *testing.T) {
 func TestServerClose(t *testing.T) {
 	s := getServer(t)
 	c := getClientConnWithClientCert(t)
-	if err := s.Stop(); err != nil {
-		t.Fatal("Failed to stop the server:", err)
-	}
-	if err := c.Close(); err != nil {
-		t.Fatal("Failed to close the client connection:", err)
-	}
-	wg.Wait()
 
 	// test what happens when there are outstanding connections and/or requests that are being handled
 	// destroying queues and other stuff during Close() might cause existing request handles to malfunction
+
+	closeClientConn(t, c)
+	stopServer(t, s)
 }
 
 func TestStop(t *testing.T) {
