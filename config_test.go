@@ -2,6 +2,10 @@ package devastator
 
 import "testing"
 
+func init() {
+	InitConf("test")
+}
+
 func TestConfig(t *testing.T) {
 	// at this point, configuration must have been initialized with test environment defaults
 	if Conf.App.Env != "test" || !Conf.App.Debug || Conf.App.Port != "3001" {

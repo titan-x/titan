@@ -4,8 +4,8 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"strconv"
+	"sync"
 	"testing"
-	"time"
 )
 
 func TestLen(t *testing.T) {
@@ -21,26 +21,30 @@ func TestListener(t *testing.T) {
 	msg4 := randString(45000)
 	msg5 := randString(500000)
 
-	host := "localhost:" + Conf.App.Port
+	host := "localhost:3009"
 	cert, privKey, _ := genCert("localhost", 0, nil, nil, 512, "localhost", "devastator")
 	l, err := Listen(cert, privKey, host, false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer l.Close()
 
-	go l.Accept(func(conn *Conn, session *Session, msg []byte) {
-		certs := conn.ConnectionState().PeerCertificates
-		if len(certs) > 0 {
-			t.Logf("Client connected with client certificate subject: %v\n", certs[0].Subject)
-		}
+	var listenerWG sync.WaitGroup
+	listenerWG.Add(1)
+	go func() {
+		defer listenerWG.Done()
+		l.Accept(func(conn *Conn, session *Session, msg []byte) {
+			certs := conn.ConnectionState().PeerCertificates
+			if len(certs) > 0 {
+				t.Logf("Client connected with client certificate subject: %v\n", certs[0].Subject)
+			}
 
-		m := string(msg)
-		if m != msg1 && m != msg2 && m != msg3 && m != msg4 && m != msg5 {
-			t.Fatal("Sent and incoming message did not match for message:", m)
-		}
-	}, func(conn *Conn, session *Session) {
-	})
+			m := string(msg)
+			if m != msg1 && m != msg2 && m != msg3 && m != msg4 && m != msg5 {
+				t.Fatal("Sent and incoming message did not match for message:", m)
+			}
+		}, func(conn *Conn, session *Session) {
+		})
+	}()
 
 	roots := x509.NewCertPool()
 	ok := roots.AppendCertsFromPEM(cert)
@@ -53,8 +57,6 @@ func TestListener(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer l.connWG.Wait()
-	defer conn.Close()
 
 	newconn := NewConn(conn, 0, 0, 0, false)
 
@@ -69,12 +71,32 @@ func TestListener(t *testing.T) {
 	send(t, newconn, msg1)
 	send(t, newconn, "close")
 
-	time.Sleep(time.Millisecond * 100)
+	l.reqWG.Wait()
+
+	l.connWG.Wait()
+	newconn.Close()
+
+	l.Close()
+	listenerWG.Wait()
 
 	// t.Logf("\nconn:\n%+v\n\n", conn)
 	// t.Logf("\nconn.ConnectionState():\n%+v\n\n", conn.ConnectionState())
 	// t.Logf("\ntls.Config:\n%+v\n\n", tlsConf)
 }
+
+// func TestClientDisconnect(t *testing.T) {
+// 	// todo: we need to verify that events occur in the order that we want them (either via event hooks or log analysis)
+// 	// this seems like a listener test than a integration test from a client perspective
+// 	s := getServer(t)
+// 	c := getClientConnWithClientCert(t)
+// 	if err := c.Close(); err != nil {
+// 		t.Fatal("Failed to close the client connection:", err)
+// 	}
+// 	if err := s.Stop(); err != nil {
+// 		t.Fatal("Failed to stop the server:", err)
+// 	}
+// 	wg.Wait()
+// }
 
 func send(t *testing.T, conn *Conn, msg string) {
 	n, err := conn.Write([]byte(msg))
