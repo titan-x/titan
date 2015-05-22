@@ -43,6 +43,7 @@ func TestStop(t *testing.T) {
 	// todo: this should be a listener/queue test if we don't use any goroutines in the Server struct methods
 	// t.Fatal("Failed to stop the server: not all the goroutines were terminated properly")
 	// t.Fatal("Failed to stop the server: server did not wait for ongoing read/write operations")
+	// t.Fatal("Server did not release port 3001 after closing.")
 }
 
 func TestConnTimeout(t *testing.T) {
