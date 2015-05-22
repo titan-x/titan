@@ -55,10 +55,10 @@ Client Authentication
 
 First-time registration is done through Google+ OAuth 2.0 flow. After a successful registration, the connecting device receives a client-side TLS certificate (for mobile devices) or a JSON Web Token (for browsers), to be used for successive connections.
 
-Typical Client-Server Sequence
-------------------------------
+Typical Client-Server Communication
+-----------------------------------
 
-Client-server communication sequence is pretty similar to that of XMPP, except we are using JSON RPC packaging.
+Client-server communication sequence is pretty similar to that of XMPP, except we are using JSON RPC packaging for messages.
 
 ```
 [Server]                    [Client]
