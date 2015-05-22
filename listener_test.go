@@ -24,21 +24,24 @@ func TestLen(t *testing.T) {
 // 	if err != nil {
 // 		t.Fatal(err)
 // 	}
-// 	defer l.Close()
 //
-// 	// todo: add waitgroup here just as in server accept in test/server_helper or we'll exit test while listener is still open
-// 	go l.Accept(func(conn *Conn, session *Session, msg []byte) {
-// 		certs := conn.ConnectionState().PeerCertificates
-// 		if len(certs) > 0 {
-// 			t.Logf("Client connected with client certificate subject: %v\n", certs[0].Subject)
-// 		}
+// 	var listenerWG sync.WaitGroup
+// 	listenerWG.Add(1)
+// 	go func() {
+// 		defer listenerWG.Done()
+// 		l.Accept(func(conn *Conn, session *Session, msg []byte) {
+// 			certs := conn.ConnectionState().PeerCertificates
+// 			if len(certs) > 0 {
+// 				t.Logf("Client connected with client certificate subject: %v\n", certs[0].Subject)
+// 			}
 //
-// 		m := string(msg)
-// 		if m != msg1 && m != msg2 && m != msg3 && m != msg4 && m != msg5 {
-// 			t.Fatal("Sent and incoming message did not match for message:", m)
-// 		}
-// 	}, func(conn *Conn, session *Session) {
-// 	})
+// 			m := string(msg)
+// 			if m != msg1 && m != msg2 && m != msg3 && m != msg4 && m != msg5 {
+// 				t.Fatal("Sent and incoming message did not match for message:", m)
+// 			}
+// 		}, func(conn *Conn, session *Session) {
+// 		})
+// 	}()
 //
 // 	roots := x509.NewCertPool()
 // 	ok := roots.AppendCertsFromPEM(cert)
@@ -53,7 +56,6 @@ func TestLen(t *testing.T) {
 // 	}
 //
 // 	newconn := NewConn(conn, 0, 0, 0, false)
-// 	defer newconn.Close()
 //
 // 	send(t, newconn, "ping")
 // 	send(t, newconn, msg1)
@@ -65,6 +67,14 @@ func TestLen(t *testing.T) {
 // 	send(t, newconn, msg5)
 // 	send(t, newconn, msg1)
 // 	send(t, newconn, "close")
+//
+// 	l.Close()
+// 	listenerWG.Wait()
+//
+// 	l.reqWG.Wait()
+//
+// 	newconn.Close()
+// 	l.connWG.Wait()
 //
 // 	// t.Logf("\nconn:\n%+v\n\n", conn)
 // 	// t.Logf("\nconn.ConnectionState():\n%+v\n\n", conn.ConnectionState())
