@@ -19,7 +19,7 @@ func TestListener(t *testing.T) {
 	msg2 := "In sit amet lectus felis, at pellentesque turpis."
 	msg3 := "Nunc urna enim, cursus varius aliquet ac, imperdiet eget tellus."
 	msg4 := randString(45000)
-	msg5 := randString(500000)
+	msg5 := randString(5000000)
 
 	host := "localhost:3009"
 	cert, privKey, _ := genCert("localhost", 0, nil, nil, 512, "localhost", "devastator")
