@@ -83,7 +83,7 @@ Client-server communication sequence is pretty similar to that of XMPP, except w
 +                                  +
 ```
 
-Any message that was not acknowledged will be delivered to the client again (hence at-least-once delivery princinple), unless TTL of the message was reached.
+Any message that was not acknowledged by the client will be delivered again (hence at-least-once delivery princinple), unless TTL of the message was reached. Client implementations should be ready to handle occasional duplicate deliveries of messages by the server. Message IDs will remain the same for duplicates.
 
 Testing
 -------
