@@ -71,13 +71,13 @@ func TestListener(t *testing.T) {
 	send(t, newconn, msg1)
 	send(t, newconn, "close")
 
-	l.Close()
-	listenerWG.Wait()
-
 	l.reqWG.Wait()
 
-	newconn.Close()
 	l.connWG.Wait()
+	newconn.Close()
+
+	l.Close()
+	listenerWG.Wait()
 
 	// t.Logf("\nconn:\n%+v\n\n", conn)
 	// t.Logf("\nconn.ConnectionState():\n%+v\n\n", conn.ConnectionState())
