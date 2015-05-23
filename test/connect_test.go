@@ -18,9 +18,6 @@ func TestServerDisconnect(t *testing.T) {
 	s := getServer(t)
 	c := getClientConnWithClientCert(t)
 
-	// test what happens when there are outstanding connections and/or requests that are being handled
-	// destroying queues and other stuff during Close() might cause existing request handles to malfunction
-
 	stopServer(t, s)
 	closeClientConn(t, c)
 }
