@@ -1,24 +1,20 @@
-// Package neptulon is a TLS framework built with middlewares.
+// Package neptulon is a socket framework with middleware support.
 package neptulon
 
-// todo: this is a candidate for a Koa like middleware library
+import "net/http"
 
-// package neptulon
-//
-// var middleware []*func(ctx Context, req Request, msg byte[], next Middleware) int
-//
-// type (
-// 	Handler func (w http.ResponseWriter, r *http.Request) (error)
-// )
-//
-// func Handle(handlers ...Handler) (http.Handler) {
-// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 		for _, handler := range handlers {
-// 			err := handler(w, r)
-// 			if err != nil {
-// 				w.Write([]byte(err.Error()))
-// 				return
-// 			}
-// 		}
-// 	})
-// }
+var middlewares []*func(ctx Context) (response interface{})
+
+type handler func(w http.ResponseWriter, r *http.Request) error
+
+func handle(handlers ...handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		for _, handler := range handlers {
+			err := handler(w, r)
+			if err != nil {
+				w.Write([]byte(err.Error()))
+				return
+			}
+		}
+	})
+}

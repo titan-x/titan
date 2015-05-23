@@ -95,8 +95,7 @@ func handleMsg(conn *Conn, session *Session, msg []byte) {
 		return
 	}
 
-	// queue the incoming request and send an ack
-	// process the message and queue a reply if necessary
+	// router: process the message and queue a reply if necessary and send an ack
 }
 
 // auth handles Google+ sign-in and client certificate authentication.
