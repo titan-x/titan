@@ -1,4 +1,5 @@
-package devastator
+// Package neptulon is a TLS framework built with middlewares.
+package neptulon
 
 // todo: this is a candidate for a Koa like middleware library
 
