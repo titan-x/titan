@@ -109,3 +109,10 @@ func send(t *testing.T, conn *Conn, msg string) {
 		t.Logf("Sent message to listener from client: ... (%v bytes)", n)
 	}
 }
+
+// closeGraceful waits for all request then connection handler goroutines to return then closes the listener. This method is meant for testing.
+func closeGraceful(l *Listener) error {
+	l.reqWG.Wait()
+	l.connWG.Wait()
+	return l.listener.Close()
+}
