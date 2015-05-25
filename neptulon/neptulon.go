@@ -1,9 +1,22 @@
 // Package neptulon is a socket framework with middleware support.
 package neptulon
 
-import "net/http"
+import (
+	"net/http"
+	"sync"
+)
 
-var middlewares []*func(ctx Context) (response interface{})
+// Neptulon framework entry point.
+type Neptulon struct {
+	debug       bool
+	err         error
+	listener    *Listener
+	mutex       sync.Mutex
+	middlewares []*func(ctx Context) (response interface{})
+}
+
+// Handle registers a new middleware to handle incoming messages.
+func (n *Neptulon) Handle() {}
 
 type handler func(w http.ResponseWriter, r *http.Request) error
 
