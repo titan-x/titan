@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/nbusy/devastator"
+	"github.com/nbusy/devastator/neptulon"
 )
 
 // client certs
@@ -86,24 +87,24 @@ wMPdFOfTgO2SHkI2MbmapQ+SLcmwddvzpo1BqkvLi4pMwn9uY+ngcEic
 )
 
 // getClientConnWithClientCert creates and returns a client connection to local testing server with valid client cert for authentication.
-func getClientConnWithClientCert(t *testing.T) *devastator.Conn {
+func getClientConnWithClientCert(t *testing.T) *neptulon.Conn {
 	return _getClientConn(t, true)
 }
 
 // getClientConnWithClientCert creates and returns an unauthenticated client connection to local testing server.
-func getAnonymousClientConn(t *testing.T) *devastator.Conn {
+func getAnonymousClientConn(t *testing.T) *neptulon.Conn {
 	return _getClientConn(t, false)
 }
 
 // closeClientConn closes a client connection with error checking.
-func closeClientConn(t *testing.T, c *devastator.Conn) {
+func closeClientConn(t *testing.T, c *neptulon.Conn) {
 	if err := c.Close(); err != nil {
 		t.Fatal("Failed to close the client connection:", err)
 	}
 }
 
 // writeMsg writes a message to a client connection with error checking.
-func writeMsg(t *testing.T, c *devastator.Conn, msg interface{}) {
+func writeMsg(t *testing.T, c *neptulon.Conn, msg interface{}) {
 	if n, err := c.WriteMsg(msg); err != nil {
 		t.Fatal("Failed to write message on client connection:", err)
 	} else if n == 0 {
@@ -112,7 +113,7 @@ func writeMsg(t *testing.T, c *devastator.Conn, msg interface{}) {
 }
 
 // readMsg reads a message off of a client connection into the given msg parameter with error checking.
-func readMsg(t *testing.T, c *devastator.Conn, msg interface{}) {
+func readMsg(t *testing.T, c *neptulon.Conn, msg interface{}) {
 	if n, err := c.ReadMsg(msg); err != nil {
 		t.Fatal("Failed to read message from client connection:", err)
 	} else if n == 0 {
@@ -120,7 +121,7 @@ func readMsg(t *testing.T, c *devastator.Conn, msg interface{}) {
 	}
 }
 
-func _getClientConn(t *testing.T, useClientCert bool) *devastator.Conn {
+func _getClientConn(t *testing.T, useClientCert bool) *neptulon.Conn {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
 	}
@@ -135,7 +136,7 @@ func _getClientConn(t *testing.T, useClientCert bool) *devastator.Conn {
 
 	// retry connect in case we're operating on a very slow machine
 	for i := 0; i <= 5; i++ {
-		c, err := devastator.Dial(addr, caCertBytes, cert, key, false) // no need for debug mode on client conn
+		c, err := neptulon.Dial(addr, caCertBytes, cert, key, false) // no need for debug mode on client conn
 		if err != nil {
 			if operr, ok := err.(*net.OpError); ok && operr.Op == "dial" && operr.Err.Error() == "connection refused" && i != 5 {
 				time.Sleep(time.Millisecond * 50)

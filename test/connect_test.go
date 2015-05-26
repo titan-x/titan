@@ -3,7 +3,7 @@ package test
 import (
 	"testing"
 
-	"github.com/nbusy/devastator"
+	"github.com/nbusy/devastator/neptulon"
 )
 
 func TestClientDisconnect(t *testing.T) {
@@ -26,7 +26,7 @@ func TestClientClose(t *testing.T) {
 	s := getServer(t)
 	c := getClientConnWithClientCert(t)
 
-	writeMsg(t, c, devastator.ReqMsg{Method: "close"})
+	writeMsg(t, c, neptulon.ReqMsg{Method: "close"})
 
 	closeClientConn(t, c)
 	stopServer(t, s)
@@ -34,6 +34,10 @@ func TestClientClose(t *testing.T) {
 
 func TestServerClose(t *testing.T) {
 	// t.Fatal("Server method.close request was not handled properly")
+}
+
+func TestMultiConn(t *testing.T) {
+	// t.Fatal("Failed to handle randomly connecting disconnecting users")
 }
 
 func TestStop(t *testing.T) {

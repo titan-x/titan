@@ -8,6 +8,8 @@ import (
 	"log"
 	"strconv"
 	"sync"
+
+	"github.com/nbusy/devastator/neptulon"
 )
 
 var users = make(map[uint32]*User)
@@ -16,29 +18,28 @@ var users = make(map[uint32]*User)
 type Server struct {
 	debug    bool
 	err      error
-	listener *Listener
+	neptulon *neptulon.App
 	mutex    sync.Mutex
 }
 
 // NewServer creates and returns a new server instance with a listener created using given parameters.
 // Debug mode dumps raw TCP data to stderr (log.Println() default).
 func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) {
-	l, err := Listen(cert, privKey, laddr, debug)
+	n, err := neptulon.NewApp(cert, privKey, laddr, debug)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Server{
 		debug:    debug,
-		listener: l,
-		mutex:    sync.Mutex{},
+		neptulon: n,
 	}, nil
 }
 
 // Start starts accepting connections on the internal listener and handles connections with registered onnection and message handlers.
 // This function blocks and never returns, unless there was an error while accepting a new connection or the server was closed.
 func (s *Server) Start() error {
-	err := s.listener.Accept(handleMsg, handleDisconn)
+	err := s.neptulon.Run()
 	if err != nil && s.debug {
 		log.Fatalln("Listener returned an error while closing:", err)
 	}
@@ -52,7 +53,7 @@ func (s *Server) Start() error {
 
 // Stop stops a server instance.
 func (s *Server) Stop() error {
-	err := s.listener.Close()
+	err := s.neptulon.Stop()
 
 	// close all active connections discarding any read/writes that is going on currently
 	// this is not a problem as we always require an ACK but it will also mean that message deliveries will be at-least-once; to-and-from the server
@@ -63,12 +64,6 @@ func (s *Server) Stop() error {
 		}
 		user.Conn = nil
 	}
-	for _, conn := range s.listener.Conns {
-		err := conn.Close()
-		if err != nil {
-			return err
-		}
-	}
 
 	s.mutex.Lock()
 	if s.err != nil {
@@ -78,8 +73,10 @@ func (s *Server) Stop() error {
 	return err
 }
 
+// ------------------------- legacy ----------------------------
+
 // handleMsg handles incoming client messages.
-func handleMsg(conn *Conn, session *Session, msg []byte) {
+func handleMsg(conn *neptulon.Conn, session *neptulon.Session, msg []byte) {
 	// authenticate the session if not already done
 	if session.UserID == 0 {
 		userID, err := auth(conn.ConnectionState().PeerCertificates, msg)
@@ -113,7 +110,7 @@ func auth(peerCerts []*x509.Certificate, msg []byte) (userID uint32, err error) 
 	}
 
 	// Google+ authentication
-	var req ReqMsg
+	var req neptulon.ReqMsg
 	if err = json.Unmarshal(msg, &req); err != nil {
 		return
 	}
@@ -139,6 +136,6 @@ func auth(peerCerts []*x509.Certificate, msg []byte) (userID uint32, err error) 
 	}
 }
 
-func handleDisconn(conn *Conn, session *Session) {
+func handleDisconn(conn *neptulon.Conn, session *neptulon.Session) {
 	users[session.UserID].Conn = nil
 }

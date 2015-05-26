@@ -88,7 +88,7 @@ Any message that was not acknowledged by the client will be delivered again (hen
 Testing
 -------
 
-All the tests can be executed by `GORACE="halt_on_error=1" go test -v -race -cover ./...` command. Optionally you can add `-v` flag to observe all connection logs. Integration tests require environment variables defined in the next section. If they are missing, integration tests are skipped.
+All the tests can be executed by `GORACE="halt_on_error=1" go test -race -cover ./...` command. Optionally you can add `-v` flag to observe all connection logs. Integration tests require environment variables defined in the next section. If they are missing, integration tests are skipped.
 
 Environment Variables
 ---------------------
