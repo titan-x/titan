@@ -71,14 +71,12 @@ func (n *Neptulon) Stop() error {
 	return err
 }
 
-// handleConn handles client connected event.
 func handleConn(n *Neptulon) func(conn *Conn, session *Session) {
 	return func(conn *Conn, session *Session) {
 		n.conns[session.id] = conn
 	}
 }
 
-// handleMsg handles incoming client messages.
 func handleMsg(n *Neptulon) func(conn *Conn, session *Session, msg []byte) {
 	return func(conn *Conn, session *Session, msg []byte) {
 		for _, m := range n.middleware {
@@ -87,7 +85,6 @@ func handleMsg(n *Neptulon) func(conn *Conn, session *Session, msg []byte) {
 	}
 }
 
-// handleDisconn handles client disconnection.
 func handleDisconn(n *Neptulon) func(conn *Conn, session *Session) {
 	return func(conn *Conn, session *Session) {
 		delete(n.conns, session.id)
