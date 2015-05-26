@@ -19,7 +19,6 @@ var (
 
 // Listener accepts connections from devices.
 type Listener struct {
-	Conns    []*Conn
 	debug    bool
 	listener net.Listener
 	connWG   sync.WaitGroup
@@ -49,7 +48,6 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 	log.Printf("Listener created: %v\n", laddr)
 
 	return &Listener{
-		Conns:    make([]*Conn, 0),
 		debug:    debug,
 		listener: l,
 	}, nil
@@ -57,7 +55,7 @@ func Listen(cert, privKey []byte, laddr string, debug bool) (*Listener, error) {
 
 // Accept waits for incoming connections and forwards the client connect/message/disconnect events to provided handlers in a new goroutine.
 // This function blocks and never returns, unless there is an error while accepting a new connection.
-func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) error {
+func (l *Listener) Accept(handleConn func(conn *Conn, session *Session), handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) error {
 	defer log.Println("Listener closed:", l.listener.Addr())
 	for {
 		conn, err := l.listener.Accept()
@@ -81,25 +79,27 @@ func (l *Listener) Accept(handleMsg func(conn *Conn, session *Session, msg []byt
 		log.Println("Client connected:", conn.RemoteAddr())
 
 		c := NewConn(tlsconn, 0, 0, 0, l.debug)
-		l.Conns = append(l.Conns, c)
-		go handleClient(l, c, handleMsg, handleDisconn)
+		go handleClient(l, c, handleConn, handleMsg, handleDisconn)
 	}
 }
 
 // handleClient waits for messages from the connected client and forwards the client message/disconnect
 // events to provided handlers in a new goroutine.
 // This function never returns, unless there is an error while reading from the channel or the client disconnects.
-func handleClient(l *Listener, conn *Conn, handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) error {
-	session := &Session{}
+func handleClient(l *Listener, conn *Conn, handleConn func(conn *Conn, session *Session), handleMsg func(conn *Conn, session *Session, msg []byte), handleDisconn func(conn *Conn, session *Session)) error {
+	id, _ := getID()
+	session := Session{id: id}
+	handleConn(conn, &session)
 
 	defer func() {
 		session.Error = conn.Close() // todo: handle close error, store the error in conn object and return it to handleMsg/handleErr/handleDisconn or one level up (to server)
-		l.connWG.Done()
 		if session.Disconnected {
 			log.Println("Client disconnected:", conn.RemoteAddr())
 		} else {
 			log.Println("Closed client connection:", conn.RemoteAddr())
 		}
+		handleDisconn(conn, &session)
+		l.connWG.Done()
 	}()
 
 	for {
@@ -126,18 +126,13 @@ func handleClient(l *Listener, conn *Conn, handleMsg func(conn *Conn, session *S
 			continue // send back pong?
 		}
 		if n == 5 && bytes.Equal(msg, closed) {
-			l.reqWG.Add(1)
-			go func() {
-				defer l.reqWG.Done()
-				handleDisconn(conn, session)
-			}()
 			return session.Error
 		}
 
 		l.reqWG.Add(1)
 		go func() {
 			defer l.reqWG.Done()
-			handleMsg(conn, session, msg)
+			handleMsg(conn, &session, msg)
 		}()
 	}
 

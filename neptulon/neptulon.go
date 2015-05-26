@@ -10,9 +10,10 @@ import (
 type Neptulon struct {
 	debug      bool
 	err        error
+	errMutex   sync.Mutex
 	listener   *Listener
-	errMutex   sync.RWMutex
 	middleware []func(conn *Conn, session *Session, msg []byte)
+	conns      map[string]*Conn
 }
 
 // New creates and returns a new Neptulon app. This is the default TLS constructor.
@@ -37,7 +38,7 @@ func (n *Neptulon) Middleware(middleware func(conn *Conn, session *Session, msg 
 // Run starts accepting connections on the internal listener and handles connections with registered middleware.
 // This function blocks and never returns, unless there was an error while accepting a new connection or the listner was closed.
 func (n *Neptulon) Run() error {
-	err := n.listener.Accept(handleMsg(n), handleDisconn)
+	err := n.listener.Accept(handleConn(n), handleMsg(n), handleDisconn(n))
 	if err != nil && n.debug {
 		log.Fatalln("Listener returned an error while closing:", err)
 	}
@@ -50,31 +51,31 @@ func (n *Neptulon) Run() error {
 }
 
 // Stop stops a server instance.
-func (s *Server) Stop() error {
-	err := s.listener.Close()
+func (n *Neptulon) Stop() error {
+	err := n.listener.Close()
 
 	// close all active connections discarding any read/writes that is going on currently
 	// this is not a problem as we always require an ACK but it will also mean that message deliveries will be at-least-once; to-and-from the server
-	for _, user := range users {
-		err := user.Conn.Close()
-		if err != nil {
-			return err
-		}
-		user.Conn = nil
-	}
-	for _, conn := range s.listener.Conns {
+	for _, conn := range n.conns {
 		err := conn.Close()
 		if err != nil {
 			return err
 		}
 	}
 
-	s.mutex.Lock()
-	if s.err != nil {
-		return s.err
+	n.errMutex.Lock()
+	if n.err != nil {
+		return n.err
 	}
-	s.mutex.Unlock()
+	n.errMutex.Unlock()
 	return err
+}
+
+// handleConn handles client connected event.
+func handleConn(n *Neptulon) func(conn *Conn, session *Session) {
+	return func(conn *Conn, session *Session) {
+		n.conns[session.id] = conn
+	}
 }
 
 // handleMsg handles incoming client messages.
@@ -87,4 +88,8 @@ func handleMsg(n *Neptulon) func(conn *Conn, session *Session, msg []byte) {
 }
 
 // handleDisconn handles client disconnection.
-func handleDisconn(conn *Conn, session *Session) {}
+func handleDisconn(n *Neptulon) func(conn *Conn, session *Session) {
+	return func(conn *Conn, session *Session) {
+		delete(n.conns, session.id)
+	}
+}

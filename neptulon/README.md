@@ -12,6 +12,11 @@ Example
 
 ToDo
 
+Testing
+-------
+
+All the tests can be executed by `GORACE="halt_on_error=1" go test -v -race -cover ./...` command. Optionally you can add `-v` flag to observe all connection logs.
+
 License
 -------
 
