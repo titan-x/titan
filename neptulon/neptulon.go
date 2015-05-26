@@ -14,6 +14,7 @@ type App struct {
 	listener   *Listener
 	middleware []func(conn *Conn, session *Session, msg []byte)
 	conns      map[string]*Conn
+	connMutex  sync.Mutex
 }
 
 // NewApp creates and returns a new Neptulon app. This is the default TLS constructor.
@@ -57,12 +58,14 @@ func (a *App) Stop() error {
 
 	// close all active connections discarding any read/writes that is going on currently
 	// this is not a problem as we always require an ACK but it will also mean that message deliveries will be at-least-once; to-and-from the server
+	a.connMutex.Lock()
 	for _, conn := range a.conns {
 		err := conn.Close()
 		if err != nil {
 			return err
 		}
 	}
+	a.connMutex.Unlock()
 
 	a.errMutex.RLock()
 	if a.err != nil {
@@ -74,7 +77,9 @@ func (a *App) Stop() error {
 
 func handleConn(a *App) func(conn *Conn, session *Session) {
 	return func(conn *Conn, session *Session) {
+		a.connMutex.Lock()
 		a.conns[session.id] = conn
+		a.connMutex.Unlock()
 	}
 }
 
@@ -88,6 +93,8 @@ func handleMsg(a *App) func(conn *Conn, session *Session, msg []byte) {
 
 func handleDisconn(a *App) func(conn *Conn, session *Session) {
 	return func(conn *Conn, session *Session) {
+		a.connMutex.Lock()
 		delete(a.conns, session.id)
+		a.connMutex.Unlock()
 	}
 }
