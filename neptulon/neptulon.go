@@ -10,7 +10,7 @@ import (
 type Neptulon struct {
 	debug      bool
 	err        error
-	errMutex   sync.Mutex
+	errMutex   sync.RWMutex
 	listener   *Listener
 	middleware []func(conn *Conn, session *Session, msg []byte)
 	conns      map[string]*Conn
@@ -63,11 +63,11 @@ func (n *Neptulon) Stop() error {
 		}
 	}
 
-	n.errMutex.Lock()
+	n.errMutex.RLock()
 	if n.err != nil {
 		return n.err
 	}
-	n.errMutex.Unlock()
+	n.errMutex.RUnlock()
 	return err
 }
 

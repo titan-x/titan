@@ -9,7 +9,7 @@ type Session struct {
 	Error        error
 	Disconnected bool
 	data         map[string]interface{}
-	mutex        sync.Mutex
+	mutex        sync.RWMutex
 }
 
 // Set stores a value for a given key in the session. This method is thread safe.
@@ -21,7 +21,7 @@ func (s *Session) Set(key string, val interface{}) {
 
 // Get retrieves a value for a given key in the session. This method is thread safe.
 func (s *Session) Get(key string) interface{} {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 	return s.data[key]
 }
