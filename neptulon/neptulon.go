@@ -1,20 +1,92 @@
 // Package neptulon is a socket framework with middleware support.
 package neptulon
 
-import "net/http"
+import (
+	"log"
+	"sync"
+)
 
-var middlewares []*func(ctx Context) (response interface{})
+// Neptulon framework entry point.
+type Neptulon struct {
+	debug      bool
+	err        error
+	errMutex   sync.RWMutex
+	listener   *Listener
+	middleware []func(conn *Conn, session *Session, msg []byte)
+	conns      map[string]*Conn
+}
 
-type handler func(w http.ResponseWriter, r *http.Request) error
+// New creates and returns a new Neptulon app. This is the default TLS constructor.
+// Debug mode dumps raw TCP data to stderr (log.Println() default).
+func New(cert, privKey []byte, laddr string, debug bool) (*Neptulon, error) {
+	l, err := Listen(cert, privKey, laddr, debug)
+	if err != nil {
+		return nil, err
+	}
 
-func handle(handlers ...handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		for _, handler := range handlers {
-			err := handler(w, r)
-			if err != nil {
-				w.Write([]byte(err.Error()))
-				return
-			}
+	return &Neptulon{
+		debug:    debug,
+		listener: l,
+	}, nil
+}
+
+// Middleware registers a new middleware to handle incoming messages.
+func (n *Neptulon) Middleware(middleware func(conn *Conn, session *Session, msg []byte)) {
+	n.middleware = append(n.middleware, middleware)
+}
+
+// Run starts accepting connections on the internal listener and handles connections with registered middleware.
+// This function blocks and never returns, unless there was an error while accepting a new connection or the listner was closed.
+func (n *Neptulon) Run() error {
+	err := n.listener.Accept(handleConn(n), handleMsg(n), handleDisconn(n))
+	if err != nil && n.debug {
+		log.Fatalln("Listener returned an error while closing:", err)
+	}
+
+	n.errMutex.Lock()
+	n.err = err
+	n.errMutex.Unlock()
+
+	return err
+}
+
+// Stop stops a server instance.
+func (n *Neptulon) Stop() error {
+	err := n.listener.Close()
+
+	// close all active connections discarding any read/writes that is going on currently
+	// this is not a problem as we always require an ACK but it will also mean that message deliveries will be at-least-once; to-and-from the server
+	for _, conn := range n.conns {
+		err := conn.Close()
+		if err != nil {
+			return err
 		}
-	})
+	}
+
+	n.errMutex.RLock()
+	if n.err != nil {
+		return n.err
+	}
+	n.errMutex.RUnlock()
+	return err
+}
+
+func handleConn(n *Neptulon) func(conn *Conn, session *Session) {
+	return func(conn *Conn, session *Session) {
+		n.conns[session.id] = conn
+	}
+}
+
+func handleMsg(n *Neptulon) func(conn *Conn, session *Session, msg []byte) {
+	return func(conn *Conn, session *Session, msg []byte) {
+		for _, m := range n.middleware {
+			m(conn, session, msg)
+		}
+	}
+}
+
+func handleDisconn(n *Neptulon) func(conn *Conn, session *Session) {
+	return func(conn *Conn, session *Session) {
+		delete(n.conns, session.id)
+	}
 }

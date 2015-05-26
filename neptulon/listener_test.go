@@ -1,4 +1,4 @@
-package devastator
+package neptulon
 
 import (
 	"crypto/tls"
@@ -21,7 +21,7 @@ func TestListener(t *testing.T) {
 	msg4 := randString(45000)   //0.45 MB
 	msg5 := randString(5000000) //5.0 MB
 
-	host := "localhost:3009"
+	host := "localhost:3010"
 	cert, privKey, _ := genCert("localhost", 0, nil, nil, 512, "localhost", "devastator")
 	l, err := Listen(cert, privKey, host, false)
 	if err != nil {
@@ -32,18 +32,18 @@ func TestListener(t *testing.T) {
 	listenerWG.Add(1)
 	go func() {
 		defer listenerWG.Done()
-		l.Accept(func(conn *Conn, session *Session, msg []byte) {
-			certs := conn.ConnectionState().PeerCertificates
-			if len(certs) > 0 {
-				t.Logf("Client connected with client certificate subject: %v\n", certs[0].Subject)
-			}
+		l.Accept(func(conn *Conn, session *Session) {},
+			func(conn *Conn, session *Session, msg []byte) {
+				certs := conn.ConnectionState().PeerCertificates
+				if len(certs) > 0 {
+					t.Logf("Client connected with client certificate subject: %v\n", certs[0].Subject)
+				}
 
-			m := string(msg)
-			if m != msg1 && m != msg2 && m != msg3 && m != msg4 && m != msg5 {
-				t.Fatal("Sent and incoming message did not match for message:", m)
-			}
-		}, func(conn *Conn, session *Session) {
-		})
+				m := string(msg)
+				if m != msg1 && m != msg2 && m != msg3 && m != msg4 && m != msg5 {
+					t.Fatal("Sent and incoming message did not match for message:", m)
+				}
+			}, func(conn *Conn, session *Session) {})
 	}()
 
 	roots := x509.NewCertPool()
