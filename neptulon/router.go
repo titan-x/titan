@@ -10,6 +10,7 @@ package neptulon
 
 // Router is a simple routing middleware.
 type Router struct {
+	routes map[string]func(conn *Conn, session *Session, msg interface{})
 }
 
 // Register adds a new route registry.

@@ -30,6 +30,10 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 		return nil, err
 	}
 
+	// n.Middleware()
+	// n.Middleware()
+	// n.Middleware()
+
 	return &Server{
 		debug:    debug,
 		neptulon: n,
