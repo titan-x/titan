@@ -110,7 +110,7 @@ func auth(peerCerts []*x509.Certificate, msg []byte) (userID uint32, err error) 
 	}
 
 	// Google+ authentication
-	var req neptulon.ReqMsg
+	var req neptulon.Request
 	if err = json.Unmarshal(msg, &req); err != nil {
 		return
 	}

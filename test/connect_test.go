@@ -26,7 +26,7 @@ func TestClientClose(t *testing.T) {
 	s := getServer(t)
 	c := getClientConnWithClientCert(t)
 
-	writeMsg(t, c, neptulon.ReqMsg{Method: "close"})
+	writeMsg(t, c, neptulon.Request{Method: "close"})
 
 	closeClientConn(t, c)
 	stopServer(t, s)
