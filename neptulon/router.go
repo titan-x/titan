@@ -14,5 +14,6 @@ type Router struct {
 }
 
 // Register adds a new route registry.
-func (r *Router) Register(route string) {
+func (r *Router) Register(route string, fn func(conn *Conn, session *Session, msg interface{})) {
+	r.routes[route] = fn
 }

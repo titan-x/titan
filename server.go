@@ -30,9 +30,10 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 		return nil, err
 	}
 
-	// n.Middleware()
-	// n.Middleware()
-	// n.Middleware()
+	// n.Middleware() // json rpc protocol
+	// p.Middleware() // public json rpc routes
+	// p.Middleware() // cert auth
+	// p.Middleware() // private json rpc routes
 
 	return &Server{
 		debug:    debug,
