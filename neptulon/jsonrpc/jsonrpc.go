@@ -1,4 +1,5 @@
-package neptulon
+// Package jsonrpc implements JSON-RPC 2.0 protocol for Neptulon framework.
+package jsonrpc
 
 import "encoding/json"
 

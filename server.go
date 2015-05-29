@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/nbusy/devastator/neptulon"
+	"github.com/nbusy/devastator/neptulon/jsonrpc"
 )
 
 var users = make(map[uint32]*User)
@@ -115,7 +116,7 @@ func auth(peerCerts []*x509.Certificate, msg []byte) (userID uint32, err error) 
 	}
 
 	// Google+ authentication
-	var req neptulon.Request
+	var req jsonrpc.Request
 	if err = json.Unmarshal(msg, &req); err != nil {
 		return
 	}

@@ -3,7 +3,7 @@ package test
 import (
 	"testing"
 
-	"github.com/nbusy/devastator/neptulon"
+	"github.com/nbusy/devastator/neptulon/jsonrpc"
 )
 
 func TestClientDisconnect(t *testing.T) {
@@ -26,7 +26,7 @@ func TestClientClose(t *testing.T) {
 	s := getServer(t)
 	c := getClientConnWithClientCert(t)
 
-	writeMsg(t, c, neptulon.Request{Method: "close"})
+	writeMsg(t, c, jsonrpc.Request{Method: "close"})
 
 	closeClientConn(t, c)
 	stopServer(t, s)
