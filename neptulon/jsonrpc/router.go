@@ -10,12 +10,18 @@ import "github.com/nbusy/devastator/neptulon"
 
 // handle authenticated calls here
 
-// Router is a simple routing middleware.
+// Router is a JSON-RPC request routing middleware.
 type Router struct {
-	routes map[string]func(conn *neptulon.Conn, session *neptulon.Session, msg interface{})
+	requestRoutes      map[string]func(conn *neptulon.Conn, session *neptulon.Session, req *Request)
+	notificationRoutes map[string]func(conn *neptulon.Conn, session *neptulon.Session, not *Notification)
 }
 
-// Register adds a new route registry.
-func (r *Router) Register(route string, fn func(conn *neptulon.Conn, session *neptulon.Session, msg interface{})) {
-	r.routes[route] = fn
+// RegisterReq adds a new request route registry.
+func (r *Router) RegisterReq(route string, handler func(conn *neptulon.Conn, session *neptulon.Session, req *Request)) {
+	r.requestRoutes[route] = handler
+}
+
+// RegisterNot adds a new request route registry.
+func (r *Router) RegisterNot(route string, handler func(conn *neptulon.Conn, session *neptulon.Session, not *Notification)) {
+	r.notificationRoutes[route] = handler
 }

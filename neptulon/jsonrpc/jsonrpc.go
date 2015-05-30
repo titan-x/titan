@@ -24,13 +24,13 @@ type Response struct {
 	Result interface{} `json:"result"`
 }
 
-// Error is a JSON RPC 2.0 response error object.
+// Error is a JSON RPC 2.0 error response object.
 type Error struct {
 	ID    string       `json:"id"`
 	Error ErrorPayload `json:"error"`
 }
 
-// ErrorPayload is a JSON RPC 2.0 response error object's 'error' field.
+// ErrorPayload is a JSON RPC 2.0 error response object's 'error' field.
 type ErrorPayload struct {
 	Code    int         `json:"code"`
 	Message string      `json:"message"`
