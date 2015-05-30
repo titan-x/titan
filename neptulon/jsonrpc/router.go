@@ -18,8 +18,8 @@ type Router struct {
 	routes map[string]func(conn *neptulon.Conn, session *neptulon.Session, msg *Message)
 }
 
-// Register adds a new route registry.
-func (r *Router) Register(route string, handler func(conn *neptulon.Conn, session *neptulon.Session, msg *Message)) {
+// Route adds a new route registry.
+func (r *Router) Route(route string, handler func(conn *neptulon.Conn, session *neptulon.Session, msg *Message)) {
 	r.routes[route] = handler
 }
 
