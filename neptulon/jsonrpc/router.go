@@ -10,11 +10,6 @@ import "github.com/nbusy/devastator/neptulon"
 
 // handle authenticated calls here
 
-// NewJSONRPCApp creates a
-func NewJSONRPCApp() (app *neptulon.App, router *Router, err error) {
-	return nil, nil, nil
-}
-
 // Router is a simple routing middleware.
 type Router struct {
 	routes map[string]func(conn *neptulon.Conn, session *neptulon.Session, msg interface{})

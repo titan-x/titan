@@ -17,7 +17,7 @@ type App struct {
 	connMutex  sync.Mutex
 }
 
-// NewApp creates a new Neptulon app. This is the default TLS constructor.
+// NewApp creates a Neptulon app. This is the default TLS constructor.
 // Debug mode dumps raw TCP data to stderr (log.Println() default).
 func NewApp(cert, privKey []byte, laddr string, debug bool) (*App, error) {
 
