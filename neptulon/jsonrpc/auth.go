@@ -1,4 +1,4 @@
-package devastator
+package jsonrpc
 
 import (
 	"fmt"
@@ -6,16 +6,11 @@ import (
 	"strconv"
 
 	"github.com/nbusy/devastator/neptulon"
-	"github.com/nbusy/devastator/neptulon/jsonrpc"
 )
 
-// Token is an encrypted identifier for connecting devices.
-type Token struct {
-	ID uint32
-	IV []byte
-}
+// todo: remove session.UserID and use session.data.UserID
 
-func authMiddleware(conn *neptulon.Conn, session *neptulon.Session, msg *jsonrpc.Message) {
+func authMiddleware(conn *neptulon.Conn, session *neptulon.Session, msg *Message) {
 	peerCerts := conn.ConnectionState().PeerCertificates
 
 	// client certificate authorization: certificate is verified by the TLS listener instance so we trust it
