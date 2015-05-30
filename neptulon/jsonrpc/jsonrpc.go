@@ -5,6 +5,15 @@ import "encoding/json"
 
 // JSON RPC 2.0 dialect, where version field is ommited for brevity.
 
+// Message is a JSON RPC 2.0 request or response message. Version field is ommited for brevity.
+type Message struct {
+	ID     string          `json:"id,omitempty"`
+	Method string          `json:"method,omitempty"`
+	Params json.RawMessage `json:"params,omitempty"`
+	Result interface{}     `json:"result,omitempty"`
+	Error  ResError        `json:"error,omitempty"`
+}
+
 // Request is a JSON RPC 2.0 request object.
 type Request struct {
 	ID     string          `json:"id"`
@@ -21,21 +30,37 @@ type Notification struct {
 // Response is a JSON RPC 2.0 response object.
 type Response struct {
 	ID     string      `json:"id"`
-	Result interface{} `json:"result"`
+	Result interface{} `json:"result,omitempty"`
+	Error  ResError    `json:"error,omitempty"`
 }
 
-// Error is a JSON RPC 2.0 error response object.
-type Error struct {
-	ID    string       `json:"id"`
-	Error ErrorPayload `json:"error"`
-}
-
-// ErrorPayload is a JSON RPC 2.0 error response object's 'error' field.
-type ErrorPayload struct {
+// ResError is a JSON RPC 2.0 response error object.
+type ResError struct {
 	Code    int         `json:"code"`
 	Message string      `json:"message"`
 	Data    interface{} `json:"data,omitempty"`
 }
+
+// ------------------------- legacy ----------------------
+
+// // Response is a JSON RPC 2.0 response object.
+// type Response struct {
+// 	ID     string      `json:"id"`
+// 	Result interface{} `json:"result"`
+// }
+//
+// // Error is a JSON RPC 2.0 error response object.
+// type Error struct {
+// 	ID    string       `json:"id"`
+// 	Error ErrorPayload `json:"error"`
+// }
+//
+// // ErrorPayload is a JSON RPC 2.0 error response object's 'error' field.
+// type ErrorPayload struct {
+// 	Code    int         `json:"code"`
+// 	Message string      `json:"message"`
+// 	Data    interface{} `json:"data,omitempty"`
+// }
 
 // ------------------------- legacy ----------------------
 

@@ -1,27 +1,33 @@
 package jsonrpc
 
-import "github.com/nbusy/devastator/neptulon"
+import (
+	"encoding/json"
 
-// register routes with callbacks here
+	"github.com/nbusy/devastator/neptulon"
+)
 
-// handle anonymouse calls here
-
-// handle authentication here
-
-// handle authenticated calls here
+// NewRouter creates a JSON-RPC 2.0 router instance and registers it with the Neptulon app.
+func NewRouter(app *neptulon.App) *Router {
+	r := Router{}
+	app.Middleware(r.middleware)
+	return &r
+}
 
 // Router is a JSON-RPC request routing middleware.
 type Router struct {
-	requestRoutes      map[string]func(conn *neptulon.Conn, session *neptulon.Session, req *Request)
-	notificationRoutes map[string]func(conn *neptulon.Conn, session *neptulon.Session, not *Notification)
+	routes map[string]func(conn *neptulon.Conn, session *neptulon.Session, msg *Message)
 }
 
-// RegisterReq adds a new request route registry.
-func (r *Router) RegisterReq(route string, handler func(conn *neptulon.Conn, session *neptulon.Session, req *Request)) {
-	r.requestRoutes[route] = handler
+// Register adds a new route registry.
+func (r *Router) Register(route string, handler func(conn *neptulon.Conn, session *neptulon.Session, msg *Message)) {
+	r.routes[route] = handler
 }
 
-// RegisterNot adds a new request route registry.
-func (r *Router) RegisterNot(route string, handler func(conn *neptulon.Conn, session *neptulon.Session, not *Notification)) {
-	r.notificationRoutes[route] = handler
+func (r *Router) middleware(conn *neptulon.Conn, session *neptulon.Session, msg []byte) {
+	var m Message
+	if err := json.Unmarshal(msg, &m); err != nil {
+		return
+	}
+
+	r.routes[m.Method](conn, session, &m)
 }
