@@ -1,5 +1,7 @@
 package devastator
 
+import "github.com/nbusy/devastator/neptulon"
+
 // User is a mobile user.
 type User struct {
 	ID              uint32
@@ -8,7 +10,7 @@ type User struct {
 	APNSDeviceToken string
 	Name            string
 	Picture         []byte
-	Conn            *Conn
+	Conn            *neptulon.Conn
 
 	// MsgQueue may contain request, response, or notification messages.
 	MsgQueue []interface{}

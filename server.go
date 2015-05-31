@@ -1,13 +1,11 @@
 package devastator
 
 import (
-	"crypto/x509"
-	"encoding/json"
-	"errors"
-	"fmt"
 	"log"
-	"strconv"
 	"sync"
+
+	"github.com/nbusy/devastator/neptulon"
+	"github.com/nbusy/devastator/neptulon/jsonrpc"
 )
 
 var users = make(map[uint32]*User)
@@ -16,29 +14,47 @@ var users = make(map[uint32]*User)
 type Server struct {
 	debug    bool
 	err      error
-	listener *Listener
+	neptulon *neptulon.App
 	mutex    sync.Mutex
 }
 
 // NewServer creates and returns a new server instance with a listener created using given parameters.
 // Debug mode dumps raw TCP data to stderr (log.Println() default).
 func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) {
-	l, err := Listen(cert, privKey, laddr, debug)
+	nep, err := neptulon.NewApp(cert, privKey, laddr, debug)
 	if err != nil {
 		return nil, err
 	}
 
+	jrpc, err := jsonrpc.NewApp(nep)
+	if err != nil {
+		return nil, err
+	}
+
+	pubrout, err := jsonrpc.NewRouter(jrpc)
+	if err != nil {
+		return nil, err
+	}
+
+	pubrout.Route("close", func(conn *neptulon.Conn, session *neptulon.Session, msg *jsonrpc.Message) {
+		log.Println("close call received")
+	})
+
+	// n.Middleware() // json rpc protocol
+	// p.Middleware("auth.google") // public json rpc routes
+	// p.Middleware() // cert auth
+	// p.Middleware() // private json rpc routes
+
 	return &Server{
 		debug:    debug,
-		listener: l,
-		mutex:    sync.Mutex{},
+		neptulon: nep,
 	}, nil
 }
 
 // Start starts accepting connections on the internal listener and handles connections with registered onnection and message handlers.
 // This function blocks and never returns, unless there was an error while accepting a new connection or the server was closed.
 func (s *Server) Start() error {
-	err := s.listener.Accept(handleMsg, handleDisconn)
+	err := s.neptulon.Run()
 	if err != nil && s.debug {
 		log.Fatalln("Listener returned an error while closing:", err)
 	}
@@ -52,7 +68,7 @@ func (s *Server) Start() error {
 
 // Stop stops a server instance.
 func (s *Server) Stop() error {
-	err := s.listener.Close()
+	err := s.neptulon.Stop()
 
 	// close all active connections discarding any read/writes that is going on currently
 	// this is not a problem as we always require an ACK but it will also mean that message deliveries will be at-least-once; to-and-from the server
@@ -63,12 +79,6 @@ func (s *Server) Stop() error {
 		}
 		user.Conn = nil
 	}
-	for _, conn := range s.listener.Conns {
-		err := conn.Close()
-		if err != nil {
-			return err
-		}
-	}
 
 	s.mutex.Lock()
 	if s.err != nil {
@@ -78,67 +88,69 @@ func (s *Server) Stop() error {
 	return err
 }
 
-// handleMsg handles incoming client messages.
-func handleMsg(conn *Conn, session *Session, msg []byte) {
-	// authenticate the session if not already done
-	if session.UserID == 0 {
-		userID, err := auth(conn.ConnectionState().PeerCertificates, msg)
-		if err != nil {
-			session.Error = fmt.Errorf("Cannot parse client message or method mismatched: %v", err)
-		}
-		session.UserID = userID
-		users[userID].Conn = conn
-		// todo: ack auth message, start sending other queued messages one by one
-		// can have 2 approaches here
-		// 1. users[id].send(...) & users[id].queue(...)
-		// 2. conn.write(...) && queue[id].conn = ...
-		return
-	}
+// ------------------------- legacy ----------------------------
 
-	// router: process the message and queue a reply if necessary and send an ack
-}
-
-// auth handles Google+ sign-in and client certificate authentication.
-func auth(peerCerts []*x509.Certificate, msg []byte) (userID uint32, err error) {
-	// client certificate authorization: certificate is verified by the TLS listener instance so we trust it
-	if len(peerCerts) > 0 {
-		idstr := peerCerts[0].Subject.CommonName
-		uid64, err := strconv.ParseUint(idstr, 10, 32)
-		if err != nil {
-			return 0, err
-		}
-		userID = uint32(uid64)
-		log.Printf("Client connected with client certificate subject: %+v", peerCerts[0].Subject)
-		return userID, nil
-	}
-
-	// Google+ authentication
-	var req ReqMsg
-	if err = json.Unmarshal(msg, &req); err != nil {
-		return
-	}
-
-	switch req.Method {
-	case "auth.token":
-		var token string
-		if err = json.Unmarshal(req.Params, &token); err != nil {
-			return
-		}
-		// assume that token = user ID for testing
-		uid64, err := strconv.ParseUint(token, 10, 32)
-		if err != nil {
-			return 0, err
-		}
-		userID = uint32(uid64)
-		return userID, nil
-	case "auth.google":
-		// todo: ping google, get user info, save user info in DB, generate and return permanent jwt token (or should this part be NBusy's business?)
-		return
-	default:
-		return 0, errors.New("initial unauthenticated request should be in the 'auth.xxx' form")
-	}
-}
-
-func handleDisconn(conn *Conn, session *Session) {
-	users[session.UserID].Conn = nil
-}
+// // handleMsg handles incoming client messages.
+// func handleMsg(conn *neptulon.Conn, session *neptulon.Session, msg []byte) {
+// 	// authenticate the session if not already done
+// 	if session.UserID == 0 {
+// 		userID, err := auth(conn.ConnectionState().PeerCertificates, msg)
+// 		if err != nil {
+// 			session.Error = fmt.Errorf("Cannot parse client message or method mismatched: %v", err)
+// 		}
+// 		session.UserID = userID
+// 		users[userID].Conn = conn
+// 		// todo: ack auth message, start sending other queued messages one by one
+// 		// can have 2 approaches here
+// 		// 1. users[id].send(...) & users[id].queue(...)
+// 		// 2. conn.write(...) && queue[id].conn = ...
+// 		return
+// 	}
+//
+// 	// router: process the message and queue a reply if necessary and send an ack
+// }
+//
+// // auth handles Google+ sign-in and client certificate authentication.
+// func auth(peerCerts []*x509.Certificate, msg []byte) (userID uint32, err error) {
+// 	// client certificate authorization: certificate is verified by the TLS listener instance so we trust it
+// 	if len(peerCerts) > 0 {
+// 		idstr := peerCerts[0].Subject.CommonName
+// 		uid64, err := strconv.ParseUint(idstr, 10, 32)
+// 		if err != nil {
+// 			return 0, err
+// 		}
+// 		userID = uint32(uid64)
+// 		log.Printf("Client connected with client certificate subject: %+v", peerCerts[0].Subject)
+// 		return userID, nil
+// 	}
+//
+// 	// Google+ authentication
+// 	var req jsonrpc.Request
+// 	if err = json.Unmarshal(msg, &req); err != nil {
+// 		return
+// 	}
+//
+// 	switch req.Method {
+// 	case "auth.token":
+// 		var token string
+// 		if err = json.Unmarshal(req.Params, &token); err != nil {
+// 			return
+// 		}
+// 		// assume that token = user ID for testing
+// 		uid64, err := strconv.ParseUint(token, 10, 32)
+// 		if err != nil {
+// 			return 0, err
+// 		}
+// 		userID = uint32(uid64)
+// 		return userID, nil
+// 	case "auth.google":
+// 		// todo: ping google, get user info, save user info in DB, generate and return permanent jwt token (or should this part be NBusy's business?)
+// 		return
+// 	default:
+// 		return 0, errors.New("initial unauthenticated request should be in the 'auth.xxx' form")
+// 	}
+// }
+//
+// func handleDisconn(conn *neptulon.Conn, session *neptulon.Session) {
+// 	users[session.UserID].Conn = nil
+// }

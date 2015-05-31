@@ -2,8 +2,9 @@ package test
 
 import (
 	"testing"
+	"time"
 
-	"github.com/nbusy/devastator"
+	"github.com/nbusy/devastator/neptulon/jsonrpc"
 )
 
 func TestClientDisconnect(t *testing.T) {
@@ -26,7 +27,11 @@ func TestClientClose(t *testing.T) {
 	s := getServer(t)
 	c := getClientConnWithClientCert(t)
 
-	writeMsg(t, c, devastator.ReqMsg{Method: "close"})
+	writeMsg(t, c, jsonrpc.Request{Method: "close"})
+
+	// todo: how to wait flush gorotune spawn
+	// todo: with nanosecond wait, client disconnected doesn't happen!
+	time.Sleep(time.Nanosecond)
 
 	closeClientConn(t, c)
 	stopServer(t, s)
@@ -34,6 +39,10 @@ func TestClientClose(t *testing.T) {
 
 func TestServerClose(t *testing.T) {
 	// t.Fatal("Server method.close request was not handled properly")
+}
+
+func TestMultiConn(t *testing.T) {
+	// t.Fatal("Failed to handle randomly connecting disconnecting users")
 }
 
 func TestStop(t *testing.T) {
