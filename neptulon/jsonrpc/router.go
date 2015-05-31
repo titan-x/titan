@@ -8,10 +8,14 @@ type Router struct {
 }
 
 // NewRouter creates a JSON-RPC router instance and registers it with the Neptulon JSON-RPC app.
-func NewRouter(app *App) *Router {
-	r := Router{}
+func NewRouter(app *App) (*Router, error) {
+	r := Router{
+		routes: make(map[string]func(conn *neptulon.Conn, session *neptulon.Session, msg *Message)),
+	}
+
 	app.Middleware(r.middleware)
-	return &r
+
+	return &r, nil
 }
 
 // Route adds a new route registry.

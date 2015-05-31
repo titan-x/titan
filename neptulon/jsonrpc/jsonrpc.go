@@ -13,10 +13,10 @@ type App struct {
 }
 
 // NewApp creates a Neptulon JSON-RPC app.
-func NewApp(n *neptulon.App) *App {
+func NewApp(n *neptulon.App) (*App, error) {
 	a := App{}
 	n.Middleware(a.handler)
-	return &a
+	return &a, nil
 }
 
 // Middleware registers a new middleware to handle incoming messages.

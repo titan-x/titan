@@ -26,10 +26,24 @@ type Server struct {
 // NewServer creates and returns a new server instance with a listener created using given parameters.
 // Debug mode dumps raw TCP data to stderr (log.Println() default).
 func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) {
-	n, err := neptulon.NewApp(cert, privKey, laddr, debug)
+	nep, err := neptulon.NewApp(cert, privKey, laddr, debug)
 	if err != nil {
 		return nil, err
 	}
+
+	jrpc, err := jsonrpc.NewApp(nep)
+	if err != nil {
+		return nil, err
+	}
+
+	pubrout, err := jsonrpc.NewRouter(jrpc)
+	if err != nil {
+		return nil, err
+	}
+
+	pubrout.Route("close", func(conn *neptulon.Conn, session *neptulon.Session, msg *jsonrpc.Message) {
+		log.Println("close call received")
+	})
 
 	// n.Middleware() // json rpc protocol
 	// p.Middleware("auth.google") // public json rpc routes
@@ -38,7 +52,7 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 
 	return &Server{
 		debug:    debug,
-		neptulon: n,
+		neptulon: nep,
 	}, nil
 }
 
