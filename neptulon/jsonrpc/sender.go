@@ -1,4 +1,4 @@
-package jsonrcp
+package jsonrpc
 
 import "github.com/nbusy/devastator/neptulon"
 
@@ -7,6 +7,6 @@ type Sender struct {
 	routes map[string]func(conn *neptulon.Conn, session *neptulon.Session, msg *Message)
 }
 
-func (r *Router) middleware(conn *neptulon.Conn, session *neptulon.Session, msg *Message) {
-	r.routes[msg.Method](conn, session, msg)
+func (s *Sender) middleware(conn *neptulon.Conn, session *neptulon.Session, msg *Message) {
+	s.routes[msg.Method](conn, session, msg)
 }
