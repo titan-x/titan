@@ -28,7 +28,10 @@ func TestClientClose(t *testing.T) {
 	c := getClientConnWithClientCert(t)
 
 	writeMsg(t, c, jsonrpc.Request{Method: "close"})
-	time.Sleep(time.Second)
+
+	// todo: how to wait flush gorotune spawn
+	// todo: with nanosecond wait, client disconnected doesn't happen!
+	time.Sleep(time.Nanosecond)
 
 	closeClientConn(t, c)
 	stopServer(t, s)
