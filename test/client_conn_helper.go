@@ -7,6 +7,7 @@ import (
 
 	"github.com/nbusy/devastator"
 	"github.com/nbusy/devastator/neptulon"
+	"github.com/nbusy/devastator/neptulon/jsonrpc"
 )
 
 // client certs
@@ -112,13 +113,15 @@ func writeMsg(t *testing.T, c *neptulon.Conn, msg interface{}) {
 	}
 }
 
-// readMsg reads a message off of a client connection into the given msg parameter with error checking.
-func readMsg(t *testing.T, c *neptulon.Conn, msg interface{}) {
-	if n, err := c.ReadMsg(msg); err != nil {
+// readMsg reads a message off of a client connection with error checking and returns a jsonrpc.Message object.
+func readMsg(t *testing.T, c *neptulon.Conn) *jsonrpc.Message {
+	var msg jsonrpc.Message
+	if n, err := c.ReadMsg(&msg); err != nil {
 		t.Fatal("Failed to read message from client connection:", err)
 	} else if n == 0 {
 		t.Fatal("Failed to read message from client connection. Only 0 byte was read.")
 	}
+	return &msg
 }
 
 func _getClientConn(t *testing.T, useClientCert bool) *neptulon.Conn {

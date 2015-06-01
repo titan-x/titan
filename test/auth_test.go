@@ -1,9 +1,14 @@
 package test
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/nbusy/devastator/neptulon/jsonrpc"
+)
 
 func TestAuth(t *testing.T) {
-	// t.Fatal("Unauthorized clients cannot call any function other than method.auth.")
+	// t.Fatal("Unauthorized clients cannot call any function other than method.auth and method.close") // call to randomized and all registered routes here
+	// t.Fatal("Anonymous calls to method.auth and method.close should be allowed")
 }
 
 func TestGoogleAuth(t *testing.T) {
@@ -14,6 +19,17 @@ func TestGoogleAuth(t *testing.T) {
 }
 
 func TestClientCertAuth(t *testing.T) {
+	s := getServer(t)
+	c := getClientConnWithClientCert(t)
+
+	writeMsg(t, c, jsonrpc.Request{Method: "auth.cert"})
+	m := readMsg(t, c)
+
+	t.Log(m)
+
+	closeClientConn(t, c)
+	stopServer(t, s)
+
 	// t.Fatal("Authentication failed with a valid client certificate")
 	// t.Fatal("Authenticated with invalid/expired client certificate")
 	// t.Fatal("Authentication was not ACKed")

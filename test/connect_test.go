@@ -38,7 +38,8 @@ func TestClientClose(t *testing.T) {
 }
 
 func TestServerClose(t *testing.T) {
-	// t.Fatal("Server method.close request was not handled properly")
+	// t.Fatal("Server->client method.close request was not handled properly")
+	// t.Fatal("ACK for Server->client method.close request was not received")
 }
 
 func TestMultiConn(t *testing.T) {
