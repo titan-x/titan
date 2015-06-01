@@ -22,10 +22,10 @@ func TestClientCertAuth(t *testing.T) {
 	s := getServer(t)
 	c := getClientConnWithClientCert(t)
 
-	writeMsg(t, c, jsonrpc.Request{Method: "auth.cert"})
-	m := readMsg(t, c)
-
-	t.Log(m)
+	writeMsg(t, c, jsonrpc.Request{Method: "auth.cert"}) // should be a variadic fn(method, params...)
+	// m := readMsg(t, c)
+	//
+	// t.Log(m)
 
 	closeClientConn(t, c)
 	stopServer(t, s)

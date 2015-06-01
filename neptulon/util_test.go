@@ -1,4 +1,4 @@
-package devastator
+package neptulon
 
 import (
 	"crypto/rsa"
