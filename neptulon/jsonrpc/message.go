@@ -30,7 +30,7 @@ type Notification struct {
 type Response struct {
 	ID     string      `json:"id"`
 	Result interface{} `json:"result,omitempty"`
-	Error  ResError    `json:"error,omitempty"`
+	Error  *ResError   `json:"error,omitempty"`
 }
 
 // ResError is a JSON-RPC response error object.

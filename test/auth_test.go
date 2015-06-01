@@ -22,15 +22,16 @@ func TestClientCertAuth(t *testing.T) {
 	s := getServer(t)
 	c := getClientConnWithClientCert(t)
 
-	writeMsg(t, c, jsonrpc.Request{Method: "auth.cert"}) // should be a variadic fn(method, params...)
-	// m := readMsg(t, c)
-	//
-	// t.Log(m)
+	writeMsg(t, c, jsonrpc.Request{ID: "123", Method: "auth.cert"}) // should be a variadic fn(method, params...)
+	m := readMsg(t, c)
+
+	if m.Result != "ACK" {
+		t.Fatal("Authentication failed with a valid client certificate. Got server response:", m)
+	}
 
 	closeClientConn(t, c)
 	stopServer(t, s)
 
-	// t.Fatal("Authentication failed with a valid client certificate")
 	// t.Fatal("Authenticated with invalid/expired client certificate")
 	// t.Fatal("Authentication was not ACKed")
 }
