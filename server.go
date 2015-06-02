@@ -45,6 +45,9 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 		// message to the given request
 		return "ACK", nil
 	})
+	pubrout.Route("echo", func(conn *neptulon.Conn, msg *jsonrpc.Message) (res interface{}, err *jsonrpc.ResError) {
+		return msg.Params, nil
+	})
 
 	// n.Middleware() // json rpc protocol
 	// p.Middleware("auth.google") // public json rpc routes
