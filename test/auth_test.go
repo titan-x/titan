@@ -25,7 +25,7 @@ func TestClientCertAuth(t *testing.T) {
 	writeMsg(t, c, jsonrpc.Request{ID: "123", Method: "auth.cert"}) // should be a variadic fn(method, params...)
 	m := readMsg(t, c)
 
-	if m.Result != "ACK" {
+	if m.ID != "123" && m.Result != "ACK" {
 		t.Fatal("Authentication failed with a valid client certificate. Got server response:", m)
 	}
 
