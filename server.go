@@ -36,10 +36,10 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 		return nil, err
 	}
 
-	pubrout.Route("close", func(conn *neptulon.Conn, session *neptulon.Session, msg *jsonrpc.Message) (res interface{}, err *jsonrpc.ResError) {
+	pubrout.Route("close", func(conn *neptulon.Conn, msg *jsonrpc.Message) (res interface{}, err *jsonrpc.ResError) {
 		return "ACK", nil
 	})
-	pubrout.Route("auth.cert", func(conn *neptulon.Conn, session *neptulon.Session, msg *jsonrpc.Message) (res interface{}, err *jsonrpc.ResError) {
+	pubrout.Route("auth.cert", func(conn *neptulon.Conn, msg *jsonrpc.Message) (res interface{}, err *jsonrpc.ResError) {
 		// writeMessage should auto generate id's for request messages (if not provided) in provided client and the sender
 		// simplist possible way to return responses (or shortcut middleware) with regards to sending message to others or a custom reply that is not a direct
 		// message to the given request
@@ -97,7 +97,7 @@ func (s *Server) Stop() error {
 // ------------------------- legacy ----------------------------
 
 // // handleMsg handles incoming client messages.
-// func handleMsg(conn *neptulon.Conn, session *neptulon.Session, msg []byte) {
+// func handleMsg(conn *neptulon.Conn, msg []byte) {
 // 	// authenticate the session if not already done
 // 	if session.UserID == 0 {
 // 		userID, err := auth(conn.ConnectionState().PeerCertificates, msg)
@@ -157,6 +157,6 @@ func (s *Server) Stop() error {
 // 	}
 // }
 //
-// func handleDisconn(conn *neptulon.Conn, session *neptulon.Session) {
+// func handleDisconn(conn *neptulon.Conn) {
 // 	users[session.UserID].Conn = nil
 // }

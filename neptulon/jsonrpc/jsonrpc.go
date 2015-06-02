@@ -9,7 +9,7 @@ import (
 
 // App is a Neptulon JSON-RPC app.
 type App struct {
-	middleware []func(conn *neptulon.Conn, session *neptulon.Session, msg *Message)
+	middleware []func(conn *neptulon.Conn, msg *Message)
 }
 
 // NewApp creates a Neptulon JSON-RPC app.
@@ -20,17 +20,17 @@ func NewApp(n *neptulon.App) (*App, error) {
 }
 
 // Middleware registers a new middleware to handle incoming messages.
-func (a *App) Middleware(middleware func(conn *neptulon.Conn, session *neptulon.Session, msg *Message)) {
+func (a *App) Middleware(middleware func(conn *neptulon.Conn, msg *Message)) {
 	a.middleware = append(a.middleware, middleware)
 }
 
-func (a *App) handler(conn *neptulon.Conn, session *neptulon.Session, msg []byte) {
+func (a *App) handler(conn *neptulon.Conn, msg []byte) {
 	var m Message
 	if err := json.Unmarshal(msg, &m); err != nil {
 		return
 	}
 
 	for _, mid := range a.middleware {
-		mid(conn, session, &m)
+		mid(conn, &m)
 	}
 }

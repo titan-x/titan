@@ -14,6 +14,7 @@ import (
 
 // Conn is a mobile client connection.
 type Conn struct {
+	Session           Session
 	conn              *tls.Conn
 	headerSize        int
 	maxMsgSize        int
@@ -35,7 +36,9 @@ func NewConn(conn *tls.Conn, headerSize, maxMsgSize, readWriteDeadline int, debu
 		readWriteDeadline = 300
 	}
 
+	id, _ := getID()
 	return &Conn{
+		Session:           Session{ID: id},
 		conn:              conn,
 		headerSize:        headerSize,
 		maxMsgSize:        maxMsgSize,

@@ -4,10 +4,9 @@ import "sync"
 
 // Session is a session data store for connections.
 type Session struct {
-	id           string
-	UserID       uint32
-	Error        error
-	Disconnected bool
+	ID           string // Auto generated session ID
+	error        error
+	disconnected bool
 	data         map[string]interface{}
 	mutex        sync.RWMutex
 }

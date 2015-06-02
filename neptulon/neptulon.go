@@ -12,7 +12,7 @@ type App struct {
 	err        error
 	errMutex   sync.RWMutex
 	listener   *Listener
-	middleware []func(conn *Conn, session *Session, msg []byte)
+	middleware []func(conn *Conn, msg []byte)
 	conns      map[string]*Conn
 	connMutex  sync.Mutex
 }
@@ -36,7 +36,7 @@ func NewApp(cert, privKey []byte, laddr string, debug bool) (*App, error) {
 }
 
 // Middleware registers a new middleware to handle incoming messages.
-func (a *App) Middleware(middleware func(conn *Conn, session *Session, msg []byte)) {
+func (a *App) Middleware(middleware func(conn *Conn, msg []byte)) {
 	a.middleware = append(a.middleware, middleware)
 }
 
@@ -78,26 +78,26 @@ func (a *App) Stop() error {
 	return err
 }
 
-func handleConn(a *App) func(conn *Conn, session *Session) {
-	return func(conn *Conn, session *Session) {
+func handleConn(a *App) func(conn *Conn) {
+	return func(conn *Conn) {
 		a.connMutex.Lock()
-		a.conns[session.id] = conn
+		a.conns[conn.Session.ID] = conn
 		a.connMutex.Unlock()
 	}
 }
 
-func handleMsg(a *App) func(conn *Conn, session *Session, msg []byte) {
-	return func(conn *Conn, session *Session, msg []byte) {
+func handleMsg(a *App) func(conn *Conn, msg []byte) {
+	return func(conn *Conn, msg []byte) {
 		for _, m := range a.middleware {
-			m(conn, session, msg)
+			m(conn, msg)
 		}
 	}
 }
 
-func handleDisconn(a *App) func(conn *Conn, session *Session) {
-	return func(conn *Conn, session *Session) {
+func handleDisconn(a *App) func(conn *Conn) {
+	return func(conn *Conn) {
 		a.connMutex.Lock()
-		delete(a.conns, session.id)
+		delete(a.conns, conn.Session.ID)
 		a.connMutex.Unlock()
 	}
 }

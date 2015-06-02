@@ -6,6 +6,8 @@ func TestSendEcho(t *testing.T) {
 	s := getServer(t)
 	c := getClientConnWithClientCert(t)
 
+	// send message to user with ID: "client.127.0.0.1"
+
 	closeClientConn(t, c)
 	stopServer(t, s)
 
