@@ -10,7 +10,7 @@ type Message struct {
 	Method string          `json:"method,omitempty"`
 	Params json.RawMessage `json:"params,omitempty"`
 	Result interface{}     `json:"result,omitempty"`
-	Error  ResError        `json:"error,omitempty"`
+	Error  *ResError       `json:"error,omitempty"`
 }
 
 // Request is a JSON-RPC request object.

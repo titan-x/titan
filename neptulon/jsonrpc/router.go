@@ -1,10 +1,6 @@
 package jsonrpc
 
-import (
-	"log"
-
-	"github.com/nbusy/devastator/neptulon"
-)
+import "github.com/nbusy/devastator/neptulon"
 
 // Router is a JSON-RPC request routing middleware.
 type Router struct {
@@ -33,25 +29,25 @@ func (r *Router) Notification(route string, handler func(conn *neptulon.Conn, no
 	r.notificationRoutes[route] = handler
 }
 
-func (r *Router) middleware(conn *neptulon.Conn, msg *Message) {
-	// if not request or notification
+func (r *Router) middleware(conn *neptulon.Conn, msg *Message) (result interface{}, err *ResError) {
+	// if not request or notification don't handle it
 	if msg.Method == "" {
-		return
+		return nil, nil
 	}
 
 	// if request
 	if msg.ID != "" {
 		if handler, ok := r.requestRoutes[msg.Method]; ok {
-			if res, errRes := handler(conn, &Request{ID: msg.ID, Method: msg.Method, Params: msg.Params}); res != nil || errRes != nil {
-				if _, err := conn.WriteMsg(Response{ID: msg.ID, Result: res, Error: errRes}); err != nil {
-					log.Fatalln("Errored while sending JSON-RPC response:", err)
-				}
+			if res, resErr := handler(conn, &Request{ID: msg.ID, Method: msg.Method, Params: msg.Params}); res != nil || resErr != nil {
+				return res, resErr
 			}
 		}
 	} else { // if notification
 		if handler, ok := r.notificationRoutes[msg.Method]; ok {
 			handler(conn, &Notification{Method: msg.Method, Params: msg.Params})
+			// todo: need to return something to prevent deeper handlers to further handle this request (i.e. not found handler logging not found warning)
 		}
 	}
 
+	return nil, nil
 }
