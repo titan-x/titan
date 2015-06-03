@@ -30,6 +30,7 @@ func (a *App) handler(conn *neptulon.Conn, msg []byte) {
 		return
 	}
 
+	// todo: it might be better to use Koa like stack: mid(conn, &m, mid(conn, &m, conn(....)))
 	for _, mid := range a.middleware {
 		mid(conn, &m)
 	}
