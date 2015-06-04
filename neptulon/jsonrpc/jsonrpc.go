@@ -40,7 +40,7 @@ func (a *App) handler(conn *neptulon.Conn, msg []byte) {
 			if _, err := conn.WriteMsg(Response{ID: m.ID, Result: res, Error: err}); err != nil {
 				log.Fatalln("Errored while sending JSON-RPC response:", err)
 			}
-			break // todo: evaluate using Koa like stack instead of manual break: mid(conn, &m, mid(conn, &m, conn(....)))
+			break
 		}
 	}
 }
