@@ -37,7 +37,9 @@ func (a *App) handler(conn *neptulon.Conn, msg []byte) {
 				log.Fatalln("Cannot return a response to a non request")
 			}
 
-			if _, err := conn.WriteMsg(Response{ID: m.ID, Result: res, Error: err}); err != nil {
+			if data, err := json.Marshal(Response{ID: m.ID, Result: res, Error: err}); err != nil {
+				log.Fatalln("Errored while serializing JSON-RPC response:", err)
+			} else if _, err := conn.Write(data); err != nil {
 				log.Fatalln("Errored while sending JSON-RPC response:", err)
 			}
 			break

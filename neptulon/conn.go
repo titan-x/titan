@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/binary"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -76,20 +75,6 @@ func Dial(addr string, rootCA []byte, clientCert []byte, clientCertKey []byte, d
 	return NewConn(c, 0, 0, 0, debug), nil
 }
 
-// ReadMsg waits for and reads the next incoming message from the TLS connection and deserializes it into the given message object.
-func (c *Conn) ReadMsg(msg interface{}) (n int, err error) {
-	n, data, err := c.Read()
-	if err != nil {
-		return
-	}
-
-	if err = json.Unmarshal(data, msg); err != nil {
-		return
-	}
-
-	return
-}
-
 // Read waits for and reads the next incoming message from the TLS connection.
 func (c *Conn) Read() (n int, msg []byte, err error) {
 	if err = c.conn.SetReadDeadline(time.Now().Add(c.readWriteDeadline)); err != nil {
@@ -131,16 +116,6 @@ func (c *Conn) Read() (n int, msg []byte, err error) {
 	}
 
 	return
-}
-
-// WriteMsg serializes and writes given message to the connection with appropriate header.
-func (c *Conn) WriteMsg(msg interface{}) (n int, err error) {
-	data, err := json.Marshal(msg)
-	if err != nil {
-		return 0, fmt.Errorf("failed to serialize the given message: %v", err)
-	}
-
-	return c.Write(data)
 }
 
 // Write writes given message to the connection.
