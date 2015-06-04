@@ -12,7 +12,7 @@ type App struct {
 	err        error
 	errMutex   sync.RWMutex
 	listener   *Listener
-	middleware []func(conn *Conn, msg []byte)
+	middleware []func(conn *Conn, msg []byte) []byte
 	conns      map[string]*Conn
 	connMutex  sync.Mutex
 }
@@ -33,7 +33,7 @@ func NewApp(cert, privKey []byte, laddr string, debug bool) (*App, error) {
 }
 
 // Middleware registers a new middleware to handle incoming messages.
-func (a *App) Middleware(middleware func(conn *Conn, msg []byte)) {
+func (a *App) Middleware(middleware func(conn *Conn, msg []byte) []byte) {
 	a.middleware = append(a.middleware, middleware)
 }
 
@@ -86,7 +86,16 @@ func handleConn(a *App) func(conn *Conn) {
 func handleMsg(a *App) func(conn *Conn, msg []byte) {
 	return func(conn *Conn, msg []byte) {
 		for _, m := range a.middleware {
-			m(conn, msg)
+			res := m(conn, msg)
+			if res == nil {
+				continue
+			}
+
+			_, err := conn.Write(res)
+			if err != nil {
+				log.Fatalln("Errored while writing response to connection:", err)
+			}
+			break
 		}
 	}
 }
