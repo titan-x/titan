@@ -8,8 +8,6 @@ import (
 	"github.com/nbusy/devastator/neptulon"
 )
 
-// todo: remove session.UserID and use session.data.UserID (but without locking as we know that UseID will be set only once)
-
 func authMiddleware(conn *neptulon.Conn, msg *Message) {
 	if conn.Session.Get("userid") != 0 {
 		return
