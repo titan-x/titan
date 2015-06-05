@@ -3,3 +3,6 @@ env: GO_ENV=test
 go:
   - 1.4.2
   - tip
+script:
+  - go test -v ./...
+  - GORACE="halt_on_error=1" go test -race -cover ./...
