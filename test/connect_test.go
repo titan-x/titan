@@ -2,7 +2,6 @@ package test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/nbusy/devastator/neptulon/jsonrpc"
 )
@@ -29,16 +28,18 @@ func TestClientClose(t *testing.T) {
 
 	writeMsg(t, c, jsonrpc.Request{Method: "close"})
 
-	// todo: how to wait flush gorotune spawn
-	// todo: with nanosecond wait, client disconnected doesn't happen!
-	time.Sleep(time.Nanosecond)
+	// note: with nanosecond wait, client disconnected doesn't happen because we close client and the server faster than
+	// listener.handleMsg() goroutine can be spawned as we're never waiting for an answer
+	// graceful listener closing attempts also fail as reqWG is never incremented in the same method
+	// time.Sleep(time.Nanosecond)
 
 	closeClientConn(t, c)
 	stopServer(t, s)
 }
 
 func TestServerClose(t *testing.T) {
-	// t.Fatal("Server method.close request was not handled properly")
+	// t.Fatal("Server->client method.close request was not handled properly")
+	// t.Fatal("ACK for Server->client method.close request was not received")
 }
 
 func TestMultiConn(t *testing.T) {

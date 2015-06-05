@@ -1,12 +1,14 @@
 package test
 
 import (
+	"encoding/json"
 	"net"
 	"testing"
 	"time"
 
 	"github.com/nbusy/devastator"
 	"github.com/nbusy/devastator/neptulon"
+	"github.com/nbusy/devastator/neptulon/jsonrpc"
 )
 
 // client certs
@@ -105,20 +107,33 @@ func closeClientConn(t *testing.T, c *neptulon.Conn) {
 
 // writeMsg writes a message to a client connection with error checking.
 func writeMsg(t *testing.T, c *neptulon.Conn, msg interface{}) {
-	if n, err := c.WriteMsg(msg); err != nil {
+	data, err := json.Marshal(msg)
+	if err != nil {
+		t.Fatal("Failed to serialize JSON-RPC message:", err)
+	}
+
+	if n, err := c.Write(data); err != nil {
 		t.Fatal("Failed to write message on client connection:", err)
 	} else if n == 0 {
 		t.Fatal("Failed to write message on client connection. Only 0 byte was written.")
 	}
 }
 
-// readMsg reads a message off of a client connection into the given msg parameter with error checking.
-func readMsg(t *testing.T, c *neptulon.Conn, msg interface{}) {
-	if n, err := c.ReadMsg(msg); err != nil {
+// readMsg reads a message off of a client connection with error checking and returns a jsonrpc.Message object.
+func readMsg(t *testing.T, c *neptulon.Conn) *jsonrpc.Message {
+	n, data, err := c.Read()
+	if err != nil {
 		t.Fatal("Failed to read message from client connection:", err)
 	} else if n == 0 {
 		t.Fatal("Failed to read message from client connection. Only 0 byte was read.")
 	}
+
+	var msg jsonrpc.Message
+	if err = json.Unmarshal(data, &msg); err != nil {
+		t.Fatal("Failed to deserialize incoming JSON-RPC message:", err)
+	}
+
+	return &msg
 }
 
 func _getClientConn(t *testing.T, useClientCert bool) *neptulon.Conn {

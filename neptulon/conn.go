@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/binary"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -14,6 +13,7 @@ import (
 
 // Conn is a mobile client connection.
 type Conn struct {
+	Session           Session
 	conn              *tls.Conn
 	headerSize        int
 	maxMsgSize        int
@@ -24,7 +24,7 @@ type Conn struct {
 // NewConn creates a new server-side connection object.
 // Default values for headerSize, maxMsgSize, and readWriteDeadline are 4 bytes, 4294967295 bytes (4GB), and 300 seconds, respectively.
 // Debug mode logs all raw TCP communication.
-func NewConn(conn *tls.Conn, headerSize, maxMsgSize, readWriteDeadline int, debug bool) *Conn {
+func NewConn(conn *tls.Conn, headerSize, maxMsgSize, readWriteDeadline int, debug bool) (*Conn, error) {
 	if headerSize == 0 {
 		headerSize = 4
 	}
@@ -35,13 +35,19 @@ func NewConn(conn *tls.Conn, headerSize, maxMsgSize, readWriteDeadline int, debu
 		readWriteDeadline = 300
 	}
 
+	id, err := getID()
+	if err != nil {
+		return nil, err
+	}
+
 	return &Conn{
+		Session:           Session{ID: id},
 		conn:              conn,
 		headerSize:        headerSize,
 		maxMsgSize:        maxMsgSize,
 		readWriteDeadline: time.Second * time.Duration(readWriteDeadline),
 		debug:             debug,
-	}
+	}, nil
 }
 
 // Dial creates a new client side connection to a given network address with optional root CA and/or a client certificate (PEM encoded X.509 cert/key).
@@ -70,21 +76,7 @@ func Dial(addr string, rootCA []byte, clientCert []byte, clientCertKey []byte, d
 		return nil, err
 	}
 
-	return NewConn(c, 0, 0, 0, debug), nil
-}
-
-// ReadMsg waits for and reads the next incoming message from the TLS connection and deserializes it into the given message object.
-func (c *Conn) ReadMsg(msg interface{}) (n int, err error) {
-	n, data, err := c.Read()
-	if err != nil {
-		return
-	}
-
-	if err = json.Unmarshal(data, msg); err != nil {
-		return
-	}
-
-	return
+	return NewConn(c, 0, 0, 0, debug)
 }
 
 // Read waits for and reads the next incoming message from the TLS connection.
@@ -128,16 +120,6 @@ func (c *Conn) Read() (n int, msg []byte, err error) {
 	}
 
 	return
-}
-
-// WriteMsg serializes and writes given message to the connection with appropriate header.
-func (c *Conn) WriteMsg(msg interface{}) (n int, err error) {
-	data, err := json.Marshal(msg)
-	if err != nil {
-		return 0, fmt.Errorf("failed to serialize the given message: %v", err)
-	}
-
-	return c.Write(data)
 }
 
 // Write writes given message to the connection.

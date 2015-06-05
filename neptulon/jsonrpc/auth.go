@@ -8,10 +8,8 @@ import (
 	"github.com/nbusy/devastator/neptulon"
 )
 
-// todo: remove session.UserID and use session.data.UserID (but without locking as we know that UseID will be set only once)
-
-func authMiddleware(conn *neptulon.Conn, session *neptulon.Session, msg *Message) {
-	if session.UserID != 0 {
+func authMiddleware(conn *neptulon.Conn, msg *Message) {
+	if conn.Session.Get("userid") != 0 {
 		return
 	}
 
@@ -21,11 +19,11 @@ func authMiddleware(conn *neptulon.Conn, session *neptulon.Session, msg *Message
 		idstr := peerCerts[0].Subject.CommonName
 		uid64, err := strconv.ParseUint(idstr, 10, 32)
 		if err != nil {
-			session.Error = fmt.Errorf("Cannot parse client message or method mismatched: %v", err)
+			conn.Session.Set("error", fmt.Errorf("Cannot parse client message or method mismatched: %v", err))
 			return
 		}
 		userID := uint32(uid64)
 		log.Printf("Client connected with client certificate subject: %+v", peerCerts[0].Subject)
-		session.UserID = userID
+		conn.Session.Set("userid", userID)
 	}
 }

@@ -32,8 +32,8 @@ func TestListener(t *testing.T) {
 	listenerWG.Add(1)
 	go func() {
 		defer listenerWG.Done()
-		l.Accept(func(conn *Conn, session *Session) {},
-			func(conn *Conn, session *Session, msg []byte) {
+		l.Accept(func(conn *Conn) {},
+			func(conn *Conn, msg []byte) {
 				certs := conn.ConnectionState().PeerCertificates
 				if len(certs) > 0 {
 					t.Logf("Client connected with client certificate subject: %v\n", certs[0].Subject)
@@ -43,7 +43,7 @@ func TestListener(t *testing.T) {
 				if m != msg1 && m != msg2 && m != msg3 && m != msg4 && m != msg5 {
 					t.Fatal("Sent and incoming message did not match for message:", m)
 				}
-			}, func(conn *Conn, session *Session) {})
+			}, func(conn *Conn) {})
 	}()
 
 	roots := x509.NewCertPool()
@@ -58,7 +58,7 @@ func TestListener(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	newconn := NewConn(conn, 0, 0, 0, false)
+	newconn, _ := NewConn(conn, 0, 0, 0, false)
 
 	send(t, newconn, "ping")
 	send(t, newconn, msg1)

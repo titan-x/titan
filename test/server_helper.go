@@ -84,7 +84,7 @@ GIOtas9LmSEjWKaHviCJkb8Aaxy2PjPwImhTM84EyfcYjAhtsTfPx/MU
 	caKeyBytes  = []byte(caKey)
 
 	// server listener goroutine wait group
-	wg sync.WaitGroup
+	listenerWG sync.WaitGroup
 )
 
 // testServer is a devastator.Server type with error checking.
@@ -102,9 +102,9 @@ func getServer(t *testing.T) *devastator.Server {
 		t.Fatal("Failed to create server:", err)
 	}
 
-	wg.Add(1)
+	listenerWG.Add(1)
 	go func() {
-		defer wg.Done()
+		defer listenerWG.Done()
 		s.Start()
 	}()
 
@@ -116,5 +116,5 @@ func stopServer(t *testing.T, s *devastator.Server) {
 	if err := s.Stop(); err != nil {
 		t.Fatal("Failed to stop the server:", err)
 	}
-	wg.Wait()
+	listenerWG.Wait()
 }
