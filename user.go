@@ -1,6 +1,6 @@
 package devastator
 
-import "github.com/nbusy/devastator/neptulon"
+import "github.com/nbusy/neptulon"
 
 // User is a mobile user.
 type User struct {

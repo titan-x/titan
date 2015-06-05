@@ -5,8 +5,8 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/nbusy/devastator/neptulon"
-	"github.com/nbusy/devastator/neptulon/jsonrpc"
+	"github.com/nbusy/neptulon"
+	"github.com/nbusy/neptulon/jsonrpc"
 )
 
 // Token is an encrypted identifier for connecting devices.

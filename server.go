@@ -4,8 +4,8 @@ import (
 	"log"
 	"sync"
 
-	"github.com/nbusy/devastator/neptulon"
-	"github.com/nbusy/devastator/neptulon/jsonrpc"
+	"github.com/nbusy/neptulon"
+	"github.com/nbusy/neptulon/jsonrpc"
 )
 
 var users = make(map[uint32]*User)

@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/nbusy/devastator"
-	"github.com/nbusy/devastator/neptulon"
-	"github.com/nbusy/devastator/neptulon/jsonrpc"
+	"github.com/nbusy/neptulon"
+	"github.com/nbusy/neptulon/jsonrpc"
 )
 
 // client certs

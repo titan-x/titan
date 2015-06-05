@@ -3,7 +3,7 @@ package test
 import (
 	"testing"
 
-	"github.com/nbusy/devastator/neptulon/jsonrpc"
+	"github.com/nbusy/neptulon/jsonrpc"
 )
 
 func TestClientDisconnect(t *testing.T) {
