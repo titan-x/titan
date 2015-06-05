@@ -58,7 +58,7 @@ func TestListener(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	newconn := NewConn(conn, 0, 0, 0, false)
+	newconn, _ := NewConn(conn, 0, 0, 0, false)
 
 	send(t, newconn, "ping")
 	send(t, newconn, msg1)

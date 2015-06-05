@@ -24,7 +24,7 @@ type Conn struct {
 // NewConn creates a new server-side connection object.
 // Default values for headerSize, maxMsgSize, and readWriteDeadline are 4 bytes, 4294967295 bytes (4GB), and 300 seconds, respectively.
 // Debug mode logs all raw TCP communication.
-func NewConn(conn *tls.Conn, headerSize, maxMsgSize, readWriteDeadline int, debug bool) *Conn {
+func NewConn(conn *tls.Conn, headerSize, maxMsgSize, readWriteDeadline int, debug bool) (*Conn, error) {
 	if headerSize == 0 {
 		headerSize = 4
 	}
@@ -35,7 +35,11 @@ func NewConn(conn *tls.Conn, headerSize, maxMsgSize, readWriteDeadline int, debu
 		readWriteDeadline = 300
 	}
 
-	id, _ := getID()
+	id, err := getID()
+	if err != nil {
+		return nil, err
+	}
+
 	return &Conn{
 		Session:           Session{ID: id},
 		conn:              conn,
@@ -43,7 +47,7 @@ func NewConn(conn *tls.Conn, headerSize, maxMsgSize, readWriteDeadline int, debu
 		maxMsgSize:        maxMsgSize,
 		readWriteDeadline: time.Second * time.Duration(readWriteDeadline),
 		debug:             debug,
-	}
+	}, nil
 }
 
 // Dial creates a new client side connection to a given network address with optional root CA and/or a client certificate (PEM encoded X.509 cert/key).
@@ -72,7 +76,7 @@ func Dial(addr string, rootCA []byte, clientCert []byte, clientCertKey []byte, d
 		return nil, err
 	}
 
-	return NewConn(c, 0, 0, 0, debug), nil
+	return NewConn(c, 0, 0, 0, debug)
 }
 
 // Read waits for and reads the next incoming message from the TLS connection.
