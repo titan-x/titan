@@ -103,7 +103,7 @@ export GOOGLE_PREPROD_API_KEY=
 Logging and Metrics
 -------------------
 
-Only actionable events are logged. You can use logs as event sources. Anything else is considered telemetry and exposed with `expvar`. Queue lengths, active connection/request counts, performance metrics, etc. Metrics are exposed via HTTP at /debug/vars in JSON format.
+Only actionable events are logged (i.e. server started, client connected on IP ..., client disconnected, etc.). You can use logs as event sources. Anything else is considered telemetry and exposed with `expvar`. Queue lengths, active connection/request counts, performance metrics, etc. Metrics are exposed via HTTP at /debug/vars in JSON format.
 
 Performance Notes
 -----------------

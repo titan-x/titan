@@ -41,8 +41,8 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 	})
 	pubrout.Request("auth.cert", func(conn *neptulon.Conn, req *jsonrpc.Request) (res interface{}, err *jsonrpc.ResError) {
 		// writeMessage should auto generate id's for request messages (if not provided) in provided client and the sender
-		// simplist possible way to return responses (or shortcut middleware) with regards to sending message to others or a custom reply that is not a direct
-		// message to the given request
+		// simplist possible way to return responses (or shortcut middleware) with regards to sending message to others or
+		// a custom reply that is not a direct message to the given request
 		return "ACK", nil
 	})
 	pubrout.Request("echo", func(conn *neptulon.Conn, req *jsonrpc.Request) (res interface{}, err *jsonrpc.ResError) {
@@ -53,6 +53,8 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 	// p.Middleware("auth.google") // public json rpc routes
 	// p.Middleware() // cert auth
 	// p.Middleware() // private json rpc routes
+	// p.Middleware() // 404-like handler
+	// p.Middleware() // request-response logger
 
 	return &Server{
 		debug:    debug,
