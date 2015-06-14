@@ -18,18 +18,18 @@ func TestGoogleAuth(t *testing.T) {
 	// t.Fatal("Authentication was not ACKed")
 }
 
-func TestClientCertAuth(t *testing.T) {
-	s := getServer(t)
+func TestValidClientCertAuth(t *testing.T) {
+	s := getServer(t) // todo: should be one object called ClientServerHelper with both server and connected client
 	c := getClientConnWithClientCert(t)
 
 	writeMsg(t, c, jsonrpc.Request{ID: "123", Method: "auth.cert"}) // should be a variadic fn(method, params...)
-	m := readMsg(t, c)
+	m := readMsg(t, c)                                              // should be read(handleReq, handleResp, handleNot)
 
 	if m.ID != "123" && m.Result != "ACK" {
 		t.Fatal("Authentication failed with a valid client certificate. Got server response:", m)
 	}
 
-	closeClientConn(t, c)
+	closeClientConn(t, c) // todo: use defer
 	stopServer(t, s)
 
 	// t.Fatal("Authenticated with invalid/expired client certificate")

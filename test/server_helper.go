@@ -82,13 +82,35 @@ GIOtas9LmSEjWKaHviCJkb8Aaxy2PjPwImhTM84EyfcYjAhtsTfPx/MU
 
 	caCertBytes = []byte(caCert)
 	caKeyBytes  = []byte(caKey)
-
-	// server listener goroutine wait group
-	listenerWG sync.WaitGroup
 )
 
-// testServer is a devastator.Server type with error checking.
-type serverHelper *devastator.Server
+// ServerHelper is a devastator.Server wrapper with built-in error logging for testing.
+type ServerHelper struct {
+	server     *devastator.Server
+	testing    *testing.T
+	listenerWG sync.WaitGroup // server listener goroutine wait group
+}
+
+// NewServerHelper creates a new devastator.Server wrapper which has built-in error logging for testing.
+func NewServerHelper(t *testing.T) *devastator.Server {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short testing mode")
+	}
+
+	laddr := "127.0.0.1:" + devastator.Conf.App.Port
+	s, err := devastator.NewServer(caCertBytes, caKeyBytes, laddr, devastator.Conf.App.Debug)
+	if err != nil {
+		t.Fatal("Failed to create server:", err)
+	}
+
+	listenerWG.Add(1)
+	go func() {
+		defer listenerWG.Done()
+		s.Start()
+	}()
+
+	return s
+}
 
 // getServer creates a local testing server instance with error checking and starts listening for incoming connections.
 func getServer(t *testing.T) *devastator.Server {

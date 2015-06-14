@@ -1,13 +1,11 @@
 package test
 
 import (
-	"encoding/json"
 	"net"
 	"testing"
 	"time"
 
 	"github.com/nbusy/devastator"
-	"github.com/nbusy/neptulon"
 	"github.com/nbusy/neptulon/jsonrpc"
 )
 
@@ -88,55 +86,14 @@ wMPdFOfTgO2SHkI2MbmapQ+SLcmwddvzpo1BqkvLi4pMwn9uY+ngcEic
 	clientKeyBytes  = []byte(clientKey)
 )
 
-// getClientConnWithClientCert creates and returns a client connection to local testing server with valid client cert for authentication.
-func getClientConnWithClientCert(t *testing.T) *neptulon.Conn {
-	return _getClientConn(t, true)
+// ClientHelper is a JSON-RPC client wrapper with built-in error logging for testing.
+type ClientHelper struct {
+	client  *jsonrpc.Client
+	testing *testing.T
 }
 
-// getClientConnWithClientCert creates and returns an unauthenticated client connection to local testing server.
-func getAnonymousClientConn(t *testing.T) *neptulon.Conn {
-	return _getClientConn(t, false)
-}
-
-// closeClientConn closes a client connection with error checking.
-func closeClientConn(t *testing.T, c *neptulon.Conn) {
-	if err := c.Close(); err != nil {
-		t.Fatal("Failed to close the client connection:", err)
-	}
-}
-
-// writeMsg writes a message to a client connection with error checking.
-func writeMsg(t *testing.T, c *neptulon.Conn, msg interface{}) {
-	data, err := json.Marshal(msg)
-	if err != nil {
-		t.Fatal("Failed to serialize JSON-RPC message:", err)
-	}
-
-	if n, err := c.Write(data); err != nil {
-		t.Fatal("Failed to write message on client connection:", err)
-	} else if n == 0 {
-		t.Fatal("Failed to write message on client connection. Only 0 byte was written.")
-	}
-}
-
-// readMsg reads a message off of a client connection with error checking and returns a jsonrpc.Message object.
-func readMsg(t *testing.T, c *neptulon.Conn) *jsonrpc.Message {
-	n, data, err := c.Read()
-	if err != nil {
-		t.Fatal("Failed to read message from client connection:", err)
-	} else if n == 0 {
-		t.Fatal("Failed to read message from client connection. Only 0 byte was read.")
-	}
-
-	var msg jsonrpc.Message
-	if err = json.Unmarshal(data, &msg); err != nil {
-		t.Fatal("Failed to deserialize incoming JSON-RPC message:", err)
-	}
-
-	return &msg
-}
-
-func _getClientConn(t *testing.T, useClientCert bool) *neptulon.Conn {
+// NewClientHelper creates a new JSON-RPC client wrapper which has built-in error logging for testing.
+func NewClientHelper(t *testing.T, useClientCert bool) *ClientHelper {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
 	}
@@ -151,11 +108,13 @@ func _getClientConn(t *testing.T, useClientCert bool) *neptulon.Conn {
 
 	// retry connect in case we're operating on a very slow machine
 	for i := 0; i <= 5; i++ {
-		c, err := neptulon.Dial(addr, caCertBytes, cert, key, false) // no need for debug mode on client conn
+		c, err := jsonrpc.Dial(addr, caCertBytes, cert, key, false) // no need for debug mode on client conn
 		if err != nil {
-			if operr, ok := err.(*net.OpError); ok && operr.Op == "dial" && operr.Err.Error() == "connection refused" && i != 5 {
+			if operr, ok := err.(*net.OpError); ok && operr.Op == "dial" && operr.Err.Error() == "connection refused" {
 				time.Sleep(time.Millisecond * 50)
 				continue
+			} else if i == 5 {
+				t.Fatalf("Cannot connect to server address %v after 5 retries, with error: %v", addr, err)
 			}
 			t.Fatalf("Cannot connect to server address %v with error: %v", addr, err)
 		}
@@ -163,7 +122,26 @@ func _getClientConn(t *testing.T, useClientCert bool) *neptulon.Conn {
 		if i != 0 {
 			t.Logf("WARNING: it took %v retries to connect to the server, which might indicate code issues or slow machine.", i)
 		}
-		return c
+		return &ClientHelper{client: c, testing: t}
 	}
-	panic("unreachable")
+	return nil
+}
+
+// WriteRequest writes a request to a client connection with error logging for testing.
+func (c *ClientHelper) WriteRequest(method string, params struct{}) (reqID string) {
+	id, err := c.client.WriteRequest(method, params)
+	if err != nil {
+		c.testing.Fatal("Failed to write request to client connection:", err)
+	}
+	return id
+}
+
+// ReadResponse reads a JSON-RPC response message from a client connection with error logging for testing.
+func (c *ClientHelper) ReadResponse() *jsonrpc.Response {
+	msg, err := c.client.ReadMsg()
+	if err != nil {
+		c.testing.Fatal("Failed to read message from client connection:", err)
+	}
+
+	return nil
 }
