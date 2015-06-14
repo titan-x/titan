@@ -136,12 +136,12 @@ func (c *ClientHelper) WriteRequest(method string, params struct{}) (reqID strin
 	return id
 }
 
-// ReadResponse reads a JSON-RPC response message from a client connection with error logging for testing.
-func (c *ClientHelper) ReadResponse() *jsonrpc.Response {
+// ReadMsg reads a JSON-RPC message from a client connection with error logging for testing.
+func (c *ClientHelper) ReadMsg() *jsonrpc.Message {
 	msg, err := c.client.ReadMsg()
 	if err != nil {
 		c.testing.Fatal("Failed to read message from client connection:", err)
 	}
 
-	return nil
+	return msg
 }
