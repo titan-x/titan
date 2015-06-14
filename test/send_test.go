@@ -3,8 +3,18 @@ package test
 import "testing"
 
 func TestSendEcho(t *testing.T) {
+	s := NewServerHelper(t)
+	defer s.Stop()
+	c := NewClientHelper(t, true)
+	defer c.Close()
 
-	// send message to user with ID: "client.127.0.0.1"
+	id := c.WriteRequest("echo", map[string]string{"echo": "echo"})
+	m := c.ReadMsg()
+
+	res := m.Result.(map[string]interface{})
+	if m.ID != id || res["echo"] != "echo" {
+		t.Fatal("Failed to receive echo message in proper format:", m)
+	}
 
 	// t.Fatal("Failed to send a message to the echo user")
 	// t.Fatal("Failed to send batch message to the echo user")
