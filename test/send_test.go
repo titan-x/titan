@@ -3,13 +3,8 @@ package test
 import "testing"
 
 func TestSendEcho(t *testing.T) {
-	s := getServer(t)
-	c := getClientConnWithClientCert(t)
 
 	// send message to user with ID: "client.127.0.0.1"
-
-	closeClientConn(t, c)
-	stopServer(t, s)
 
 	// t.Fatal("Failed to send a message to the echo user")
 	// t.Fatal("Failed to send batch message to the echo user")

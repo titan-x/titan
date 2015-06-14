@@ -128,7 +128,7 @@ func NewClientHelper(t *testing.T, useClientCert bool) *ClientHelper {
 }
 
 // WriteRequest writes a request to a client connection with error logging for testing.
-func (c *ClientHelper) WriteRequest(method string, params struct{}) (reqID string) {
+func (c *ClientHelper) WriteRequest(method string, params interface{}) (reqID string) {
 	id, err := c.client.WriteRequest(method, params)
 	if err != nil {
 		c.testing.Fatal("Failed to write request to client connection:", err)
@@ -144,4 +144,11 @@ func (c *ClientHelper) ReadMsg() *jsonrpc.Message {
 	}
 
 	return msg
+}
+
+// Close closes a client connection.
+func (c *ClientHelper) Close() {
+	if err := c.client.Close(); err != nil {
+		c.testing.Fatal("Failed to close client connection:", err)
+	}
 }

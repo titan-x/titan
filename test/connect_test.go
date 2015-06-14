@@ -1,40 +1,35 @@
 package test
 
-import (
-	"testing"
-
-	"github.com/nbusy/neptulon/jsonrpc"
-)
+import "testing"
 
 func TestClientDisconnect(t *testing.T) {
-	s := getServer(t)
-	c := getClientConnWithClientCert(t)
+	s := NewServerHelper(t)
+	c := NewClientHelper(t, true)
 
-	closeClientConn(t, c)
-	stopServer(t, s)
+	c.Close()
+	s.Stop()
 }
 
 func TestServerDisconnect(t *testing.T) {
-	s := getServer(t)
-	c := getClientConnWithClientCert(t)
+	s := NewServerHelper(t)
+	c := NewClientHelper(t, true)
 
-	stopServer(t, s)
-	closeClientConn(t, c)
+	s.Stop()
+	c.Close()
 }
 
 func TestClientClose(t *testing.T) {
-	s := getServer(t)
-	c := getClientConnWithClientCert(t)
+	s := NewServerHelper(t)
+	defer s.Stop()
+	c := NewClientHelper(t, true)
+	defer c.Close()
 
-	writeMsg(t, c, jsonrpc.Request{Method: "close"})
+	c.WriteRequest("close", nil) // should be notification
 
 	// note: with nanosecond wait, client disconnected doesn't happen because we close client and the server faster than
 	// listener.handleMsg() goroutine can be spawned as we're never waiting for an answer
 	// graceful listener closing attempts also fail as reqWG is never incremented in the same method
 	// time.Sleep(time.Nanosecond)
-
-	closeClientConn(t, c)
-	stopServer(t, s)
 }
 
 func TestServerClose(t *testing.T) {
