@@ -37,13 +37,10 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 	}
 
 	pubrout.Request("close", func(conn *neptulon.Conn, req *jsonrpc.Request) (res interface{}, err *jsonrpc.ResError) {
-		return "ACK", nil
+		return "ACK", nil // todo: should be a notification and hence should not require ACK
 	})
 	pubrout.Request("auth.cert", func(conn *neptulon.Conn, req *jsonrpc.Request) (res interface{}, err *jsonrpc.ResError) {
-		// writeMessage should auto generate id's for request messages (if not provided) in provided client and the sender
-		// simplist possible way to return responses (or shortcut middleware) with regards to sending message to others or
-		// a custom reply that is not a direct message to the given request
-		return "ACK", nil
+		return "OK", nil
 	})
 	pubrout.Request("echo", func(conn *neptulon.Conn, req *jsonrpc.Request) (res interface{}, err *jsonrpc.ResError) {
 		return req.Params, nil

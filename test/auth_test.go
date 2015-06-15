@@ -21,7 +21,7 @@ func TestValidClientCertAuth(t *testing.T) {
 	id := h.Client.WriteRequest("auth.cert", nil)
 	m := h.Client.ReadMsg()
 
-	if m.ID != id || m.Result != "ACK" {
+	if m.ID != id || m.Result != "OK" {
 		t.Fatal("Authentication failed with a valid client certificate. Got server response:", m)
 	}
 
