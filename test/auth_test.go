@@ -15,13 +15,11 @@ func TestGoogleAuth(t *testing.T) {
 }
 
 func TestValidClientCertAuth(t *testing.T) {
-	s := NewServerHelper(t)
-	defer s.Stop()
-	c := NewClientHelper(t, true)
-	defer c.Close()
+	h := NewClientServerHelper(t, true)
+	defer h.Close()
 
-	id := c.WriteRequest("auth.cert", nil)
-	m := c.ReadMsg()
+	id := h.Client.WriteRequest("auth.cert", nil)
+	m := h.Client.ReadMsg()
 
 	if m.ID != id || m.Result != "ACK" {
 		t.Fatal("Authentication failed with a valid client certificate. Got server response:", m)
