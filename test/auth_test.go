@@ -24,9 +24,18 @@ func TestValidClientCertAuth(t *testing.T) {
 	if m.ID != id || m.Result != "OK" {
 		t.Fatal("Authentication failed with a valid client certificate. Got server response:", m)
 	}
+}
 
-	// t.Fatal("Authenticated with invalid/expired client certificate")
-	// t.Fatal("Authentication was not ACKed")
+func TestInvalidClientCertAuth(t *testing.T) {
+	h := NewClientServerHelper(t, false)
+	defer h.Close()
+
+	id := h.Client.WriteRequest("auth.cert", nil)
+	m := h.Client.ReadMsg()
+
+	if m.ID != id || m.Result == "OK" {
+		t.Fatal("Authenticated with invalid/expired client certificate. Got server response:", m)
+	}
 }
 
 func TestTokenAuth(t *testing.T) {
