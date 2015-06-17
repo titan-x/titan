@@ -36,14 +36,14 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 		return nil, err
 	}
 
-	pubrout.Request("close", func(conn *neptulon.Conn, req *jsonrpc.Request) (res interface{}, err *jsonrpc.ResError) {
-		return "ACK", nil // todo: should be a notification and hence should not require ACK
+	pubrout.Request("close", func(ctx *jsonrpc.ReqContext) {
+		ctx.Res = "ACK"
 	})
-	pubrout.Request("auth.cert", func(conn *neptulon.Conn, req *jsonrpc.Request) (res interface{}, err *jsonrpc.ResError) {
-		return "OK", nil
+	pubrout.Request("auth.cert", func(ctx *jsonrpc.ReqContext) {
+		ctx.Res = "OK"
 	})
-	pubrout.Request("echo", func(conn *neptulon.Conn, req *jsonrpc.Request) (res interface{}, err *jsonrpc.ResError) {
-		return req.Params, nil
+	pubrout.Request("echo", func(ctx *jsonrpc.ReqContext) {
+		ctx.Res = ctx.Req.Params
 	})
 
 	// n.Middleware() // json rpc protocol
