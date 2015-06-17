@@ -30,10 +30,10 @@ func TestInvalidClientCertAuth(t *testing.T) {
 	h := NewClientServerHelper(t, false)
 	defer h.Close()
 
-	id := h.Client.WriteRequest("auth.cert", nil)
+	_ = h.Client.WriteRequest("auth.cert", nil)
 	m := h.Client.ReadMsg()
 
-	if m.ID != id || m.Result == "OK" {
+	if m.Result != nil || m.Error.Code != 666 || m.Error.Message != "Invalid client certificate." {
 		t.Fatal("Authenticated with invalid/expired client certificate. Got server response:", m)
 	}
 }

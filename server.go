@@ -37,12 +37,22 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 	}
 
 	pubrout.Request("close", func(ctx *jsonrpc.ReqContext) {
-		ctx.Res = "ACK"
+		ctx.Res = "ACK" // should be notification and should close conn immediately
 	})
-	pubrout.Request("auth.cert", func(ctx *jsonrpc.ReqContext) {
+
+	_, err = jsonrpc.NewCertAuth(jrpc)
+	if err != nil {
+		return nil, err
+	}
+
+	privrout, err := jsonrpc.NewRouter(jrpc)
+	if err != nil {
+		return nil, err
+	}
+	privrout.Request("auth.cert", func(ctx *jsonrpc.ReqContext) {
 		ctx.Res = "OK"
 	})
-	pubrout.Request("echo", func(ctx *jsonrpc.ReqContext) {
+	privrout.Request("echo", func(ctx *jsonrpc.ReqContext) {
 		ctx.Res = ctx.Req.Params
 	})
 
