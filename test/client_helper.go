@@ -9,7 +9,7 @@ import (
 	"github.com/nbusy/neptulon/jsonrpc"
 )
 
-// client certs
+// client cert for testing
 var (
 	// host = client.127.0.0.1, cn = client.127.0.0.1, org = devastator
 	clientCert = `-----BEGIN CERTIFICATE-----
