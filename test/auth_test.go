@@ -14,21 +14,44 @@ func TestGoogleAuth(t *testing.T) {
 	// t.Fatal("Authentication was not ACKed")
 }
 
+func TestGoogleRegister(t *testing.T) {
+	s := NewServerHelper(t)
+	defer s.Stop()
+	c := NewClientHelper(t).Dial()
+	defer c.Close()
+
+	// h.Client.WriteRequest("auth.google", map[string]string{"OAuthToken": "1234"})
+	// m := h.Client.ReadMsg()
+
+	// should get client cert and try connecting with it again
+}
+
 func TestValidClientCertAuth(t *testing.T) {
 	s := NewServerHelper(t)
 	defer s.Stop()
-	c := NewClientHelper(t, true)
+	c := NewClientHelper(t).DefaultCert().Dial()
 	defer c.Close()
 
 	id := c.WriteRequest("auth.cert", nil)
 	m := c.ReadMsg()
 
-	if m.ID != id && m.Result != "ACK" {
+	if m.ID != id || m.Result != "OK" {
 		t.Fatal("Authentication failed with a valid client certificate. Got server response:", m)
 	}
+}
 
-	// t.Fatal("Authenticated with invalid/expired client certificate")
-	// t.Fatal("Authentication was not ACKed")
+func TestInvalidClientCertAuth(t *testing.T) {
+	s := NewServerHelper(t)
+	defer s.Stop()
+	c := NewClientHelper(t).Dial()
+	defer c.Close()
+
+	_ = c.WriteRequest("auth.cert", nil)
+	m := c.ReadMsg()
+
+	if m.Result != nil || m.Error.Code != 666 || m.Error.Message != "Invalid client certificate." {
+		t.Fatal("Authenticated successfully with invalid client certificate. Got server response:", m)
+	}
 }
 
 func TestTokenAuth(t *testing.T) {

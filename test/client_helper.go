@@ -9,7 +9,7 @@ import (
 	"github.com/nbusy/neptulon/jsonrpc"
 )
 
-// client certs
+// client cert for testing
 var (
 	// host = client.127.0.0.1, cn = client.127.0.0.1, org = devastator
 	clientCert = `-----BEGIN CERTIFICATE-----
@@ -88,43 +88,60 @@ wMPdFOfTgO2SHkI2MbmapQ+SLcmwddvzpo1BqkvLi4pMwn9uY+ngcEic
 
 // ClientHelper is a JSON-RPC client wrapper with built-in error logging for testing.
 type ClientHelper struct {
-	client  *jsonrpc.Client
-	testing *testing.T
+	client    *jsonrpc.Client
+	testing   *testing.T
+	cert, key []byte
 }
 
 // NewClientHelper creates a new JSON-RPC client wrapper which has built-in error logging for testing.
-func NewClientHelper(t *testing.T, useClientCert bool) *ClientHelper {
+func NewClientHelper(t *testing.T) *ClientHelper {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
 	}
 
-	var cert, key []byte
-	if useClientCert {
-		cert = clientCertBytes
-		key = clientKeyBytes
-	}
+	return &ClientHelper{testing: t}
+}
 
+// DefaultCert attaches default test client certificate to the connection.
+func (c *ClientHelper) DefaultCert() *ClientHelper {
+	c.cert = clientCertBytes
+	c.key = clientKeyBytes
+	return c
+}
+
+// Cert attaches given PEM encoded client certificate to the connection.
+func (c *ClientHelper) Cert(cert, key []byte) *ClientHelper {
+	c.cert = cert
+	c.key = key
+	return c
+}
+
+// Dial initiates a connection.
+func (c *ClientHelper) Dial() *ClientHelper {
 	addr := "127.0.0.1:" + devastator.Conf.App.Port
 
 	// retry connect in case we're operating on a very slow machine
 	for i := 0; i <= 5; i++ {
-		c, err := jsonrpc.Dial(addr, caCertBytes, cert, key, false) // no need for debug mode on client conn
+		client, err := jsonrpc.Dial(addr, caCertBytes, c.cert, c.key, false) // no need for debug mode on client conn
 		if err != nil {
 			if operr, ok := err.(*net.OpError); ok && operr.Op == "dial" && operr.Err.Error() == "connection refused" {
 				time.Sleep(time.Millisecond * 50)
 				continue
 			} else if i == 5 {
-				t.Fatalf("Cannot connect to server address %v after 5 retries, with error: %v", addr, err)
+				c.testing.Fatalf("Cannot connect to server address %v after 5 retries, with error: %v", addr, err)
 			}
-			t.Fatalf("Cannot connect to server address %v with error: %v", addr, err)
+			c.testing.Fatalf("Cannot connect to server address %v with error: %v", addr, err)
 		}
 
 		if i != 0 {
-			t.Logf("WARNING: it took %v retries to connect to the server, which might indicate code issues or slow machine.", i)
+			c.testing.Logf("WARNING: it took %v retries to connect to the server, which might indicate code issues or slow machine.", i)
 		}
-		return &ClientHelper{client: c, testing: t}
+
+		c.client = client
+		return c
 	}
-	return nil
+
+	return c
 }
 
 // WriteRequest writes a request to a client connection with error logging for testing.

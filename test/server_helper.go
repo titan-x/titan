@@ -7,7 +7,7 @@ import (
 	"github.com/nbusy/devastator"
 )
 
-// server certificates
+// server certificate for testing
 var (
 	// host = 127.0.0.1, cn = 127.0.0.1, org = devastator
 	caCert = `-----BEGIN CERTIFICATE-----

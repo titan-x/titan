@@ -36,17 +36,24 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 		return nil, err
 	}
 
-	pubrout.Request("close", func(conn *neptulon.Conn, req *jsonrpc.Request) (res interface{}, err *jsonrpc.ResError) {
-		return "ACK", nil
+	pubrout.Request("close", func(ctx *jsonrpc.ReqContext) {
+		ctx.Res = "ACK" // should be notification and should close conn immediately
 	})
-	pubrout.Request("auth.cert", func(conn *neptulon.Conn, req *jsonrpc.Request) (res interface{}, err *jsonrpc.ResError) {
-		// writeMessage should auto generate id's for request messages (if not provided) in provided client and the sender
-		// simplist possible way to return responses (or shortcut middleware) with regards to sending message to others or
-		// a custom reply that is not a direct message to the given request
-		return "ACK", nil
+
+	_, err = jsonrpc.NewCertAuth(jrpc)
+	if err != nil {
+		return nil, err
+	}
+
+	privrout, err := jsonrpc.NewRouter(jrpc)
+	if err != nil {
+		return nil, err
+	}
+	privrout.Request("auth.cert", func(ctx *jsonrpc.ReqContext) {
+		ctx.Res = "OK"
 	})
-	pubrout.Request("echo", func(conn *neptulon.Conn, req *jsonrpc.Request) (res interface{}, err *jsonrpc.ResError) {
-		return req.Params, nil
+	privrout.Request("echo", func(ctx *jsonrpc.ReqContext) {
+		ctx.Res = ctx.Req.Params
 	})
 
 	// n.Middleware() // json rpc protocol
