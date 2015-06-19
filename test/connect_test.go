@@ -4,7 +4,7 @@ import "testing"
 
 func TestClientDisconnect(t *testing.T) {
 	s := NewServerHelper(t)
-	c := NewClientHelper(t, true)
+	c := NewClientHelper(t).DefaultCert().Dial()
 
 	c.Close()
 	s.Stop()
@@ -12,7 +12,7 @@ func TestClientDisconnect(t *testing.T) {
 
 func TestServerDisconnect(t *testing.T) {
 	s := NewServerHelper(t)
-	c := NewClientHelper(t, true)
+	c := NewClientHelper(t).DefaultCert().Dial()
 
 	s.Stop()
 	c.Close()
@@ -21,7 +21,7 @@ func TestServerDisconnect(t *testing.T) {
 func TestClientClose(t *testing.T) {
 	s := NewServerHelper(t)
 	defer s.Stop()
-	c := NewClientHelper(t, true)
+	c := NewClientHelper(t).DefaultCert().Dial()
 	defer c.Close()
 
 	c.WriteRequest("close", nil) // should be notification

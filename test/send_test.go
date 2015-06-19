@@ -5,7 +5,7 @@ import "testing"
 func TestSendEcho(t *testing.T) {
 	s := NewServerHelper(t)
 	defer s.Stop()
-	c := NewClientHelper(t, true)
+	c := NewClientHelper(t).DefaultCert().Dial()
 	defer c.Close()
 
 	id := c.WriteRequest("echo", map[string]string{"echo": "echo"})

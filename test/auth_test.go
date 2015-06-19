@@ -15,8 +15,10 @@ func TestGoogleAuth(t *testing.T) {
 }
 
 func TestGoogleRegister(t *testing.T) {
-	h := NewClientServerHelper(t, false)
-	defer h.Close()
+	s := NewServerHelper(t)
+	defer s.Stop()
+	c := NewClientHelper(t).Dial()
+	defer c.Close()
 
 	// h.Client.WriteRequest("auth.google", map[string]string{"OAuthToken": "1234"})
 	// m := h.Client.ReadMsg()
@@ -25,11 +27,13 @@ func TestGoogleRegister(t *testing.T) {
 }
 
 func TestValidClientCertAuth(t *testing.T) {
-	h := NewClientServerHelper(t, true)
-	defer h.Close()
+	s := NewServerHelper(t)
+	defer s.Stop()
+	c := NewClientHelper(t).DefaultCert().Dial()
+	defer c.Close()
 
-	id := h.Client.WriteRequest("auth.cert", nil)
-	m := h.Client.ReadMsg()
+	id := c.WriteRequest("auth.cert", nil)
+	m := c.ReadMsg()
 
 	if m.ID != id || m.Result != "OK" {
 		t.Fatal("Authentication failed with a valid client certificate. Got server response:", m)
@@ -37,11 +41,13 @@ func TestValidClientCertAuth(t *testing.T) {
 }
 
 func TestInvalidClientCertAuth(t *testing.T) {
-	h := NewClientServerHelper(t, false)
-	defer h.Close()
+	s := NewServerHelper(t)
+	defer s.Stop()
+	c := NewClientHelper(t).Dial()
+	defer c.Close()
 
-	_ = h.Client.WriteRequest("auth.cert", nil)
-	m := h.Client.ReadMsg()
+	_ = c.WriteRequest("auth.cert", nil)
+	m := c.ReadMsg()
 
 	if m.Result != nil || m.Error.Code != 666 || m.Error.Message != "Invalid client certificate." {
 		t.Fatal("Authenticated successfully with invalid client certificate. Got server response:", m)

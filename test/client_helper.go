@@ -94,7 +94,7 @@ type ClientHelper struct {
 }
 
 // NewClientHelper creates a new JSON-RPC client wrapper which has built-in error logging for testing.
-func NewClientHelper(t *testing.T, useClientCert bool) *ClientHelper {
+func NewClientHelper(t *testing.T) *ClientHelper {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
 	}
@@ -140,7 +140,8 @@ func (c *ClientHelper) Dial() *ClientHelper {
 		c.client = client
 		return c
 	}
-	return nil
+
+	return c
 }
 
 // WriteRequest writes a request to a client connection with error logging for testing.
