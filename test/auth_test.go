@@ -18,7 +18,7 @@ func TestGoogleRegister(t *testing.T) {
 	h := NewClientServerHelper(t, false)
 	defer h.Close()
 
-	h.Client.WriteRequest("auth.google", map[string]string{"OAuthToken": "1234"})
+	// h.Client.WriteRequest("auth.google", map[string]string{"OAuthToken": "1234"})
 	// m := h.Client.ReadMsg()
 
 	// should get client cert and try connecting with it again

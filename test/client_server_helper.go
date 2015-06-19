@@ -16,6 +16,10 @@ func NewClientServerHelper(t *testing.T, useClientCert bool) *ClientServerHelper
 	return &ClientServerHelper{Client: c, Server: s}
 }
 
+// func (cs *ClientServerHelper) Close() {
+//
+// }
+
 // Close closes the client connection and then stops the server instace.
 func (cs *ClientServerHelper) Close() {
 	cs.Client.Close()
