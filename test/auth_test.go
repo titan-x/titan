@@ -41,6 +41,7 @@ func TestValidClientCertAuth(t *testing.T) {
 }
 
 func TestInvalidClientCertAuth(t *testing.T) {
+	// todo: no cert, no signature cert, invalid CA signed cert, expired cert...
 	s := NewServerHelper(t)
 	defer s.Stop()
 	c := NewClientHelper(t).Dial()
