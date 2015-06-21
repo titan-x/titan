@@ -39,6 +39,14 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 	pubrout.Request("close", func(ctx *jsonrpc.ReqContext) {
 		ctx.Res = "ACK" // should be notification and should close conn immediately
 	})
+	pubrout.Request("auth.cert", func(ctx *jsonrpc.ReqContext) {
+		certs := ctx.Conn.ConnectionState().PeerCertificates
+		if len(certs) == 0 {
+			ctx.ResErr = &jsonrpc.ResError{Code: 666, Message: "Invalid client certificate.", Data: certs}
+		} else {
+			ctx.Res = "OK"
+		}
+	})
 
 	_, err = jsonrpc.NewCertAuth(jrpc)
 	if err != nil {
@@ -49,9 +57,6 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 	if err != nil {
 		return nil, err
 	}
-	privrout.Request("auth.cert", func(ctx *jsonrpc.ReqContext) {
-		ctx.Res = "OK"
-	})
 	privrout.Request("echo", func(ctx *jsonrpc.ReqContext) {
 		ctx.Res = ctx.Req.Params
 	})
