@@ -19,7 +19,7 @@ type Server struct {
 }
 
 // NewServer creates and returns a new server instance with a listener created using given parameters.
-// Debug mode dumps raw TCP data to stderr (log.Println() default).
+// Debug mode dumps raw TCP data to stderr using log.Println().
 func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) {
 	nep, err := neptulon.NewApp(cert, privKey, laddr, debug)
 	if err != nil {
@@ -36,8 +36,8 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 		return nil, err
 	}
 
-	pubrout.Request("close", func(ctx *jsonrpc.ReqContext) {
-		ctx.Res = "ACK" // should be notification and should close conn immediately
+	pubrout.Request("auth.google", func(ctx *jsonrpc.ReqContext) {
+		ctx.ResErr = &jsonrpc.ResError{Code: 0, Message: "Not implemented."}
 	})
 
 	_, err = jsonrpc.NewCertAuth(jrpc)
@@ -49,19 +49,16 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 	if err != nil {
 		return nil, err
 	}
-	privrout.Request("auth.cert", func(ctx *jsonrpc.ReqContext) {
-		ctx.Res = "OK"
-	})
+
 	privrout.Request("echo", func(ctx *jsonrpc.ReqContext) {
 		ctx.Res = ctx.Req.Params
+		if ctx.Res == nil {
+			ctx.Res = ""
+		}
 	})
 
-	// n.Middleware() // json rpc protocol
-	// p.Middleware("auth.google") // public json rpc routes
-	// p.Middleware() // cert auth
-	// p.Middleware() // private json rpc routes
-	// p.Middleware() // 404-like handler
-	// p.Middleware() // request-response logger
+	// p.Middleware(NotFoundHandler()) // 404-like handler
+	// p.Middleware(Logger()) // request-response logger (the pointer fields in request/response objects will have to change for this to work)
 
 	return &Server{
 		debug:    debug,

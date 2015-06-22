@@ -9,11 +9,11 @@ func TestSendEcho(t *testing.T) {
 	defer c.Close()
 
 	id := c.WriteRequest("echo", map[string]string{"echo": "echo"})
-	m := c.ReadMsg()
+	_, res, _ := c.ReadMsg()
 
-	res := m.Result.(map[string]interface{})
-	if m.ID != id || res["echo"] != "echo" {
-		t.Fatal("Failed to receive echo message in proper format:", m)
+	resMap := res.Result.(map[string]interface{})
+	if res.ID != id || resMap["echo"] != "echo" {
+		t.Fatal("Failed to receive echo message in proper format:", res)
 	}
 
 	// t.Fatal("Failed to send a message to the echo user")

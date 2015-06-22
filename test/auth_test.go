@@ -32,25 +32,26 @@ func TestValidClientCertAuth(t *testing.T) {
 	c := NewClientHelper(t).DefaultCert().Dial()
 	defer c.Close()
 
-	id := c.WriteRequest("auth.cert", nil)
-	m := c.ReadMsg()
+	id := c.WriteRequest("echo", nil)
+	_, res, _ := c.ReadMsg()
 
-	if m.ID != id || m.Result != "OK" {
-		t.Fatal("Authentication failed with a valid client certificate. Got server response:", m)
+	if res.ID != id {
+		t.Fatal("Authentication failed with a valid client certificate. Got server response:", res)
 	}
 }
 
 func TestInvalidClientCertAuth(t *testing.T) {
+	// todo: no cert, no signature cert, invalid CA signed cert, expired cert...
 	s := NewServerHelper(t)
 	defer s.Stop()
 	c := NewClientHelper(t).Dial()
 	defer c.Close()
 
-	_ = c.WriteRequest("auth.cert", nil)
-	m := c.ReadMsg()
+	_ = c.WriteRequest("echo", nil)
+	_, res, _ := c.ReadMsg()
 
-	if m.Result != nil || m.Error.Code != 666 || m.Error.Message != "Invalid client certificate." {
-		t.Fatal("Authenticated successfully with invalid client certificate. Got server response:", m)
+	if res.Result != nil || res.Error.Code != 666 || res.Error.Message != "Invalid client certificate." {
+		t.Fatal("Authenticated successfully with invalid client certificate. Got server response:", res)
 	}
 }
 
