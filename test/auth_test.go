@@ -32,10 +32,10 @@ func TestValidClientCertAuth(t *testing.T) {
 	c := NewClientHelper(t).DefaultCert().Dial()
 	defer c.Close()
 
-	id := c.WriteRequest("auth.cert", nil)
+	id := c.WriteRequest("echo", nil)
 	_, res, _ := c.ReadMsg()
 
-	if res.ID != id || res.Result != "OK" {
+	if res.ID != id {
 		t.Fatal("Authentication failed with a valid client certificate. Got server response:", res)
 	}
 }
@@ -47,7 +47,7 @@ func TestInvalidClientCertAuth(t *testing.T) {
 	c := NewClientHelper(t).Dial()
 	defer c.Close()
 
-	_ = c.WriteRequest("auth.cert", nil)
+	_ = c.WriteRequest("echo", nil)
 	_, res, _ := c.ReadMsg()
 
 	if res.Result != nil || res.Error.Code != 666 || res.Error.Message != "Invalid client certificate." {
