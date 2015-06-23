@@ -49,8 +49,8 @@ func TestInvalidClientCertAuth(t *testing.T) {
 	_ = c.WriteRequest("echo", nil)
 	_, res, _ := c.ReadMsg()
 
-	if res.Result != nil || res.Error.Code != 666 || res.Error.Message != "Invalid client certificate." {
-		t.Fatal("Authenticated successfully with invalid client certificate. Got server response:", res)
+	if res != nil {
+		t.Fatal("Authenticated successfully with invalid client certificate.")
 	}
 
 	// _, res, _ = c.ReadMsg()
