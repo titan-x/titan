@@ -26,12 +26,12 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 		return nil, err
 	}
 
-	jrpc, err := jsonrpc.NewApp(nep)
+	rpc, err := jsonrpc.NewApp(nep)
 	if err != nil {
 		return nil, err
 	}
 
-	pubrout, err := jsonrpc.NewRouter(jrpc)
+	pubrout, err := jsonrpc.NewRouter(rpc)
 	if err != nil {
 		return nil, err
 	}
@@ -40,12 +40,12 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 		ctx.ResErr = &jsonrpc.ResError{Code: 0, Message: "Not implemented."}
 	})
 
-	_, err = jsonrpc.NewCertAuth(jrpc)
+	_, err = jsonrpc.NewCertAuth(rpc)
 	if err != nil {
 		return nil, err
 	}
 
-	privrout, err := jsonrpc.NewRouter(jrpc)
+	privrout, err := jsonrpc.NewRouter(rpc)
 	if err != nil {
 		return nil, err
 	}
