@@ -155,6 +155,7 @@ func (c *ClientHelper) WriteRequest(method string, params interface{}) (reqID st
 }
 
 // ReadMsg reads a JSON-RPC message from a client connection with error logging for testing.
+// Returns nil if connection was closed.
 func (c *ClientHelper) ReadMsg() (req *jsonrpc.Request, res *jsonrpc.Response, not *jsonrpc.Notification) {
 	req, res, not, err := c.client.ReadMsg()
 	if err == io.EOF {
