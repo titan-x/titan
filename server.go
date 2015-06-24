@@ -1,7 +1,10 @@
 package devastator
 
 import (
+	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"sync"
 
 	"github.com/nbusy/neptulon"
@@ -37,7 +40,23 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 	}
 
 	pubrout.Request("auth.google", func(ctx *jsonrpc.ReqContext) {
-		ctx.ResErr = &jsonrpc.ResError{Code: 0, Message: "Not implemented."}
+		res, err := http.Get("https://www.googleapis.com/plus/v1/people/me?access_token=" + ctx.Req.Params.(map[string]string)["token"])
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		profile, err := ioutil.ReadAll(res.Body)
+		res.Body.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("%s", profile)
+
+		// email: profile.emails[0].value,
+		// name: profile.displayName,
+		// picture: (yield request.get(profile.image.url, {encoding: 'base64'})).body
+
+		// if authenticated generate "userid", set it in session, create and send client-certificate as reponse
 	})
 
 	_, err = jsonrpc.NewCertAuth(rpc)
