@@ -1,7 +1,6 @@
 package devastator
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -39,6 +38,7 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 		return nil, err
 	}
 
+	// retrieve user info (display name, e-mail, profile pic) using an access token that has 'profile' and 'email' scopes
 	pubrout.Request("auth.google", func(ctx *jsonrpc.ReqContext) {
 		res, err := http.Get("https://www.googleapis.com/plus/v1/people/me?access_token=" + ctx.Req.Params.(map[string]string)["token"])
 		if err != nil {
@@ -50,7 +50,7 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("%s", profile)
+		log.Printf("%s", profile)
 
 		// email: profile.emails[0].value,
 		// name: profile.displayName,

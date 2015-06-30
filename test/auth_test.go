@@ -8,7 +8,11 @@ func TestAuth(t *testing.T) {
 }
 
 func TestGoogleAuth(t *testing.T) {
-	// t.Fatal("Google+ first sign-in (registration) failed with valid credentials")
+	s := NewServerHelper(t)
+	defer s.Stop()
+	c := NewClientHelper(t).Dial()
+	defer c.Close()
+
 	// t.Fatal("Google+ second sign-in (regular) failed with valid credentials")
 	// t.Fatal("Google+ sign-in passed with invalid credentials")
 	// t.Fatal("Authentication was not ACKed")
@@ -20,10 +24,15 @@ func TestGoogleRegister(t *testing.T) {
 	c := NewClientHelper(t).Dial()
 	defer c.Close()
 
+	// c.WriteRequest("auth.google", map[string]string{"accessToken": "abc"})
+	// c.ReadMsg()
+
 	// h.Client.WriteRequest("auth.google", map[string]string{"OAuthToken": "1234"})
 	// m := h.Client.ReadMsg()
 
 	// should get client cert and try connecting with it again
+
+	// t.Fatal("Google+ first sign-in/registration failed with valid credentials")
 }
 
 func TestValidClientCertAuth(t *testing.T) {

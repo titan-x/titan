@@ -155,17 +155,30 @@ func (c *ClientHelper) WriteRequest(method string, params interface{}) (reqID st
 }
 
 // ReadMsg reads a JSON-RPC message from a client connection with error logging for testing.
-// Returns nil if connection was closed.
 func (c *ClientHelper) ReadMsg() (req *jsonrpc.Request, res *jsonrpc.Response, not *jsonrpc.Notification) {
 	req, res, not, err := c.client.ReadMsg()
-	if err == io.EOF {
-		return nil, nil, nil
-	}
 	if err != nil {
 		c.testing.Fatal("Failed to read message from client connection:", err)
 	}
 
 	return
+}
+
+// ReadRes reads a response object from a client connection. If incoming message is not a response, an error is logged.
+func (c *ClientHelper) ReadRes() *jsonrpc.Response {
+	_, res, _, err := c.client.ReadMsg()
+	if err != nil {
+		c.testing.Fatal("Failed to read response from client connection:", err)
+	}
+
+	return res
+}
+
+func (c *ClientHelper) VerifyConnClosed() {
+	req, res, not, err := c.client.ReadMsg()
+	if err == io.EOF {
+
+	}
 }
 
 // Close closes a client connection.
