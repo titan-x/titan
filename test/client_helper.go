@@ -138,11 +138,12 @@ func (c *ClientHelper) Dial() *ClientHelper {
 			c.testing.Logf("WARNING: it took %v retries to connect to the server, which might indicate code issues or slow machine.", i)
 		}
 
+		client.SetReadDeadline(10)
 		c.client = client
 		return c
 	}
 
-	return c
+	return nil
 }
 
 // WriteRequest writes a request to a client connection with error logging for testing.
