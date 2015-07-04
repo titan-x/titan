@@ -62,7 +62,6 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 
 		// if authenticated generate "userid", set it in session, create and send client-certificate as reponse
 		ctx.Res = "access granted"
-		ctx.Done = true
 	})
 
 	_, err = jsonrpc.NewCertAuth(rpc)
