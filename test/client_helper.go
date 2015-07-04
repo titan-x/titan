@@ -176,11 +176,13 @@ func (c *ClientHelper) ReadRes() *jsonrpc.Response {
 
 // VerifyConnClosed verifies that the connection is in closed state.
 // Verification is done via reading from the channel and checking that returned error is io.EOF.
-func (c *ClientHelper) VerifyConnClosed() {
+func (c *ClientHelper) VerifyConnClosed() bool {
 	_, _, _, err := c.client.ReadMsg()
 	if err != io.EOF {
-		c.testing.Fatal("Expected channel to be in closed state but it is still open.")
+		return false
 	}
+
+	return true
 }
 
 // Close closes a client connection.
