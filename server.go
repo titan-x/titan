@@ -1,6 +1,7 @@
 package devastator
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -40,7 +41,10 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 
 	// retrieve user info (display name, e-mail, profile pic) using an access token that has 'profile' and 'email' scopes
 	pubrout.Request("auth.google", func(ctx *jsonrpc.ReqContext) {
-		res, err := http.Get("https://www.googleapis.com/plus/v1/people/me?access_token=" + ctx.Req.Params.(map[string]string)["token"])
+		token := ctx.Req.Params.(map[string]interface{})["accessToken"]
+		uri := fmt.Sprintf("https://www.googleapis.com/plus/v1/people/me?access_token=%s", token)
+
+		res, err := http.Get(uri)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -57,6 +61,8 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 		// picture: (yield request.get(profile.image.url, {encoding: 'base64'})).body
 
 		// if authenticated generate "userid", set it in session, create and send client-certificate as reponse
+		ctx.Res = "access granted"
+		ctx.Done = true
 	})
 
 	_, err = jsonrpc.NewCertAuth(rpc)

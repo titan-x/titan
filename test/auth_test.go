@@ -1,6 +1,9 @@
 package test
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 func TestAuth(t *testing.T) {
 	// t.Fatal("Unauthorized clients cannot call any function other than method.auth and method.close") // call to randomized and all registered routes here
@@ -36,13 +39,20 @@ func TestInvalidClientCertAuth(t *testing.T) {
 }
 
 func TestGoogleRegister(t *testing.T) {
+	token := os.Getenv("GOOGLE_ACCESS_TOKEN")
+	if token == "" {
+		t.Skip("Missing 'GOOGLE_ACCESS_TOKEN' environment variable. Skipping Google sign-in testing.")
+	}
+
 	s := NewServerHelper(t)
 	c := NewClientHelper(t).Dial()
 
-	c.WriteRequest("auth.google", map[string]string{"accessToken": "abc"})
+	c.WriteRequest("auth.google", map[string]string{"accessToken": token})
 	res := c.ReadRes()
 
-	// t.Fatal("Google+ first sign-in/registration failed with valid credentials")
+	if res.Error != nil {
+		t.Fatal("Google+ first sign-in/registration failed with valid credentials:", res.Error)
+	}
 
 	c.Close()
 	s.Stop()
