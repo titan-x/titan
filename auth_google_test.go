@@ -6,7 +6,7 @@ import (
 )
 
 // retrieved on 5th of July, 2015
-const googleAuthRes = `{
+var googleAuthRes = []byte(`{
  "kind": "plus#person",
  "etag": "\"abcd123\"",
  "gender": "male",
@@ -32,11 +32,11 @@ const googleAuthRes = `{
  "language": "en",
  "circledByCount": 999,
  "verified": false
-}`
+}`)
 
 func TestGoogleAuth(t *testing.T) {
 	var p googleProfile
-	json.Unmarshal([]byte(googleAuthRes), &p)
+	json.Unmarshal(googleAuthRes, &p)
 
 	t.Fatal(p)
 }
