@@ -10,6 +10,20 @@ import (
 	"github.com/nbusy/neptulon/jsonrpc"
 )
 
+type googleProfile struct {
+	emails      []googleProfileEmail
+	displayName string
+	image       googleProfileImage
+}
+
+type googleProfileEmail struct {
+	value string
+}
+
+type googleProfileImage struct {
+	url string
+}
+
 // email: profile.emails[0].value,
 // name: profile.displayName,
 // picture: (yield request.get(profile.image.url, {encoding: 'base64'})).body
@@ -30,10 +44,12 @@ func googleAuth(ctx *jsonrpc.ReqContext) {
 		log.Fatal(err)
 	}
 
-	var profile interface{}
-	json.Unmarshal(b, &profile)
+	log.Printf("%s\n", b)
 
-	log.Fatalf("%s", b)
+	var p googleProfile
+	json.Unmarshal(b, &p)
+
+	log.Fatalf("%+v", p)
 
 	// if authenticated generate "userid", set it in session, create and send client-certificate as reponse
 	ctx.Res = "access granted"
