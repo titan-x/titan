@@ -5,7 +5,8 @@ import (
 	"testing"
 )
 
-// retrieved on 5th of July, 2015
+// Response from: GET https://www.googleapis.com/plus/v1/people/me?access_token=...
+// (retrieved on 5th of July, 2015)
 var googleAuthRes = []byte(`{
  "kind": "plus#person",
  "etag": "\"abcd123\"",
@@ -34,9 +35,21 @@ var googleAuthRes = []byte(`{
  "verified": false
 }`)
 
-func TestGoogleAuth(t *testing.T) {
-	var p googleProfile
-	json.Unmarshal(googleAuthRes, &p)
+var (
+	displayName = "Chuck Norris"
+	email       = "chuck@devastator.com"
+	imgURL      = "https://lh3.googleusercontent.com/asdfgsgdsfs/afsdggg/sdafdsff/1234dfgg/photo.jpg?sz=50"
+)
 
-	t.Fatal(p)
+func TestGoogleAuth(t *testing.T) {
+	var profile gProfile
+	if err := json.Unmarshal(googleAuthRes, &profile); err != nil {
+		t.Fatal(err)
+	}
+
+	if profile.DisplayName != displayName ||
+		profile.Emails[0].Value != email ||
+		profile.Image.URL != imgURL {
+		t.Fatal("Cannot deserialize Google auth response.")
+	}
 }

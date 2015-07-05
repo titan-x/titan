@@ -10,25 +10,23 @@ import (
 	"github.com/nbusy/neptulon/jsonrpc"
 )
 
-type googleProfile struct {
-	emails      []googleProfileEmail
-	displayName string
-	image       googleProfileImage
+// Response from GET https://www.googleapis.com/plus/v1/people/me?access_token=...
+// has the following structure with denoted fields of interest (rest is left out):
+type gProfile struct {
+	Emails      []gEmail
+	DisplayName string
+	Image       gImage
 }
 
-type googleProfileEmail struct {
-	value string
+type gEmail struct {
+	Value string
 }
 
-type googleProfileImage struct {
-	url string
+type gImage struct {
+	URL string
 }
 
-// email: profile.emails[0].value,
-// name: profile.displayName,
-// picture: (yield request.get(profile.image.url, {encoding: 'base64'})).body
-
-// retrieve user info (display name, e-mail, profile pic) using an access token that has 'profile' and 'email' scopes
+// Retrieve user info (display name, e-mail, profile pic) using an access token that has 'profile' and 'email' scopes.
 func googleAuth(ctx *jsonrpc.ReqContext) {
 	token := ctx.Req.Params.(map[string]interface{})["accessToken"]
 	uri := fmt.Sprintf("https://www.googleapis.com/plus/v1/people/me?access_token=%s", token)
@@ -38,19 +36,17 @@ func googleAuth(ctx *jsonrpc.ReqContext) {
 		log.Fatal(err)
 	}
 
-	b, err := ioutil.ReadAll(res.Body)
+	resBody, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Printf("%s\n", b)
+	var profile gProfile
+	if err := json.Unmarshal(resBody, &profile); err != nil {
+		log.Fatal(err)
+	}
 
-	var p googleProfile
-	json.Unmarshal(b, &p)
-
-	log.Fatalf("%+v", p)
-
-	// if authenticated generate "userid", set it in session, create and send client-certificate as reponse
+	// if authenticated generate "userid", set it in session, create, store in database, and send client-certificate as reponse
 	ctx.Res = "access granted"
 }
