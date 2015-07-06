@@ -50,6 +50,6 @@ func TestGoogleAuth(t *testing.T) {
 	if profile.DisplayName != displayName ||
 		profile.Emails[0].Value != email ||
 		profile.Image.URL != imgURL {
-		t.Fatal("Cannot deserialize Google auth response.")
+		t.Fatal("Cannot deserialize Google 'plus/v1/people/me' response.")
 	}
 }

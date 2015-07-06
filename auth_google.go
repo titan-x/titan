@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 
 	"github.com/nbusy/neptulon/jsonrpc"
@@ -26,27 +25,46 @@ type gImage struct {
 	URL string
 }
 
-// Retrieve user info (display name, e-mail, profile pic) using an access token that has 'profile' and 'email' scopes.
 func googleAuth(ctx *jsonrpc.ReqContext) {
 	token := ctx.Req.Params.(map[string]interface{})["accessToken"]
-	uri := fmt.Sprintf("https://www.googleapis.com/plus/v1/people/me?access_token=%s", token)
+	_, _, _ = getGProfile(token.(string))
 
+	// if authenticated generate "userid", set it in session, create, store in database, and send client-certificate as reponse
+	ctx.Res = "access granted"
+}
+
+// Retrieve user info (display name, e-mail, profile pic) using an access token that has 'profile' and 'email' scopes.
+// Also retrieves user profile image via profile image URL provided the response.
+func getGProfile(token string) (profile *gProfile, profilePic []byte, err error) {
+	// retrieve profile info from Google
+	uri := fmt.Sprintf("https://www.googleapis.com/plus/v1/people/me?access_token=%s", token)
 	res, err := http.Get(uri)
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
 
 	resBody, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
 
-	var profile gProfile
-	if err := json.Unmarshal(resBody, &profile); err != nil {
-		log.Fatal(err)
+	if err = json.Unmarshal(resBody, profile); err != nil {
+		return
 	}
 
-	// if authenticated generate "userid", set it in session, create, store in database, and send client-certificate as reponse
-	ctx.Res = "access granted"
+	// retrieve profile image
+	uri = profile.Image.URL
+	res, err = http.Get(uri)
+	if err != nil {
+		return
+	}
+
+	profilePic, err = ioutil.ReadAll(res.Body)
+	res.Body.Close()
+	if err != nil {
+		return
+	}
+
+	return
 }
