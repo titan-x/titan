@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 
 	"github.com/nbusy/neptulon/jsonrpc"
@@ -27,7 +28,10 @@ type gImage struct {
 
 func googleAuth(ctx *jsonrpc.ReqContext) {
 	token := ctx.Req.Params.(map[string]interface{})["accessToken"]
-	_, _, _ = getGProfile(token.(string))
+	_, _, err := getGProfile(token.(string))
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// if authenticated generate "userid", set it in session, create, store in database, and send client-certificate as reponse
 	ctx.Res = "access granted"
