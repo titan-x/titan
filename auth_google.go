@@ -30,10 +30,14 @@ func googleAuth(ctx *jsonrpc.ReqContext) {
 	token := ctx.Req.Params.(map[string]interface{})["accessToken"]
 	_, _, err := getGProfile(token.(string))
 	if err != nil {
-		log.Fatal(err)
+		ctx.ResErr = &jsonrpc.ResError{Code: 666, Message: "Failed to authenticated user with Google+ OAuth access token."}
+		log.Printf("Errored during Google+ profile call using provided access token: %v with error: %v", token, err)
 	}
 
+	// user is authenticated at this point so check if this is a first-time registration
+
 	// if authenticated generate "userid", set it in session, create, store in database, and send client-certificate as reponse
+
 	ctx.Res = "access granted"
 }
 
