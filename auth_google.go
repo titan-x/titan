@@ -35,6 +35,7 @@ func googleAuth(ctx *jsonrpc.ReqContext) {
 	}
 
 	// user is authenticated at this point so check if this is a first-time registration
+	// if user, ok := users.GetByMail("..."); ok { ... }
 
 	// if authenticated generate "userid", set it in session, create, store in database, and send client-certificate as reponse
 
