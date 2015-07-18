@@ -15,7 +15,7 @@ type Server struct {
 	neptulon *neptulon.App
 	mutex    sync.Mutex
 	users    map[uint32]*User // id->user
-	userDB   UserDB
+	db       DB
 }
 
 // NewServer creates and returns a new server instance with a listener created using given parameters.
@@ -65,8 +65,9 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 	}, nil
 }
 
-// UseDB sets the user database to be used by the server. If not supplied, in-memory database implementation is used.
-func (s *Server) UseDB(db UserDB) error {
+// UseDB sets the database to be used by the server. If not supplied, in-memory database implementation is used.
+func (s *Server) UseDB(db DB) error {
+	s.db = db
 	return nil
 }
 
