@@ -46,12 +46,12 @@ func readHandler(m *ccs.InMsg) {
 			return
 		}
 
-		id := uint32(id64)
-		user, ok := users[id]
-		if !ok {
-			log.Printf("User not found in user list: %+v\n", m)
-		}
-
-		user.Send(m.Data)
+		// id := uint32(id64)
+		// user, ok := users[id]
+		// if !ok {
+		// 	log.Printf("User not found in user list: %+v\n", m)
+		// }
+		//
+		// user.Send(m.Data)
 	}
 }

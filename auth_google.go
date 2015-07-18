@@ -38,6 +38,7 @@ func googleAuth(ctx *jsonrpc.ReqContext) {
 	// if user, ok := users.GetByMail("..."); ok { ... }
 
 	// if authenticated generate "userid", set it in session, create, store in database, and send client-certificate as reponse
+	// if no csr is provided, create and send a cert
 
 	ctx.Res = "access granted"
 }

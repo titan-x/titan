@@ -8,14 +8,14 @@ import (
 	"github.com/nbusy/neptulon/jsonrpc"
 )
 
-var users = make(map[uint32]*User)
-
 // Server wraps a listener instance and registers default connection and message handlers with the listener.
 type Server struct {
 	debug    bool
 	err      error
 	neptulon *neptulon.App
 	mutex    sync.Mutex
+	users    map[uint32]*User // id->user
+	userDB   UserDB
 }
 
 // NewServer creates and returns a new server instance with a listener created using given parameters.
@@ -61,7 +61,13 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 	return &Server{
 		debug:    debug,
 		neptulon: nep,
+		users:    make(map[uint32]*User),
 	}, nil
+}
+
+// UseDB sets the user database to be used by the server. If not supplied, in-memory database implementation is used.
+func (s *Server) UseDB(db UserDB) error {
+	return nil
 }
 
 // Start starts accepting connections on the internal listener and handles connections with registered onnection and message handlers.
@@ -85,7 +91,7 @@ func (s *Server) Stop() error {
 
 	// close all active connections discarding any read/writes that is going on currently
 	// this is not a problem as we always require an ACK but it will also mean that message deliveries will be at-least-once; to-and-from the server
-	for _, user := range users {
+	for _, user := range s.users {
 		err := user.Conn.Close()
 		if err != nil {
 			return err

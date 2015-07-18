@@ -2,7 +2,7 @@ package devastator
 
 import "github.com/nbusy/neptulon"
 
-// User is a mobile user.
+// User encapsulates connected user information.
 type User struct {
 	ID              uint32
 	PhoneNumber     uint64
