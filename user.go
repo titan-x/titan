@@ -5,6 +5,7 @@ import "github.com/nbusy/neptulon"
 // User encapsulates connected user information.
 type User struct {
 	ID              uint32
+	Email           string
 	PhoneNumber     uint64
 	GCMRegID        string
 	APNSDeviceToken string

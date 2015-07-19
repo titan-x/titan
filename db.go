@@ -9,6 +9,7 @@ type DB interface {
 type UserDB interface {
 	GetByID(id uint32) (*User, bool)
 	GetByMail(mail string) (*User, bool)
+	SaveUser(u *User) error
 }
 
 // InMemDB is an in-memory database.
@@ -32,4 +33,11 @@ func (db *InMemUserDB) GetByID(id uint32) (user *User, ok bool) {
 func (db *InMemUserDB) GetByMail(email string) (user *User, ok bool) {
 	user, ok = db.emails[email]
 	return
+}
+
+// SaveUser save or updates a user object in the database.
+func (db *InMemUserDB) SaveUser(u *User) error {
+	db.ids[u.ID] = u
+	db.emails[u.Email] = u
+	return nil
 }

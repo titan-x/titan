@@ -36,10 +36,14 @@ func googleAuth(ctx *jsonrpc.ReqContext, db DB) {
 
 	// user is authenticated at this point so check if this is a first-time registration
 	if user, ok := db.GetByMail(p.Emails[0].Value); ok {
-		if user.Cert != nil {
-			ctx.Res = user.Cert
+		if user.Cert == nil {
+			// todo: add CertMgr
+			user.Cert = make([]byte, 555)
+			db.SaveUser(user)
 		}
 
+		ctx.Res = user.Cert
+		ctx.Conn.Session.Set("userid", user.ID)
 	}
 
 	// if this is a first-time login; generate "userid", set it in session, create, store in database, and send client-certificate as reponse
