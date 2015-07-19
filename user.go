@@ -11,6 +11,7 @@ type User struct {
 	Name            string
 	Picture         []byte
 	Conn            *neptulon.Conn
+	Cert            []byte
 
 	// MsgQueue may contain request, response, or notification messages.
 	MsgQueue []interface{}

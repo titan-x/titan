@@ -26,6 +26,13 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 		return nil, err
 	}
 
+	s := Server{
+		debug:    debug,
+		neptulon: nep,
+		users:    make(map[uint32]*User),
+		db:       new(InMemDB),
+	}
+
 	rpc, err := jsonrpc.NewApp(nep)
 	if err != nil {
 		return nil, err
@@ -36,7 +43,9 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 		return nil, err
 	}
 
-	pubrout.Request("auth.google", googleAuth)
+	pubrout.Request("auth.google", func(ctx *jsonrpc.ReqContext) {
+		googleAuth(ctx, s.db)
+	})
 
 	_, err = jsonrpc.NewCertAuth(rpc)
 	if err != nil {
@@ -58,11 +67,7 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 	// p.Middleware(NotFoundHandler()) // 404-like handler
 	// p.Middleware(Logger()) // request-response logger (the pointer fields in request/response objects will have to change for this to work)
 
-	return &Server{
-		debug:    debug,
-		neptulon: nep,
-		users:    make(map[uint32]*User),
-	}, nil
+	return &s, nil
 }
 
 // UseDB sets the database to be used by the server. If not supplied, in-memory database implementation is used.

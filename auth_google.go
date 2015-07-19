@@ -26,18 +26,23 @@ type gImage struct {
 	URL string
 }
 
-func googleAuth(ctx *jsonrpc.ReqContext) {
-	token := ctx.Req.Params.(map[string]interface{})["accessToken"]
-	_, _, err := getGProfile(token.(string))
+func googleAuth(ctx *jsonrpc.ReqContext, db DB) {
+	t := ctx.Req.Params.(map[string]interface{})["accessToken"]
+	p, _, err := getGProfile(t.(string))
 	if err != nil {
 		ctx.ResErr = &jsonrpc.ResError{Code: 666, Message: "Failed to authenticated user with Google+ OAuth access token."}
-		log.Printf("Errored during Google+ profile call using provided access token: %v with error: %v", token, err)
+		log.Printf("Errored during Google+ profile call using provided access token: %v with error: %v", t, err)
 	}
 
 	// user is authenticated at this point so check if this is a first-time registration
-	// if user, ok := users.GetByMail("..."); ok { ... }
+	if user, ok := db.GetByMail(p.Emails[0].Value); ok {
+		if user.Cert != nil {
+			ctx.Res = user.Cert
+		}
 
-	// if authenticated generate "userid", set it in session, create, store in database, and send client-certificate as reponse
+	}
+
+	// if this is a first-time login; generate "userid", set it in session, create, store in database, and send client-certificate as reponse
 	// if no csr is provided, create and send a cert
 
 	ctx.Res = "access granted"

@@ -11,23 +11,25 @@ type UserDB interface {
 	GetByMail(mail string) (*User, bool)
 }
 
-// InMemoryDB is an in-memory database.
-type InMemoryDB struct {
-	InMemoryUserDB
+// InMemDB is an in-memory database.
+type InMemDB struct {
+	InMemUserDB
 }
 
-// InMemoryUserDB is in-memory user database.
-type InMemoryUserDB struct {
-	ids   map[uint32]*User
-	mails map[string]*User
+// InMemUserDB is in-memory user database.
+type InMemUserDB struct {
+	ids    map[uint32]*User
+	emails map[string]*User
 }
 
 // GetByID retrieves a user by ID.
-func (u *InMemoryUserDB) GetByID(id uint32) (*User, bool) {
-	return nil, false
+func (db *InMemUserDB) GetByID(id uint32) (user *User, ok bool) {
+	user, ok = db.ids[id]
+	return
 }
 
 // GetByMail retrieves a user by e-mail address.
-func (u *InMemoryUserDB) GetByMail(mail string) (*User, bool) {
-	return nil, false
+func (db *InMemUserDB) GetByMail(email string) (user *User, ok bool) {
+	user, ok = db.emails[email]
+	return
 }
