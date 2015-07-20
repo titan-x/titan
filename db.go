@@ -24,19 +24,23 @@ type InMemUserDB struct {
 }
 
 // GetByID retrieves a user by ID.
-func (db *InMemUserDB) GetByID(id uint32) (user *User, ok bool) {
-	user, ok = db.ids[id]
+func (db *InMemUserDB) GetByID(id uint32) (u *User, ok bool) {
+	u, ok = db.ids[id]
 	return
 }
 
 // GetByMail retrieves a user by e-mail address.
-func (db *InMemUserDB) GetByMail(email string) (user *User, ok bool) {
-	user, ok = db.emails[email]
+func (db *InMemUserDB) GetByMail(email string) (u *User, ok bool) {
+	u, ok = db.emails[email]
 	return
 }
 
 // SaveUser save or updates a user object in the database.
 func (db *InMemUserDB) SaveUser(u *User) error {
+	if u.ID == 0 {
+		u.ID = uint32(len(db.ids) + 1)
+	}
+
 	db.ids[u.ID] = u
 	db.emails[u.Email] = u
 	return nil
