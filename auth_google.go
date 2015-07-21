@@ -26,6 +26,8 @@ type gImage struct {
 	URL string
 }
 
+// googleAuth authenticates a user with Google+ using provided OAuth 2.0 access token.
+// If authenticated successfully, user profile is retrieved from Google+ and user is given a TLS client-certificate in return.
 func googleAuth(ctx *jsonrpc.ReqContext, db DB) {
 	t := ctx.Req.Params.(map[string]interface{})["accessToken"]
 	p, i, err := getGProfile(t.(string))
@@ -55,7 +57,7 @@ func googleAuth(ctx *jsonrpc.ReqContext, db DB) {
 	return
 }
 
-// Retrieve user info (display name, e-mail, profile pic) using an access token that has 'profile' and 'email' scopes.
+// getGProfile retrieves user info (display name, e-mail, profile pic) using an access token that has 'profile' and 'email' scopes.
 // Also retrieves user profile image via profile image URL provided the response.
 func getGProfile(token string) (profile *gProfile, profilePic []byte, err error) {
 	// retrieve profile info from Google
