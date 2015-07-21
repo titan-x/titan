@@ -38,12 +38,12 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 		return nil, err
 	}
 
-	pubrout, err := jsonrpc.NewRouter(rpc)
+	pubRoute, err := jsonrpc.NewRouter(rpc)
 	if err != nil {
 		return nil, err
 	}
 
-	pubrout.Request("auth.google", func(ctx *jsonrpc.ReqContext) {
+	pubRoute.Request("auth.google", func(ctx *jsonrpc.ReqContext) {
 		googleAuth(ctx, s.db)
 	})
 
@@ -52,12 +52,12 @@ func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) 
 		return nil, err
 	}
 
-	privrout, err := jsonrpc.NewRouter(rpc)
+	privRoute, err := jsonrpc.NewRouter(rpc)
 	if err != nil {
 		return nil, err
 	}
 
-	privrout.Request("echo", func(ctx *jsonrpc.ReqContext) {
+	privRoute.Request("echo", func(ctx *jsonrpc.ReqContext) {
 		ctx.Res = ctx.Req.Params
 		if ctx.Res == nil {
 			ctx.Res = ""
