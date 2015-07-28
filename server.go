@@ -20,8 +20,8 @@ type Server struct {
 
 // NewServer creates and returns a new server instance with a listener created using given parameters.
 // Debug mode dumps raw TCP data to stderr using log.Println().
-func NewServer(cert, privKey []byte, laddr string, debug bool) (*Server, error) {
-	nep, err := neptulon.NewApp(cert, privKey, laddr, debug)
+func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, debug bool) (*Server, error) {
+	nep, err := neptulon.NewApp(cert, privKey, clientCACert, laddr, debug)
 	if err != nil {
 		return nil, err
 	}

@@ -1,5 +1,13 @@
 package test
 
+import (
+	"crypto/x509/pkix"
+	"testing"
+	"time"
+
+	"github.com/nbusy/ca"
+)
+
 // server certificate for testing
 var (
 	// host = 127.0.0.1, cn = 127.0.0.1, org = devastator
@@ -152,4 +160,60 @@ wMPdFOfTgO2SHkI2MbmapQ+SLcmwddvzpo1BqkvLi4pMwn9uY+ngcEic
 
 	clientCertBytes = []byte(clientCert)
 	clientKeyBytes  = []byte(clientKey)
+
+	clientCACertBytes, clientCAKeyBytes []byte
 )
+
+// create an entire certificate chain for testing: CA/SigningCert/HostingCert/ClientCert
+func createCertChain(t *testing.T) {
+	caCert, caKey, err := ca.CreateCACert(pkix.Name{
+		Country:            []string{"SE"},
+		Organization:       []string{"FooBar"},
+		OrganizationalUnit: []string{"FooBar Certificate Authority"},
+		CommonName:         "FooBar Root CA",
+	}, time.Hour, 512)
+
+	if caCert == nil || caKey == nil || err != nil {
+		t.Fatal("Failed to created CA cert", err)
+	}
+
+	signingCert, signingKey, err := ca.CreateSigningCert(pkix.Name{
+		Country:            []string{"SE"},
+		Organization:       []string{"FooBar"},
+		OrganizationalUnit: []string{"FooBar Intermediate Certificate Authority"},
+		CommonName:         "FooBar Intermadiate CA",
+	}, time.Hour, 512, caCert, caKey)
+
+	if signingCert == nil || signingKey == nil || err != nil {
+		t.Fatal("Failed to created signing cert", err)
+	}
+
+	svrCert, svrKey, err := ca.CreateServerCert(pkix.Name{
+		Country:      []string{"SE"},
+		Organization: []string{"FooBar"},
+		CommonName:   "127.0.0.1",
+	}, "127.0.0.1", time.Hour, 512, signingCert, signingKey)
+
+	if svrCert == nil || svrKey == nil || err != nil {
+		t.Fatal("Failed to created server cert", err)
+	}
+
+	clientCert, clientKey, err := ca.CreateClientCert(pkix.Name{
+		Country:      []string{"SE"},
+		Organization: []string{"FooBar"},
+		CommonName:   "chuck.norris",
+	}, time.Hour, 512, signingCert, signingKey)
+
+	if clientCert == nil || clientKey == nil || err != nil {
+		t.Fatal("Failed to created client cert", err)
+	}
+
+	caCertBytes = svrCert
+	caKeyBytes = svrKey
+
+	clientCertBytes = clientCert
+	clientKeyBytes = clientKey
+
+	clientCACertBytes = signingCert
+	clientCAKeyBytes = signingKey
+}
