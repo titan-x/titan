@@ -28,8 +28,8 @@ func NewClientHelper(t *testing.T) *ClientHelper {
 
 // DefaultCert attaches default test client certificate to the connection.
 func (c *ClientHelper) DefaultCert() *ClientHelper {
-	c.cert = clientCertBytes
-	c.key = clientKeyBytes
+	c.cert = clientCert
+	c.key = clientKey
 	return c
 }
 
@@ -46,7 +46,7 @@ func (c *ClientHelper) Dial() *ClientHelper {
 
 	// retry connect in case we're operating on a very slow machine
 	for i := 0; i <= 5; i++ {
-		client, err := jsonrpc.Dial(addr, clientCACertBytes, c.cert, c.key, false) // no need for debug mode on client conn
+		client, err := jsonrpc.Dial(addr, intermediateCAKey, c.cert, c.key, false) // no need for debug mode on client conn
 		if err != nil {
 			if operr, ok := err.(*net.OpError); ok && operr.Op == "dial" && operr.Err.Error() == "connection refused" {
 				time.Sleep(time.Millisecond * 50)
