@@ -15,7 +15,6 @@ func TestValidClientCertAuth(t *testing.T) {
 	defer s.Stop()
 	c := NewClientHelper(t).DefaultCert().Dial()
 	defer c.Close()
-
 	id := c.WriteRequest("echo", nil)
 	_, res, _ := c.ReadMsg()
 

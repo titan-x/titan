@@ -46,7 +46,7 @@ func (c *ClientHelper) Dial() *ClientHelper {
 
 	// retry connect in case we're operating on a very slow machine
 	for i := 0; i <= 5; i++ {
-		client, err := jsonrpc.Dial(addr, certChain.IntCAKey, c.cert, c.key, false) // no need for debug mode on client conn
+		client, err := jsonrpc.Dial(addr, certChain.IntCACert, c.cert, c.key, false) // no need for debug mode on client conn as we have it on server conn already
 		if err != nil {
 			if operr, ok := err.(*net.OpError); ok && operr.Op == "dial" && operr.Err.Error() == "connection refused" {
 				time.Sleep(time.Millisecond * 50)
