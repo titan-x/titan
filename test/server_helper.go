@@ -20,12 +20,12 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 		t.Skip("Skipping integration test in short testing mode")
 	}
 
-	if caCert == nil {
+	if certChain.RootCACert == nil {
 		createCertChain(t)
 	}
 
 	laddr := "127.0.0.1:" + devastator.Conf.App.Port
-	s, err := devastator.NewServer(caCert, caKey, intermediateCACert, intermediateCAKey, laddr, devastator.Conf.App.Debug)
+	s, err := devastator.NewServer(certChain.ServerCert, certChain.ServerKey, certChain.IntCACert, certChain.IntCAKey, laddr, devastator.Conf.App.Debug)
 	if err != nil {
 		t.Fatal("Failed to create server:", err)
 	}
