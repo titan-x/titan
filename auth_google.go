@@ -28,7 +28,7 @@ type gImage struct {
 
 // googleAuth authenticates a user with Google+ using provided OAuth 2.0 access token.
 // If authenticated successfully, user profile is retrieved from Google+ and user is given a TLS client-certificate in return.
-func googleAuth(ctx *jsonrpc.ReqContext, db DB) {
+func googleAuth(ctx *jsonrpc.ReqContext, db DB, cm *CertMgr) {
 	t := ctx.Req.Params.(map[string]interface{})["accessToken"]
 	p, i, err := getGProfile(t.(string))
 	if err != nil {
@@ -36,11 +36,17 @@ func googleAuth(ctx *jsonrpc.ReqContext, db DB) {
 		log.Printf("Errored during Google+ profile call using provided access token: %v with error: %v", t, err)
 	}
 
+	var key []byte
+	if key == nil {
+	}
+
 	// user is authenticated at this point so check if this is a first-time registration
 	if user, ok := db.GetByMail(p.Emails[0].Value); ok {
 		if user.Cert == nil {
 			// todo: add CertMgr
-			user.Cert = make([]byte, 555)
+			if user.Cert, key, err = cm.GenClientCert(string(user.ID)); err != nil {
+				log.Fatal("Failed to generate client certificate for user:", err)
+			}
 			db.SaveUser(user)
 		}
 

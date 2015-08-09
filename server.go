@@ -14,8 +14,9 @@ type Server struct {
 	err      error
 	neptulon *neptulon.App
 	mutex    sync.Mutex
-	users    map[uint32]*User // id->user
+	users    map[uint32]*User // map[id]user
 	db       DB
+	certMgr  *CertMgr
 }
 
 // NewServer creates and returns a new server instance with a listener created using given parameters.
@@ -30,7 +31,7 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		debug:    debug,
 		neptulon: nep,
 		users:    make(map[uint32]*User),
-		db:       new(InMemDB),
+		certMgr:  NewCertMgr(clientCACert, clientCAKey),
 	}
 
 	rpc, err := jsonrpc.NewApp(nep)
@@ -44,7 +45,7 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 	}
 
 	pubRoute.Request("auth.google", func(ctx *jsonrpc.ReqContext) {
-		googleAuth(ctx, s.db)
+		googleAuth(ctx, s.db, s.certMgr)
 	})
 
 	_, err = jsonrpc.NewCertAuth(rpc)

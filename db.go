@@ -5,6 +5,8 @@ type DB interface {
 	UserDB
 }
 
+// todo: db.GetByMail is not good, either use udb.GetByMail -or- db.Users.GetByMail
+
 // UserDB presists user information in database.
 type UserDB interface {
 	GetByID(id uint32) (*User, bool)
