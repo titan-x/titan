@@ -26,9 +26,14 @@ type gImage struct {
 	URL string
 }
 
+// certResponse is the success response returned after a successful Google authentication.
+type certResponse struct {
+	cert, key []byte
+}
+
 // googleAuth authenticates a user with Google+ using provided OAuth 2.0 access token.
 // If authenticated successfully, user profile is retrieved from Google+ and user is given a TLS client-certificate in return.
-func googleAuth(ctx *jsonrpc.ReqContext, db DB, cm *CertMgr) {
+func googleAuth(ctx *jsonrpc.ReqContext, db DB, certMgr *CertMgr) {
 	t := ctx.Req.Params.(map[string]interface{})["accessToken"]
 	p, i, err := getGProfile(t.(string))
 	if err != nil {
@@ -36,30 +41,26 @@ func googleAuth(ctx *jsonrpc.ReqContext, db DB, cm *CertMgr) {
 		log.Printf("Errored during Google+ profile call using provided access token: %v with error: %v", t, err)
 	}
 
-	var key []byte
-	if key == nil {
+	// retrieve user information
+	user, ok := db.GetByMail(p.Emails[0].Value)
+	if !ok {
+		// this is a first-time registration so create user profile via Google+ profile info
+		user = &User{Email: p.Emails[0].Value, Name: p.DisplayName, Picture: i, Cert: make([]byte, 555)}
 	}
 
-	// user is authenticated at this point so check if this is a first-time registration
-	if user, ok := db.GetByMail(p.Emails[0].Value); ok {
-		if user.Cert == nil {
-			// todo: add CertMgr
-			if user.Cert, key, err = cm.GenClientCert(string(user.ID)); err != nil {
-				log.Fatal("Failed to generate client certificate for user:", err)
-			}
-			db.SaveUser(user)
-		}
-
-		ctx.Res = user.Cert
-		ctx.Conn.Session.Set("userid", user.ID)
-		return
+	// re-create user client certificate as we don't store private key
+	cert, key, err := certMgr.GenClientCert(string(user.ID))
+	if err != nil {
+		log.Fatal("Failed to generate client certificate for user:", err)
 	}
 
-	// first-time login so generate create user
-	u := User{Email: p.Emails[0].Value, Name: p.DisplayName, Picture: i, Cert: make([]byte, 555)}
-	db.SaveUser(&u)
-	ctx.Res = u.Cert
-	ctx.Conn.Session.Set("userid", u.ID)
+	user.Cert = cert
+	if err := db.SaveUser(user); err != nil {
+		log.Fatal("Failed to persist user information:", err)
+	}
+
+	ctx.Conn.Session.Set("userid", user.ID)
+	ctx.Res = certResponse{cert: user.Cert, key: key}
 	return
 }
 
