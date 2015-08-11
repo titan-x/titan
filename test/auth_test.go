@@ -3,6 +3,8 @@ package test
 import (
 	"os"
 	"testing"
+
+	"github.com/nbusy/devastator"
 )
 
 func TestAuth(t *testing.T) {
@@ -16,7 +18,7 @@ func TestValidClientCertAuth(t *testing.T) {
 	c := NewClientHelper(t).DefaultCert().Dial()
 	defer c.Close()
 	id := c.WriteRequest("echo", nil)
-	_, res, _ := c.ReadMsg()
+	_, res, _ := c.ReadMsg(nil)
 
 	if res.ID != id {
 		t.Fatal("Authentication failed with a valid client certificate. Got server response:", res)
@@ -47,7 +49,7 @@ func TestGoogleRegister(t *testing.T) {
 	c := NewClientHelper(t).Dial()
 
 	c.WriteRequest("auth.google", map[string]string{"accessToken": token})
-	res := c.ReadRes()
+	res := c.ReadRes(&devastator.CertResponse{}) // todo: we need to be able to specify return type here, otherwise we get a map[]
 
 	if res.Error != nil {
 		t.Fatal("Google+ first sign-in/registration failed with valid credentials:", res.Error)
@@ -56,7 +58,22 @@ func TestGoogleRegister(t *testing.T) {
 	c.Close()
 	s.Stop()
 
-	// todo: should get client cert and try connecting with it again
+	// now connect to server with our new client certificate
+	r := res.Result.(*devastator.CertResponse)
+	cert, key := r.Cert, r.Key
+
+	s = NewServerHelper(t)
+	c = NewClientHelper(t).Cert(cert, key).Dial()
+
+	_ = c.WriteRequest("echo", nil)
+	res = c.ReadRes(nil)
+
+	if res.Error != nil {
+		t.Fatal("Failed to connect to the server with certificates created after Google+ sign-in:", res.Error)
+	}
+
+	c.Close()
+	s.Stop()
 }
 
 func TestGoogleAuth(t *testing.T) {

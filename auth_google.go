@@ -10,7 +10,7 @@ import (
 	"github.com/nbusy/neptulon/jsonrpc"
 )
 
-// Response from GET https://www.googleapis.com/plus/v1/people/me?access_token=...
+// Response from GET https://www.googleapis.com/plus/v1/people/me?access_token=... (with scope 'profile' and 'email')
 // has the following structure with denoted fields of interest (rest is left out):
 type gProfile struct {
 	Emails      []gEmail
@@ -26,9 +26,9 @@ type gImage struct {
 	URL string
 }
 
-// certResponse is the success response returned after a successful Google authentication.
-type certResponse struct {
-	cert, key []byte
+// CertResponse is the success response returned after a successful Google authentication.
+type CertResponse struct {
+	Cert, Key []byte
 }
 
 // googleAuth authenticates a user with Google+ using provided OAuth 2.0 access token.
@@ -60,7 +60,7 @@ func googleAuth(ctx *jsonrpc.ReqContext, db DB, certMgr *CertMgr) {
 	}
 
 	ctx.Conn.Session.Set("userid", user.ID)
-	ctx.Res = certResponse{cert: user.Cert, key: key}
+	ctx.Res = CertResponse{Cert: user.Cert, Key: key}
 	return
 }
 
@@ -80,9 +80,11 @@ func getGProfile(token string) (profile *gProfile, profilePic []byte, err error)
 		return
 	}
 
-	if err = json.Unmarshal(resBody, profile); err != nil {
+	var p gProfile
+	if err = json.Unmarshal(resBody, &p); err != nil {
 		return
 	}
+	profile = &p
 
 	// retrieve profile image
 	uri = profile.Image.URL

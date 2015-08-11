@@ -31,6 +31,7 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		debug:    debug,
 		neptulon: nep,
 		users:    make(map[uint32]*User),
+		db:       NewInMemDB(),
 		certMgr:  NewCertMgr(clientCACert, clientCAKey),
 	}
 
