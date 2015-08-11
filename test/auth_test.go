@@ -39,7 +39,7 @@ func TestInvalidClientCertAuth(t *testing.T) {
 	}
 }
 
-func TestGoogleRegister(t *testing.T) {
+func TestGoogleAuth(t *testing.T) {
 	token := os.Getenv("GOOGLE_ACCESS_TOKEN")
 	if token == "" {
 		t.Skip("Missing 'GOOGLE_ACCESS_TOKEN' environment variable. Skipping Google sign-in testing.")
@@ -76,7 +76,7 @@ func TestGoogleRegister(t *testing.T) {
 	s.Stop()
 }
 
-func TestGoogleAuth(t *testing.T) {
+func TestInvalidGoogleAuth(t *testing.T) {
 	s := NewServerHelper(t)
 	defer s.Stop()
 	c := NewClientHelper(t).Dial()
@@ -84,5 +84,4 @@ func TestGoogleAuth(t *testing.T) {
 
 	// t.Fatal("Google+ second sign-in (regular) failed with valid credentials")
 	// t.Fatal("Google+ sign-in passed with invalid credentials")
-	// t.Fatal("Authentication was not ACKed")
 }
