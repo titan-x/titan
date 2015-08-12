@@ -49,7 +49,7 @@ func TestGoogleAuth(t *testing.T) {
 	c := NewClientHelper(t).Dial()
 
 	c.WriteRequest("auth.google", map[string]string{"accessToken": token})
-	res := c.ReadRes(&devastator.CertResponse{}) // todo: we need to be able to specify return type here, otherwise we get a map[]
+	res := c.ReadRes(&devastator.CertResponse{})
 
 	if res.Error != nil {
 		t.Fatal("Google+ first sign-in/registration failed with valid credentials:", res.Error)
