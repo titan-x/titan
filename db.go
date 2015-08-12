@@ -16,8 +16,11 @@ type UserDB interface {
 
 // InMemDB is an in-memory database.
 type InMemDB struct {
+	InMemMsgQ
 	InMemUserDB
 }
+
+type InMemMsgQ struct{}
 
 // NewInMemDB creates a new in-memory database.
 func NewInMemDB() InMemDB {
