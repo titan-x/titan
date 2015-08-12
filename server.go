@@ -14,7 +14,6 @@ type Server struct {
 	err      error
 	neptulon *neptulon.App
 	mutex    sync.Mutex
-	users    map[uint32]*User // map[id]user
 	db       DB
 	certMgr  *CertMgr
 }
@@ -30,7 +29,6 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 	s := Server{
 		debug:    debug,
 		neptulon: nep,
-		users:    make(map[uint32]*User),
 		db:       NewInMemDB(),
 		certMgr:  NewCertMgr(clientCACert, clientCAKey),
 	}
@@ -94,18 +92,10 @@ func (s *Server) Start() error {
 }
 
 // Stop stops a server instance.
+// Close all active connections discarding any read/writes that is going on currently.
+// This is not a problem as we always require an ACK but it will also mean that message deliveries will be at-least-once; to-and-from the server.
 func (s *Server) Stop() error {
 	err := s.neptulon.Stop()
-
-	// close all active connections discarding any read/writes that is going on currently
-	// this is not a problem as we always require an ACK but it will also mean that message deliveries will be at-least-once; to-and-from the server
-	for _, user := range s.users {
-		err := user.Conn.Close()
-		if err != nil {
-			return err
-		}
-		user.Conn = nil
-	}
 
 	s.mutex.Lock()
 	if s.err != nil {
