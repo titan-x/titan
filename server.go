@@ -91,8 +91,7 @@ func (s *Server) Start() error {
 	return err
 }
 
-// Stop stops a server instance.
-// Close all active connections discarding any read/writes that is going on currently.
+// Stop stops the server and closes all of the active connections discarding any read/writes that is going on currently.
 // This is not a problem as we always require an ACK but it will also mean that message deliveries will be at-least-once; to-and-from the server.
 func (s *Server) Stop() error {
 	err := s.neptulon.Stop()
