@@ -2,7 +2,7 @@ package devastator
 
 import "github.com/nbusy/neptulon"
 
-// User encapsulates connected user information.
+// User encapsulates user information.
 type User struct {
 	ID              uint32
 	Email           string
