@@ -79,8 +79,8 @@ func (c *ClientHelper) WriteRequest(method string, params interface{}) (reqID st
 }
 
 // ReadMsg reads a JSON-RPC message from a client connection with error logging for testing.
-func (c *ClientHelper) ReadMsg(resultType interface{}) (req *jsonrpc.Request, res *jsonrpc.Response, not *jsonrpc.Notification) {
-	req, res, not, err := c.client.ReadMsg(resultType)
+func (c *ClientHelper) ReadMsg(resultData interface{}) (req *jsonrpc.Request, res *jsonrpc.Response, not *jsonrpc.Notification) {
+	req, res, not, err := c.client.ReadMsg(resultData)
 	if err != nil {
 		c.testing.Fatal("Failed to read message from client connection:", err)
 	}
@@ -89,8 +89,8 @@ func (c *ClientHelper) ReadMsg(resultType interface{}) (req *jsonrpc.Request, re
 }
 
 // ReadRes reads a response object from a client connection. If incoming message is not a response, an error is logged.
-func (c *ClientHelper) ReadRes(resultType interface{}) *jsonrpc.Response {
-	_, res, _, err := c.client.ReadMsg(resultType)
+func (c *ClientHelper) ReadRes(resultData interface{}) *jsonrpc.Response {
+	_, res, _, err := c.client.ReadMsg(resultData)
 	if err != nil {
 		c.testing.Fatal("Failed to read response from client connection:", err)
 	}
