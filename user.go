@@ -2,15 +2,17 @@ package devastator
 
 import "github.com/nbusy/neptulon"
 
-// User is a mobile user.
+// User encapsulates connected user information.
 type User struct {
 	ID              uint32
+	Email           string
 	PhoneNumber     uint64
 	GCMRegID        string
 	APNSDeviceToken string
 	Name            string
 	Picture         []byte
 	Conn            *neptulon.Conn
+	Cert            []byte
 
 	// MsgQueue may contain request, response, or notification messages.
 	MsgQueue []interface{}

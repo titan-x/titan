@@ -10,7 +10,7 @@ const debug = false
 
 // Example demonstrating the Devastator server.
 func Example() {
-	s, err := devastator.NewServer(nil, nil, "", debug)
+	s, err := devastator.NewServer(nil, nil, nil, nil, "", debug)
 	if err != nil {
 		log.Fatalln("Errored while creating a new server instance:", err)
 	}
