@@ -41,6 +41,16 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 	return &h
 }
 
+// MockDB attaches a MockDB instance to the server for testing.
+func (s *ServerHelper) MockDB() *MockDB {
+	db := MockDB{}
+	if err := s.server.UseDB(db); err != nil {
+		s.testing.Fatal("Failed to attach MockDB to server instance.")
+	}
+
+	return &db
+}
+
 // Stop stops a server instance with error checking.
 func (s *ServerHelper) Stop() {
 	if err := s.server.Stop(); err != nil {
