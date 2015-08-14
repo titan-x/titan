@@ -13,6 +13,6 @@ func TestReceiveQueue(t *testing.T) {
 	defer c.Close()
 
 	db := s.GetDB()
-	db.SaveUser(&devastator.User{ID: 1})
+	db.SaveUser(&devastator.User{ID: 1, Cert: certChain.ClientCert})
 	db.SaveUser(&devastator.User{ID: 2})
 }

@@ -1,6 +1,7 @@
 package test
 
 import (
+	"crypto/x509/pkix"
 	"testing"
 	"time"
 
@@ -14,6 +15,13 @@ var certChain ca.CertChain
 func createCertChain(t *testing.T) {
 	var err error
 	if certChain, err = ca.GenCertChain("FooBar", "127.0.0.1", "127.0.0.1", time.Hour, 512); err != nil {
+		t.Fatal(err)
+	}
+
+	if certChain.ClientCert, certChain.ClientKey, err = ca.GenClientCert(pkix.Name{
+		Organization: []string{"FooBar"},
+		CommonName:   "1",
+	}, time.Hour, 512, certChain.IntCACert, certChain.IntCAKey); err != nil {
 		t.Fatal(err)
 	}
 }
