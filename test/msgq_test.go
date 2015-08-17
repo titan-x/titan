@@ -7,5 +7,4 @@ func TestReceiveQueue(t *testing.T) {
 	defer s.Stop()
 	c := NewClientHelper(t).DefaultCert().Dial()
 	defer c.Close()
-
 }
