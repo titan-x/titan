@@ -25,7 +25,6 @@ func TestValidClientCertAuth(t *testing.T) {
 	}
 }
 
-// todo: no cert, no signature cert, invalid CA signed cert, expired cert...
 func TestInvalidClientCertAuth(t *testing.T) {
 	s := NewServerHelper(t)
 	defer s.Stop()
@@ -37,6 +36,8 @@ func TestInvalidClientCertAuth(t *testing.T) {
 	if !c.VerifyConnClosed() {
 		t.Fatal("Authenticated successfully with invalid client certificate.")
 	}
+
+	// todo: no cert, no signature cert, invalid CA signed cert, expired cert...
 }
 
 func TestGoogleAuth(t *testing.T) {

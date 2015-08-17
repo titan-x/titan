@@ -9,6 +9,7 @@ import (
 
 // ServerHelper is a devastator.Server wrapper with built-in error logging for testing.
 type ServerHelper struct {
+	DB         devastator.InMemDB
 	server     *devastator.Server
 	testing    *testing.T
 	listenerWG sync.WaitGroup // server listener goroutine wait group
@@ -30,7 +31,12 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 		t.Fatal("Failed to create server:", err)
 	}
 
-	h := ServerHelper{server: s, testing: t}
+	db := devastator.NewInMemDB()
+	if err := s.UseDB(db); err != nil {
+		t.Fatal("Failed to attach InMemDB to server instance:", err)
+	}
+
+	h := ServerHelper{DB: db, server: s, testing: t}
 
 	h.listenerWG.Add(1)
 	go func() {
@@ -39,6 +45,13 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 	}()
 
 	return &h
+}
+
+// SeedDB populates the database with seed data for testing.
+func (s *ServerHelper) SeedDB() *ServerHelper {
+	s.DB.SaveUser(&devastator.User{ID: 1, Cert: certChain.ClientCert})
+	s.DB.SaveUser(&devastator.User{ID: 2})
+	return s
 }
 
 // Stop stops a server instance with error checking.
