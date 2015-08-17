@@ -1,6 +1,7 @@
 package devastator
 
 import (
+	"fmt"
 	"log"
 	"sync"
 
@@ -98,7 +99,7 @@ func (s *Server) Stop() error {
 
 	s.mutex.Lock()
 	if s.err != nil {
-		return s.err
+		return fmt.Errorf("Past internal error: %v", s.err)
 	}
 	s.mutex.Unlock()
 	return err
