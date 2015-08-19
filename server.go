@@ -53,6 +53,10 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		ctx.Conn.Close()
 	})
 
+	// pubRoute.NotFound(...)
+	// todo: if the first incoming message in public route is not one of close/google.auth,
+	// close the connection right away (and maybe wait for client to return ACK then close?)
+
 	_, err = jsonrpc.NewCertAuth(rpc)
 	if err != nil {
 		return nil, err
