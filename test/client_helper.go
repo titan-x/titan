@@ -10,14 +10,15 @@ import (
 	"github.com/nbusy/neptulon/jsonrpc"
 )
 
-// ClientHelper is a JSON-RPC client wrapper with built-in error logging for testing.
+// ClientHelper is a JSON-RPC client wrapper.
+// All the functions are wrapped with proper test runner error logging.
 type ClientHelper struct {
 	client    *jsonrpc.Client
 	testing   *testing.T
 	cert, key []byte
 }
 
-// NewClientHelper creates a new JSON-RPC client wrapper which has built-in error logging for testing.
+// NewClientHelper creates a new JSON-RPC client helper object.
 func NewClientHelper(t *testing.T) *ClientHelper {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
@@ -69,7 +70,7 @@ func (c *ClientHelper) Dial() *ClientHelper {
 	return nil
 }
 
-// WriteRequest sends a request message through the client connection with error logging for testing.
+// WriteRequest sends a request message through the client connection.
 func (c *ClientHelper) WriteRequest(method string, params interface{}) (reqID string) {
 	id, err := c.client.WriteRequest(method, params)
 	if err != nil {
@@ -78,14 +79,14 @@ func (c *ClientHelper) WriteRequest(method string, params interface{}) (reqID st
 	return id
 }
 
-// WriteNotification sends a notification message through the client connection with error logging for testing.
+// WriteNotification sends a notification message through the client connection.
 func (c *ClientHelper) WriteNotification(method string, params interface{}) {
 	if err := c.client.WriteNotification(method, params); err != nil {
 		c.testing.Fatal("Failed to write notification to client connection:", err)
 	}
 }
 
-// ReadMsg reads a JSON-RPC message from a client connection with error logging for testing.
+// ReadMsg reads a JSON-RPC message from a client connection.
 func (c *ClientHelper) ReadMsg(resultData interface{}) (req *jsonrpc.Request, res *jsonrpc.Response, not *jsonrpc.Notification) {
 	req, res, not, err := c.client.ReadMsg(resultData)
 	if err != nil {
