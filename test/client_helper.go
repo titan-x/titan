@@ -69,13 +69,20 @@ func (c *ClientHelper) Dial() *ClientHelper {
 	return nil
 }
 
-// WriteRequest writes a request to a client connection with error logging for testing.
+// WriteRequest sends a request message through the client connection with error logging for testing.
 func (c *ClientHelper) WriteRequest(method string, params interface{}) (reqID string) {
 	id, err := c.client.WriteRequest(method, params)
 	if err != nil {
 		c.testing.Fatal("Failed to write request to client connection:", err)
 	}
 	return id
+}
+
+// WriteNotification sends a notification message through the client connection with error logging for testing.
+func (c *ClientHelper) WriteNotification(method string, params interface{}) {
+	if err := c.client.WriteNotification(method, params); err != nil {
+		c.testing.Fatal("Failed to write notification to client connection:", err)
+	}
 }
 
 // ReadMsg reads a JSON-RPC message from a client connection with error logging for testing.

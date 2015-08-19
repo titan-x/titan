@@ -24,7 +24,7 @@ func TestClientClose(t *testing.T) {
 	c := NewClientHelper(t).DefaultCert().Dial()
 	defer c.Close()
 
-	// c.WriteRequest("close", nil) // should be notification
+	c.WriteNotification("close", nil)
 
 	// note: with nanosecond wait, client disconnected doesn't happen because we close client and the server faster than
 	// listener.handleMsg() goroutine can be spawned as we're never waiting for an answer
