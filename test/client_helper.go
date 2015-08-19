@@ -79,11 +79,21 @@ func (c *ClientHelper) WriteRequest(method string, params interface{}) (reqID st
 	return id
 }
 
+// WriteRequestArr sends a request message through the client connection. Params object is variadic.
+func (c *ClientHelper) WriteRequestArr(method string, params ...interface{}) (reqID string) {
+	return c.WriteRequest(method, params)
+}
+
 // WriteNotification sends a notification message through the client connection.
 func (c *ClientHelper) WriteNotification(method string, params interface{}) {
 	if err := c.client.WriteNotification(method, params); err != nil {
 		c.testing.Fatal("Failed to write notification to client connection:", err)
 	}
+}
+
+// WriteNotificationArr sends a notification message through the client connection. Params object is variadic.
+func (c *ClientHelper) WriteNotificationArr(method string, params ...interface{}) {
+	c.WriteNotification(method, params)
 }
 
 // ReadMsg reads a JSON-RPC message from a client connection.
