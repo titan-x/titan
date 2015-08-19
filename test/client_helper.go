@@ -10,7 +10,7 @@ import (
 	"github.com/nbusy/neptulon/jsonrpc"
 )
 
-// ClientHelper is a JSON-RPC client wrapper.
+// ClientHelper is a neptulon/jsonrpc.Client wrapper.
 // All the functions are wrapped with proper test runner error logging.
 type ClientHelper struct {
 	client    *jsonrpc.Client
@@ -18,7 +18,7 @@ type ClientHelper struct {
 	cert, key []byte
 }
 
-// NewClientHelper creates a new JSON-RPC client helper object.
+// NewClientHelper creates a new client helper object.
 func NewClientHelper(t *testing.T) *ClientHelper {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")

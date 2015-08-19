@@ -7,7 +7,8 @@ import (
 	"github.com/nbusy/devastator"
 )
 
-// ServerHelper is a devastator.Server wrapper with built-in error logging for testing.
+// ServerHelper is a devastator.Server wrapper.
+// All the functions are wrapped with proper test runner error logging.
 type ServerHelper struct {
 	DB         devastator.InMemDB
 	server     *devastator.Server
@@ -15,7 +16,7 @@ type ServerHelper struct {
 	listenerWG sync.WaitGroup // server listener goroutine wait group
 }
 
-// NewServerHelper creates a new devastator.Server wrapper which has built-in error logging for testing.
+// NewServerHelper creates a new server helper object.
 func NewServerHelper(t *testing.T) *ServerHelper {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
@@ -47,14 +48,14 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 	return &h
 }
 
-// SeedDB populates the database with seed data for testing.
+// SeedDB populates the database.
 func (s *ServerHelper) SeedDB() *ServerHelper {
 	s.DB.SaveUser(&devastator.User{ID: 1, Cert: certChain.ClientCert})
 	s.DB.SaveUser(&devastator.User{ID: 2})
 	return s
 }
 
-// Stop stops a server instance with error checking.
+// Stop stops a server instance.
 func (s *ServerHelper) Stop() {
 	if err := s.server.Stop(); err != nil {
 		s.testing.Fatal("Failed to stop the server:", err)
