@@ -48,6 +48,11 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		googleAuth(ctx, s.db, s.certMgr)
 	})
 
+	pubRoute.Notification("close", func(ctx *jsonrpc.NotContext) {
+		ctx.Done = true
+		ctx.Conn.Close()
+	})
+
 	_, err = jsonrpc.NewCertAuth(rpc)
 	if err != nil {
 		return nil, err
