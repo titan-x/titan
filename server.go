@@ -74,8 +74,8 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		}
 	})
 
-	// p.Middleware(NotFoundHandler()) // 404-like handler
-	// p.Middleware(Logger()) // request-response logger (the pointer fields in request/response objects will have to change for this to work)
+	// privRoute.Middleware(NotFoundHandler()) // 404-like handler
+	// privRoute/pubRoute.Middleware(Logger()) // request-response logger (the pointer fields in request/response objects will have to change for this to work)
 
 	return &s, nil
 }
