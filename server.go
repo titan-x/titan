@@ -75,17 +75,11 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 	})
 
 	privRoute.Request("msg.send", func(ctx *jsonrpc.ReqContext) {
-		ctx.Res = ctx.Req.Params
-		if ctx.Res == nil {
-			ctx.Res = ""
-		}
+
 	})
 
 	privRoute.Request("msg.recv", func(ctx *jsonrpc.ReqContext) {
-		ctx.Res = ctx.Req.Params
-		if ctx.Res == nil {
-			ctx.Res = ""
-		}
+
 	})
 
 	// privRoute.Middleware(NotFoundHandler()) // 404-like handler
