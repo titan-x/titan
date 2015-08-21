@@ -48,7 +48,7 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		googleAuth(ctx, s.db, s.certMgr)
 	})
 
-	pubRoute.Notification("close", func(ctx *jsonrpc.NotContext) {
+	pubRoute.Notification("conn.close", func(ctx *jsonrpc.NotContext) {
 		ctx.Done = true
 		ctx.Conn.Close()
 	})
@@ -67,7 +67,21 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		return nil, err
 	}
 
-	privRoute.Request("echo", func(ctx *jsonrpc.ReqContext) {
+	privRoute.Request("msg.echo", func(ctx *jsonrpc.ReqContext) {
+		ctx.Res = ctx.Req.Params
+		if ctx.Res == nil {
+			ctx.Res = ""
+		}
+	})
+
+	privRoute.Request("msg.send", func(ctx *jsonrpc.ReqContext) {
+		ctx.Res = ctx.Req.Params
+		if ctx.Res == nil {
+			ctx.Res = ""
+		}
+	})
+
+	privRoute.Request("msg.recv", func(ctx *jsonrpc.ReqContext) {
 		ctx.Res = ctx.Req.Params
 		if ctx.Res == nil {
 			ctx.Res = ""
