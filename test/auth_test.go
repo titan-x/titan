@@ -17,7 +17,7 @@ func TestValidClientCertAuth(t *testing.T) {
 	defer s.Stop()
 	c := NewClientHelper(t).DefaultCert().Dial()
 	defer c.Close()
-	id := c.WriteRequest("echo", nil)
+	id := c.WriteRequest("msg.echo", nil)
 	_, res, _ := c.ReadMsg(nil)
 
 	if res.ID != id {
@@ -31,7 +31,7 @@ func TestInvalidClientCertAuth(t *testing.T) {
 	c := NewClientHelper(t).Dial()
 	defer c.Close()
 
-	_ = c.WriteRequest("echo", nil)
+	_ = c.WriteRequest("msg.echo", nil)
 
 	if !c.VerifyConnClosed() {
 		t.Fatal("Authenticated successfully with invalid client certificate.")
@@ -66,7 +66,7 @@ func TestGoogleAuth(t *testing.T) {
 	s = NewServerHelper(t)
 	c = NewClientHelper(t).Cert(cert, key).Dial()
 
-	_ = c.WriteRequest("echo", nil)
+	_ = c.WriteRequest("msg.echo", nil)
 	res = c.ReadRes(nil)
 
 	if res.Error != nil {

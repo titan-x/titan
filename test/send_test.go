@@ -8,7 +8,7 @@ func TestSendEcho(t *testing.T) {
 	c := NewClientHelper(t).DefaultCert().Dial()
 	defer c.Close()
 
-	id := c.WriteRequest("echo", map[string]string{"echo": "echo"})
+	id := c.WriteRequest("msg.echo", map[string]string{"echo": "echo"})
 	_, res, _ := c.ReadMsg(nil)
 
 	resMap := res.Result.(map[string]interface{})

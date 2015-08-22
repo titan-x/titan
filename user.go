@@ -1,7 +1,5 @@
 package devastator
 
-import "github.com/nbusy/neptulon"
-
 // User encapsulates user information.
 type User struct {
 	ID              uint32
@@ -11,7 +9,6 @@ type User struct {
 	APNSDeviceToken string
 	Name            string
 	Picture         []byte
-	Conn            *neptulon.Conn
 	Cert            []byte
 
 	// MsgQueue may contain request, response, or notification messages.
