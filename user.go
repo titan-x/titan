@@ -2,7 +2,7 @@ package devastator
 
 // User encapsulates user information.
 type User struct {
-	ID              uint32
+	ID              string
 	Email           string
 	PhoneNumber     uint64
 	GCMRegID        string

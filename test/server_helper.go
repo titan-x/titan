@@ -50,8 +50,8 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 
 // SeedDB populates the database.
 func (s *ServerHelper) SeedDB() *ServerHelper {
-	s.DB.SaveUser(&devastator.User{ID: 1, Cert: certChain.ClientCert})
-	s.DB.SaveUser(&devastator.User{ID: 2, Cert: client2Cert})
+	s.DB.SaveUser(&devastator.User{ID: "1", Cert: certChain.ClientCert})
+	s.DB.SaveUser(&devastator.User{ID: "2", Cert: client2Cert})
 	return s
 }
 
