@@ -17,6 +17,7 @@ type Server struct {
 	mutex    sync.Mutex
 	db       DB
 	certMgr  *CertMgr
+	conns    map[string]string // user ID -> conn ID
 }
 
 // NewServer creates and returns a new server instance with a listener created using given parameters.
@@ -32,6 +33,7 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		neptulon: nep,
 		db:       NewInMemDB(),
 		certMgr:  NewCertMgr(clientCACert, clientCAKey),
+		conns:    make(map[string]string),
 	}
 
 	rpc, err := jsonrpc.NewApp(nep)
@@ -57,7 +59,7 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 	// todo: if the first incoming message in public route is not one of close/google.auth,
 	// close the connection right away (and maybe wait for client to return ACK then close?)
 
-	_, err = jsonrpc.NewCertAuth(rpc)
+	_, err = NewCertAuth(rpc, s.conns)
 	if err != nil {
 		return nil, err
 	}
