@@ -10,9 +10,6 @@ type User struct {
 	Name            string
 	Picture         []byte
 	Cert            []byte
-
-	// MsgQueue may contain request, response, or notification messages.
-	MsgQueue []interface{}
 }
 
 // Send sends given data to to a device using device specific infrastructure.

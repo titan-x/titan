@@ -65,6 +65,11 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		return nil, err
 	}
 
+	sender, err := jsonrpc.NewSender(rpc)
+	if err != nil {
+		return nil, err
+	}
+
 	privRoute, err := jsonrpc.NewRouter(rpc)
 	if err != nil {
 		return nil, err
@@ -78,7 +83,16 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 	})
 
 	privRoute.Request("msg.send", func(ctx *jsonrpc.ReqContext) {
-
+		// try to send the incoming message right away
+		// todo: pass in type for deserialization (along with route?)
+		params := ctx.Req.Params.(map[string]interface{})
+		to, msg := params["to"], params["message"]
+		if connID, ok := s.conns.Get(to); ok {
+			// todo: use a client instance in sender as it already implements simplified sending, array sending functions
+			sender.Request(connID.(string), &jsonrpc.Request{ID: "456", Method: "msg.recv", Params: msg.(string)})
+		} else {
+			// todo: queue the message to userID for later delivery
+		}
 	})
 
 	privRoute.Request("msg.recv", func(ctx *jsonrpc.ReqContext) {
