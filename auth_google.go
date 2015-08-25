@@ -59,7 +59,7 @@ func googleAuth(ctx *jsonrpc.ReqContext, db DB, certMgr *CertMgr) {
 		log.Fatal("Failed to persist user information:", err)
 	}
 
-	ctx.Conn.UID = user.ID
+	ctx.Conn.Data.Set("userid", user.ID)
 	ctx.Res = CertResponse{Cert: user.Cert, Key: key}
 	return
 }

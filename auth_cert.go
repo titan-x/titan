@@ -3,6 +3,7 @@ package devastator
 import (
 	"log"
 
+	"github.com/nbusy/cmap"
 	"github.com/nbusy/neptulon/jsonrpc"
 )
 
@@ -14,11 +15,11 @@ import (
 
 // CertAuth is a TLS certificate authentication middleware for Neptulon JSON-RPC app.
 type CertAuth struct {
-	conns map[string]string // user ID -> conn ID
+	conns *cmap.CMap // user ID -> conn ID
 }
 
 // NewCertAuth creates and registers a new certificate authentication middleware instance with a Neptulon JSON-RPC app.
-func NewCertAuth(app *jsonrpc.App, conns map[string]string) (*CertAuth, error) {
+func NewCertAuth(app *jsonrpc.App, conns *cmap.CMap) (*CertAuth, error) {
 	a := CertAuth{conns: conns}
 	app.ReqMiddleware(a.reqMiddleware)
 	app.ResMiddleware(a.resMiddleware)
@@ -27,7 +28,7 @@ func NewCertAuth(app *jsonrpc.App, conns map[string]string) (*CertAuth, error) {
 }
 
 func (a *CertAuth) reqMiddleware(ctx *jsonrpc.ReqContext) {
-	if _, ok := a.conns[ctx.Conn.ID]; ok {
+	if _, ok := ctx.Conn.Data.Get("userid"); ok {
 		return
 	}
 
@@ -41,12 +42,12 @@ func (a *CertAuth) reqMiddleware(ctx *jsonrpc.ReqContext) {
 	}
 
 	userID := certs[0].Subject.CommonName
-	a.conns[userID] = ctx.Conn.ID
+	ctx.Conn.Data.Set("userid", userID)
 	log.Println("Client-certificate authenticated:", ctx.Conn.RemoteAddr(), userID)
 }
 
 func (a *CertAuth) resMiddleware(ctx *jsonrpc.ResContext) {
-	if _, ok := a.conns[ctx.Conn.ID]; ok {
+	if _, ok := ctx.Conn.Data.Get("userid"); ok {
 		return
 	}
 
@@ -55,7 +56,7 @@ func (a *CertAuth) resMiddleware(ctx *jsonrpc.ResContext) {
 }
 
 func (a *CertAuth) notMiddleware(ctx *jsonrpc.NotContext) {
-	if _, ok := a.conns[ctx.Conn.ID]; ok {
+	if _, ok := ctx.Conn.Data.Get("userid"); ok {
 		return
 	}
 

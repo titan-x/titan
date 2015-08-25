@@ -5,6 +5,7 @@ import (
 	"log"
 	"sync"
 
+	"github.com/nbusy/cmap"
 	"github.com/nbusy/neptulon"
 	"github.com/nbusy/neptulon/jsonrpc"
 )
@@ -17,7 +18,7 @@ type Server struct {
 	mutex    sync.Mutex
 	db       DB
 	certMgr  *CertMgr
-	conns    map[string]string // user ID -> conn ID
+	conns    *cmap.CMap // user ID -> conn ID
 }
 
 // NewServer creates and returns a new server instance with a listener created using given parameters.
@@ -33,7 +34,7 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		neptulon: nep,
 		db:       NewInMemDB(),
 		certMgr:  NewCertMgr(clientCACert, clientCAKey),
-		conns:    make(map[string]string),
+		conns:    cmap.New(),
 	}
 
 	rpc, err := jsonrpc.NewApp(nep)
