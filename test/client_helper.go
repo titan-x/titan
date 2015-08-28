@@ -97,6 +97,7 @@ func (c *ClientHelper) WriteNotificationArr(method string, params ...interface{}
 }
 
 // ReadMsg reads a JSON-RPC message from a client connection.
+// Optionally, you can pass in a data structure that the returned JSON-RPC response result data will be serialized into. Otherwise json.Unmarshal defaults apply.
 func (c *ClientHelper) ReadMsg(resultData interface{}) (req *jsonrpc.Request, res *jsonrpc.Response, not *jsonrpc.Notification) {
 	req, res, not, err := c.client.ReadMsg(resultData)
 	if err != nil {
@@ -107,6 +108,7 @@ func (c *ClientHelper) ReadMsg(resultData interface{}) (req *jsonrpc.Request, re
 }
 
 // ReadRes reads a response object from a client connection. If incoming message is not a response, an error is logged.
+// Optionally, you can pass in a data structure that the returned JSON-RPC response result data will be serialized into. Otherwise json.Unmarshal defaults apply.
 func (c *ClientHelper) ReadRes(resultData interface{}) *jsonrpc.Response {
 	_, res, _, err := c.client.ReadMsg(resultData)
 	if err != nil {
