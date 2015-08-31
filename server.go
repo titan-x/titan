@@ -47,7 +47,7 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		return nil, err
 	}
 
-	pubRoute.Request("auth.google", nil, func(ctx *jsonrpc.ReqContext) {
+	pubRoute.Request("auth.google", func(ctx *jsonrpc.ReqContext) {
 		googleAuth(ctx, s.db, s.certMgr)
 	})
 
@@ -70,27 +70,27 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		return nil, err
 	}
 
-	privRoute.Request("msg.echo", nil, func(ctx *jsonrpc.ReqContext) {
+	privRoute.Request("msg.echo", func(ctx *jsonrpc.ReqContext) {
 		ctx.Res = ctx.Req.Params
 		if ctx.Res == nil {
 			ctx.Res = ""
 		}
 	})
 
-	privRoute.Request("msg.send", nil, func(ctx *jsonrpc.ReqContext) {
+	privRoute.Request("msg.send", func(ctx *jsonrpc.ReqContext) {
 		// try to send the incoming message right away
 		// todo: pass in type for deserialization (along with route?)
 		params := ctx.Req.Params.(map[string]interface{})
 		to, msg := params["to"], params["message"]
 		if connID, ok := s.conns.Get(to); ok {
 			// todo: use a client instance in sender as it already implements simplified sending, array sending functions
-			privRoute.SendRequest(connID.(string), nil, &jsonrpc.Request{ID: "456", Method: "msg.recv", Params: msg.(string)})
+			privRoute.SendRequest(connID.(string), &jsonrpc.Request{ID: "456", Method: "msg.recv", Params: msg.(string)})
 		} else {
 			// todo: queue the message to userID for later delivery
 		}
 	})
 
-	privRoute.Request("msg.recv", nil, func(ctx *jsonrpc.ReqContext) {
+	privRoute.Request("msg.recv", func(ctx *jsonrpc.ReqContext) {
 
 	})
 
