@@ -13,7 +13,7 @@ import (
 // Server wraps a listener instance and registers default connection and message handlers with the listener.
 type Server struct {
 	debug    bool
-	neptulon *neptulon.App
+	neptulon *neptulon.Server
 	db       DB
 	certMgr  *CertMgr
 	conns    *cmap.CMap // user ID -> conn ID
@@ -24,7 +24,7 @@ type Server struct {
 // NewServer creates and returns a new server instance with a listener created using given parameters.
 // Debug mode dumps raw TCP data to stderr using log.Println().
 func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, debug bool) (*Server, error) {
-	nep, err := neptulon.NewApp(cert, privKey, clientCACert, laddr, debug)
+	nep, err := neptulon.NewServer(cert, privKey, clientCACert, laddr, debug)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		conns:    cmap.New(),
 	}
 
-	rpc, err := jsonrpc.NewApp(nep)
+	rpc, err := jsonrpc.NewServer(nep)
 	if err != nil {
 		return nil, err
 	}

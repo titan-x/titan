@@ -13,17 +13,17 @@ import (
 // todo2: we need to pass client CA cert as a param here which will add it to listener.tls.Config file as client CA cert
 // rather than TLS listener always requiring client CA cert w/ constructor
 
-// CertAuth is a TLS certificate authentication middleware for Neptulon JSON-RPC app.
+// CertAuth is a TLS certificate authentication middleware for Neptulon JSON-RPC server.
 type CertAuth struct {
 	conns *cmap.CMap // user ID -> conn ID
 }
 
-// NewCertAuth creates and registers a new certificate authentication middleware instance with a Neptulon JSON-RPC app.
-func NewCertAuth(app *jsonrpc.App, conns *cmap.CMap) (*CertAuth, error) {
+// NewCertAuth creates and registers a new certificate authentication middleware instance with a Neptulon JSON-RPC server.
+func NewCertAuth(server *jsonrpc.Server, conns *cmap.CMap) (*CertAuth, error) {
 	a := CertAuth{conns: conns}
-	app.ReqMiddleware(a.reqMiddleware)
-	app.ResMiddleware(a.resMiddleware)
-	app.NotMiddleware(a.notMiddleware)
+	server.ReqMiddleware(a.reqMiddleware)
+	server.ResMiddleware(a.resMiddleware)
+	server.NotMiddleware(a.notMiddleware)
 	return &a, nil
 }
 
