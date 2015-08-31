@@ -3,8 +3,6 @@ package test
 import (
 	"os"
 	"testing"
-
-	"github.com/nbusy/devastator"
 )
 
 func TestAuth(t *testing.T) {
@@ -40,6 +38,10 @@ func TestInvalidClientCertAuth(t *testing.T) {
 	// todo: no cert, no signature cert, invalid CA signed cert, expired cert...
 }
 
+type googleAuthRes struct {
+	Cert, Key []byte
+}
+
 func TestGoogleAuth(t *testing.T) {
 	token := os.Getenv("GOOGLE_ACCESS_TOKEN")
 	if token == "" {
@@ -50,7 +52,8 @@ func TestGoogleAuth(t *testing.T) {
 	c := NewClientHelper(t).Dial()
 
 	c.WriteRequest("auth.google", map[string]string{"accessToken": token})
-	res := c.ReadRes(&devastator.CertResponse{})
+	var resData googleAuthRes
+	res := c.ReadRes(&resData)
 
 	if res.Error != nil {
 		t.Fatal("Google+ first sign-in/registration failed with valid credentials:", res.Error)
@@ -60,11 +63,8 @@ func TestGoogleAuth(t *testing.T) {
 	s.Stop()
 
 	// now connect to server with our new client certificate
-	r := res.Result.(*devastator.CertResponse)
-	cert, key := r.Cert, r.Key
-
 	s = NewServerHelper(t)
-	c = NewClientHelper(t).Cert(cert, key).Dial()
+	c = NewClientHelper(t).Cert(resData.Cert, resData.Key).Dial()
 
 	_ = c.WriteRequest("msg.echo", nil)
 	res = c.ReadRes(nil)

@@ -7,7 +7,7 @@ import (
 
 // Response from: GET https://www.googleapis.com/plus/v1/people/me?access_token=...
 // (retrieved on 5th of July, 2015)
-var googleAuthRes = []byte(`{
+var googleAuthResStr = []byte(`{
  "kind": "plus#person",
  "etag": "\"abcd123\"",
  "gender": "male",
@@ -43,7 +43,7 @@ var (
 
 func TestGoogleAuth(t *testing.T) {
 	var profile gProfile
-	if err := json.Unmarshal(googleAuthRes, &profile); err != nil {
+	if err := json.Unmarshal(googleAuthResStr, &profile); err != nil {
 		t.Fatal(err)
 	}
 

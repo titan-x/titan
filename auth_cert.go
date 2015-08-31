@@ -27,7 +27,7 @@ func NewCertAuth(app *jsonrpc.App, conns *cmap.CMap) (*CertAuth, error) {
 	return &a, nil
 }
 
-func (a *CertAuth) reqMiddleware(ctx *jsonrpc.ReqContext) {
+func (a *CertAuth) reqMiddleware(ctx *jsonrpc.ReqCtx) {
 	if _, ok := ctx.Conn.Data.Get("userid"); ok {
 		return
 	}
@@ -46,7 +46,7 @@ func (a *CertAuth) reqMiddleware(ctx *jsonrpc.ReqContext) {
 	log.Println("Client-certificate authenticated:", ctx.Conn.RemoteAddr(), userID)
 }
 
-func (a *CertAuth) resMiddleware(ctx *jsonrpc.ResContext) {
+func (a *CertAuth) resMiddleware(ctx *jsonrpc.ResCtx) {
 	if _, ok := ctx.Conn.Data.Get("userid"); ok {
 		return
 	}
@@ -55,7 +55,7 @@ func (a *CertAuth) resMiddleware(ctx *jsonrpc.ResContext) {
 	ctx.Conn.Close()
 }
 
-func (a *CertAuth) notMiddleware(ctx *jsonrpc.NotContext) {
+func (a *CertAuth) notMiddleware(ctx *jsonrpc.NotCtx) {
 	if _, ok := ctx.Conn.Data.Get("userid"); ok {
 		return
 	}

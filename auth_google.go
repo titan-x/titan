@@ -26,19 +26,26 @@ type gImage struct {
 	URL string
 }
 
-// CertResponse is the success response returned after a successful Google authentication.
-type CertResponse struct {
+// googleAuthRes is the success response returned after a successful Google authentication.
+type googleAuthRes struct {
 	Cert, Key []byte
+}
+
+// googleAuthRequest is the incoming request object.
+type googleAuthReq struct {
+	accessToken string
 }
 
 // googleAuth authenticates a user with Google+ using provided OAuth 2.0 access token.
 // If authenticated successfully, user profile is retrieved from Google+ and user is given a TLS client-certificate in return.
-func googleAuth(ctx *jsonrpc.ReqContext, db DB, certMgr *CertMgr) {
-	t := ctx.Req.Params.(map[string]interface{})["accessToken"]
-	p, i, err := getGProfile(t.(string))
+func googleAuth(ctx *jsonrpc.ReqCtx, db DB, certMgr *CertMgr) {
+	var r googleAuthReq
+	ctx.Params(&r)
+
+	p, i, err := getGProfile(r.accessToken)
 	if err != nil {
-		ctx.ResErr = &jsonrpc.ResError{Code: 666, Message: "Failed to authenticated user with Google+ OAuth access token."}
-		log.Printf("Errored during Google+ profile call using provided access token: %v with error: %v", t, err)
+		ctx.Err = &jsonrpc.ResError{Code: 666, Message: "Failed to authenticated user with Google+ OAuth access token."}
+		log.Printf("Errored during Google+ profile call using provided access token: %v with error: %v", r.accessToken, err)
 	}
 
 	// retrieve user information
@@ -60,7 +67,7 @@ func googleAuth(ctx *jsonrpc.ReqContext, db DB, certMgr *CertMgr) {
 	}
 
 	ctx.Conn.Data.Set("userid", user.ID)
-	ctx.Res = CertResponse{Cert: user.Cert, Key: key}
+	ctx.Res = googleAuthRes{Cert: user.Cert, Key: key}
 	return
 }
 
