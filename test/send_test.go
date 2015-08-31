@@ -9,7 +9,7 @@ func TestSendEcho(t *testing.T) {
 	defer c.Close()
 
 	id := c.WriteRequest("msg.echo", map[string]string{"echo": "echo"})
-	_, res, _ := c.ReadMsg(nil)
+	_, res, _ := c.ReadMsg(nil, nil)
 
 	resMap := res.Result.(map[string]interface{})
 	if res.ID != id || resMap["echo"] != "echo" {
