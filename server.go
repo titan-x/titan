@@ -13,12 +13,12 @@ import (
 // Server wraps a listener instance and registers default connection and message handlers with the listener.
 type Server struct {
 	debug    bool
-	err      error
 	neptulon *neptulon.App
-	mutex    sync.Mutex
 	db       DB
 	certMgr  *CertMgr
 	conns    *cmap.CMap // user ID -> conn ID
+	err      error
+	errMutex sync.Mutex
 }
 
 // NewServer creates and returns a new server instance with a listener created using given parameters.
@@ -118,9 +118,9 @@ func (s *Server) Start() error {
 		log.Fatalln("Listener returned an error while closing:", err)
 	}
 
-	s.mutex.Lock()
+	s.errMutex.Lock()
 	s.err = err
-	s.mutex.Unlock()
+	s.errMutex.Unlock()
 
 	return err
 }
@@ -130,10 +130,10 @@ func (s *Server) Start() error {
 func (s *Server) Stop() error {
 	err := s.neptulon.Stop()
 
-	s.mutex.Lock()
+	s.errMutex.Lock()
 	if s.err != nil {
 		return fmt.Errorf("Past internal error: %v", s.err)
 	}
-	s.mutex.Unlock()
+	s.errMutex.Unlock()
 	return err
 }
