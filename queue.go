@@ -13,8 +13,9 @@ import (
 
 // Queue is a message queue for queueing and sending messages to users.
 type Queue struct {
-	conns *cmap.CMap      // user ID -> conn ID
-	route *jsonrpc.Router // route to send messages through
+	conns *cmap.CMap                      // user ID -> conn ID
+	route *jsonrpc.Router                 // route to send messages through
+	reqs  map[string]([]*jsonrpc.Request) // user ID -> []*jsonrpc.Request
 }
 
 // NewQueue creates a new queue object.
@@ -28,6 +29,7 @@ func NewQueue() Queue {
 // If there are pending messages for the user, they are started to be send immediately.
 func (q *Queue) SetConn(userID, connID string) {
 	q.conns.Set(userID, connID)
+	// todo: trigger processing
 }
 
 // RemoveConn removes a user's associated connection ID.
@@ -38,9 +40,9 @@ func (q *Queue) RemoveConn(userID string) {
 // AddRequest queues a request message to be sent to the given user.
 func (q *Queue) AddRequest(userID string, request *jsonrpc.Request) {
 	if connID, ok := q.conns.Get(userID); ok {
-		// todo: use a client instance in sender as it already implements simplified sending, array sending functions
-		res := q.route.SendRequest(connID.(string), request)
+		q.route.SendRequest(connID.(string), request)
+		// wait on multiple responses, wait on a single channel, or use callbacks?
 	} else {
-		// todo: queue the message to userID for later delivery
+		// q.reqs[userID] = append(q.reqs[userID], request)
 	}
 }
