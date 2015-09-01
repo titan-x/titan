@@ -2,7 +2,6 @@ package devastator
 
 import (
 	"github.com/nbusy/cmap"
-	"github.com/nbusy/neptulon"
 	"github.com/nbusy/neptulon/jsonrpc"
 )
 
@@ -14,7 +13,7 @@ import (
 
 // Queue is a message queue for queueing and sending messages to users.
 type Queue struct {
-	conns *cmap.CMap      // user ID -> *neptulon.Conn
+	conns *cmap.CMap      // user ID -> conn ID
 	route *jsonrpc.Router // route to send messages through
 }
 
@@ -25,14 +24,14 @@ func NewQueue() Queue {
 	}
 }
 
-// SetConn sets the active connection for the given user.
-// If there are pending messages for the user, they start to be sent immediately.
-func (q *Queue) SetConn(userID string, conn *neptulon.Conn) {
-	q.conns.Set(userID, conn)
+// SetConn associates a user with a connection by ID.
+// If there are pending messages for the user, they are started to be send immediately.
+func (q *Queue) SetConn(userID, connID string) {
+	q.conns.Set(userID, connID)
 }
 
-// Disconn releases dicsonnected user's connection object.
-func (q *Queue) Disconn(userID string) {
+// RemoveConn removes a user's associated connection ID.
+func (q *Queue) RemoveConn(userID string) {
 	q.conns.Delete(userID)
 }
 
@@ -40,7 +39,7 @@ func (q *Queue) Disconn(userID string) {
 func (q *Queue) AddRequest(userID string, request *jsonrpc.Request) {
 	if connID, ok := q.conns.Get(userID); ok {
 		// todo: use a client instance in sender as it already implements simplified sending, array sending functions
-		q.route.SendRequest(connID.(string), request)
+		res := q.route.SendRequest(connID.(string), request)
 	} else {
 		// todo: queue the message to userID for later delivery
 	}
