@@ -12,11 +12,16 @@ import (
 
 // Server wraps a listener instance and registers default connection and message handlers with the listener.
 type Server struct {
+	neptulon  *neptulon.Server
+	jsonrpc   *jsonrpc.Server
+	pubRoute  *jsonrpc.Router
+	privRoute *jsonrpc.Router
+
+	db      DB
+	certMgr *CertMgr
+	conns   *cmap.CMap // user ID -> conn ID
+
 	debug    bool
-	neptulon *neptulon.Server
-	db       DB
-	certMgr  *CertMgr
-	conns    *cmap.CMap // user ID -> conn ID
 	err      error
 	errMutex sync.Mutex
 }
@@ -37,21 +42,21 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		conns:    cmap.New(),
 	}
 
-	rpc, err := jsonrpc.NewServer(nep)
+	s.jsonrpc, err = jsonrpc.NewServer(nep)
 	if err != nil {
 		return nil, err
 	}
 
-	pubRoute, err := jsonrpc.NewRouter(rpc)
+	s.pubRoute, err = jsonrpc.NewRouter(s.jsonrpc)
 	if err != nil {
 		return nil, err
 	}
 
-	pubRoute.Request("auth.google", func(ctx *jsonrpc.ReqCtx) {
+	s.pubRoute.Request("auth.google", func(ctx *jsonrpc.ReqCtx) {
 		googleAuth(ctx, s.db, s.certMgr)
 	})
 
-	pubRoute.Notification("conn.close", func(ctx *jsonrpc.NotCtx) {
+	s.pubRoute.Notification("conn.close", func(ctx *jsonrpc.NotCtx) {
 		ctx.Done = true
 		ctx.Conn.Close()
 	})
@@ -60,17 +65,17 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 	// todo: if the first incoming message in public route is not one of close/google.auth,
 	// close the connection right away (and maybe wait for client to return ACK then close?)
 
-	_, err = NewCertAuth(rpc, s.conns)
+	_, err = NewCertAuth(s.jsonrpc, s.conns)
 	if err != nil {
 		return nil, err
 	}
 
-	privRoute, err := jsonrpc.NewRouter(rpc)
+	s.privRoute, err = jsonrpc.NewRouter(s.jsonrpc)
 	if err != nil {
 		return nil, err
 	}
 
-	privRoute.Request("msg.echo", func(ctx *jsonrpc.ReqCtx) {
+	s.privRoute.Request("msg.echo", func(ctx *jsonrpc.ReqCtx) {
 		ctx.Params(&ctx.Res)
 		if ctx.Res == nil {
 			ctx.Res = ""
@@ -82,19 +87,19 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		message string
 	}
 
-	privRoute.Request("msg.send", func(ctx *jsonrpc.ReqCtx) {
+	s.privRoute.Request("msg.send", func(ctx *jsonrpc.ReqCtx) {
 		// try to send the incoming message right away
 		var r msgSendRequest
 		ctx.Params(&r)
 		if connID, ok := s.conns.Get(r.to); ok {
 			// todo: use a client instance in sender as it already implements simplified sending, array sending functions
-			privRoute.SendRequest(connID.(string), &jsonrpc.Request{ID: "456", Method: "msg.recv", Params: r.message})
+			s.privRoute.SendRequest(connID.(string), &jsonrpc.Request{ID: "456", Method: "msg.recv", Params: r.message})
 		} else {
 			// todo: queue the message to userID for later delivery
 		}
 	})
 
-	privRoute.Request("msg.recv", func(ctx *jsonrpc.ReqCtx) {
+	s.privRoute.Request("msg.recv", func(ctx *jsonrpc.ReqCtx) {
 
 	})
 
