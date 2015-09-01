@@ -19,7 +19,7 @@ type Server struct {
 
 	db      DB
 	certMgr *CertMgr
-	conns   *cmap.CMap // user ID -> conn ID
+	conns   *cmap.CMap // user ID -> conn ID (reverse of what is stored in neptulon)
 
 	debug    bool
 	err      error
