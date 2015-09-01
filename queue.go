@@ -38,10 +38,9 @@ func (q *Queue) RemoveConn(userID string) {
 }
 
 // AddRequest queues a request message to be sent to the given user.
-func (q *Queue) AddRequest(userID string, request *jsonrpc.Request) {
+func (q *Queue) AddRequest(userID string, request *jsonrpc.Request, resHandler func(ctx *jsonrpc.ResCtx)) {
 	if connID, ok := q.conns.Get(userID); ok {
-		q.route.SendRequest(connID.(string), request)
-		// wait on multiple responses, wait on a single channel, or use callbacks?
+		q.route.SendRequest(connID.(string), request, resHandler)
 	} else {
 		// q.reqs[userID] = append(q.reqs[userID], request)
 	}
