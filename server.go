@@ -19,7 +19,10 @@ type Server struct {
 
 	db      DB
 	certMgr *CertMgr
-	conns   *cmap.CMap // user ID -> conn ID (reverse of what is stored in neptulon)
+	conns   *cmap.CMap // user ID -> conn ID (reverse of what is stored in neptulon server)
+	// todo: type queue { conns cmap.CMap; route Route; queue Queue }
+	//         .AddConn() { // trigger queue send inside cert_auth as long as conn is available }
+	//         .Disconn() { }
 
 	debug    bool
 	err      error
