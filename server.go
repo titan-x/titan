@@ -81,14 +81,14 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		}
 	})
 
-	type msgSendRequest struct {
+	type sendMsgReq struct {
 		to      string
 		message string
 	}
 
 	s.privRoute.Request("msg.send", func(ctx *jsonrpc.ReqCtx) {
 		// try to send the incoming message right away
-		var r msgSendRequest
+		var r sendMsgReq
 		ctx.Params(&r)
 		s.queue.AddRequest(r.to, &jsonrpc.Request{ID: "456", Method: "msg.recv", Params: r.message})
 	})
