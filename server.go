@@ -5,7 +5,6 @@ import (
 	"log"
 	"sync"
 
-	"github.com/nbusy/cmap"
 	"github.com/nbusy/neptulon"
 	"github.com/nbusy/neptulon/jsonrpc"
 )
@@ -19,10 +18,7 @@ type Server struct {
 
 	db      DB
 	certMgr *CertMgr
-	conns   *cmap.CMap // user ID -> conn ID (reverse of what is stored in neptulon server)
-	// todo: type queue { conns cmap.CMap; route Route; queue Queue }
-	//         .AddConn() { // trigger queue send inside cert_auth as long as conn is available }
-	//         .Disconn() { }
+	queue   Queue
 
 	debug    bool
 	err      error
@@ -42,7 +38,7 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		neptulon: nep,
 		db:       NewInMemDB(),
 		certMgr:  NewCertMgr(clientCACert, clientCAKey),
-		conns:    cmap.New(),
+		queue:    NewQueue(),
 	}
 
 	s.jsonrpc, err = jsonrpc.NewServer(nep)
@@ -68,7 +64,7 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 	// todo: if the first incoming message in public route is not one of close/google.auth,
 	// close the connection right away (and maybe wait for client to return ACK then close?)
 
-	_, err = NewCertAuth(s.jsonrpc, s.conns)
+	_, err = NewCertAuth(s.jsonrpc)
 	if err != nil {
 		return nil, err
 	}
@@ -94,12 +90,7 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		// try to send the incoming message right away
 		var r msgSendRequest
 		ctx.Params(&r)
-		if connID, ok := s.conns.Get(r.to); ok {
-			// todo: use a client instance in sender as it already implements simplified sending, array sending functions
-			s.privRoute.SendRequest(connID.(string), &jsonrpc.Request{ID: "456", Method: "msg.recv", Params: r.message})
-		} else {
-			// todo: queue the message to userID for later delivery
-		}
+		s.queue.SendRequest(r.to, &jsonrpc.Request{ID: "456", Method: "msg.recv", Params: r.message})
 	})
 
 	s.privRoute.Request("msg.recv", func(ctx *jsonrpc.ReqCtx) {

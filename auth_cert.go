@@ -3,7 +3,6 @@ package devastator
 import (
 	"log"
 
-	"github.com/nbusy/cmap"
 	"github.com/nbusy/neptulon/jsonrpc"
 )
 
@@ -15,12 +14,11 @@ import (
 
 // CertAuth is a TLS certificate authentication middleware for Neptulon JSON-RPC server.
 type CertAuth struct {
-	conns *cmap.CMap // user ID -> conn ID
 }
 
 // NewCertAuth creates and registers a new certificate authentication middleware instance with a Neptulon JSON-RPC server.
-func NewCertAuth(server *jsonrpc.Server, conns *cmap.CMap) (*CertAuth, error) {
-	a := CertAuth{conns: conns}
+func NewCertAuth(server *jsonrpc.Server) (*CertAuth, error) {
+	a := CertAuth{}
 	server.ReqMiddleware(a.reqMiddleware)
 	server.ResMiddleware(a.resMiddleware)
 	server.NotMiddleware(a.notMiddleware)
