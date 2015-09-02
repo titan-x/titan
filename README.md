@@ -8,7 +8,7 @@ Devastator is a messaging server for delivering chat messages to mobile and Web 
 Example
 -------
 
-ToDo
+See [example_test.go](example_test.go) file.
 
 Architecture
 ------------
@@ -37,6 +37,8 @@ Following is the overview of the server application's components:
 
 Client-Server Protocol
 ----------------------
+
+(Devastator server is entirely built on top of [Neptulon](https://github.com/nbusy/neptulon) framework. You can browse Neptulon repository to get more in-depth info.)
 
 Client server communication protocol is based on [JSON RPC](http://www.jsonrpc.org/specification) 2.0 specs. Mobile devices connect with the TLS endpoint and the Web browsers utilizes the WebSocket endpoint. The message framing on the TLS endpoint is quite simple:
 
