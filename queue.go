@@ -25,7 +25,7 @@ func NewQueue(r *jsonrpc.Router) Queue {
 // If there are pending messages for the user, they are started to be send immediately.
 func (q *Queue) SetConn(userID, connID string) {
 	q.conns.Set(userID, connID)
-	// todo: trigger processing
+	go q.processQueue(userID)
 }
 
 // RemoveConn removes a user's associated connection ID.
@@ -54,4 +54,9 @@ func (q *Queue) AddRequest(userID string, method string, params interface{}, res
 type queuedRequest struct {
 	Method string
 	Params interface{}
+}
+
+func (q *Queue) processQueue(userID string) {
+	// todo: register channel before loop so we can capture message even during initialization
+
 }
