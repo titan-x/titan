@@ -90,7 +90,7 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		// try to send the incoming message right away
 		var r sendMsgReq
 		ctx.Params(&r)
-		s.queue.AddRequest(r.to, &jsonrpc.Request{ID: "456", Method: "msg.recv", Params: r.message}, func(ctx *jsonrpc.ResCtx) {
+		s.queue.AddRequest(r.to, "msg.recv", r.message, func(ctx *jsonrpc.ResCtx) {
 			// todo: handle response (which is probably just ACK so this might be automated as a part of Queue or with something like MsgHandler)
 		})
 	})
