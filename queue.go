@@ -13,9 +13,11 @@ type Queue struct {
 }
 
 // NewQueue creates a new queue object.
-func NewQueue() Queue {
+func NewQueue(r *jsonrpc.Router) Queue {
 	return Queue{
 		conns: cmap.New(),
+		route: r,
+		reqs:  make(map[string]([]queuedRequest)),
 	}
 }
 
@@ -38,7 +40,12 @@ func (q *Queue) AddRequest(userID string, method string, params interface{}, res
 			return err
 		}
 	} else {
-		// q.reqs[userID] = append(q.reqs[userID], request)
+		r := queuedRequest{Method: method, Params: params}
+		if rs, ok := q.reqs[userID]; ok {
+			q.reqs[userID] = append(rs, r)
+		} else {
+			q.reqs[userID] = []queuedRequest{{Method: method, Params: params}}
+		}
 	}
 
 	return nil

@@ -38,7 +38,6 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		neptulon: nep,
 		db:       NewInMemDB(),
 		certMgr:  NewCertMgr(clientCACert, clientCAKey),
-		queue:    NewQueue(),
 	}
 
 	s.jsonrpc, err = jsonrpc.NewServer(nep)
@@ -73,6 +72,8 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 	if err != nil {
 		return nil, err
 	}
+
+	s.queue = NewQueue(s.privRoute)
 
 	s.privRoute.Request("msg.echo", func(ctx *jsonrpc.ReqCtx) {
 		ctx.Params(&ctx.Res)
