@@ -1,6 +1,8 @@
 package devastator
 
 import (
+	"log"
+
 	"github.com/nbusy/cmap"
 	"github.com/nbusy/neptulon/jsonrpc"
 )
@@ -34,29 +36,32 @@ func (q *Queue) RemoveConn(userID string) {
 }
 
 // AddRequest queues a request message to be sent to the given user.
-func (q *Queue) AddRequest(userID string, method string, params interface{}, resHandler func(ctx *jsonrpc.ResCtx)) error {
-	if connID, ok := q.conns.Get(userID); ok {
-		if err := q.route.SendRequest(connID.(string), method, params, resHandler); err != nil {
-			return err
-		}
+func (q *Queue) AddRequest(userID string, method string, params interface{}, resHandler func(ctx *jsonrpc.ResCtx)) {
+	r := queuedRequest{Method: method, Params: params, ResHandler: resHandler}
+	if rs, ok := q.reqs[userID]; ok {
+		q.reqs[userID] = append(rs, r)
 	} else {
-		r := queuedRequest{Method: method, Params: params}
-		if rs, ok := q.reqs[userID]; ok {
-			q.reqs[userID] = append(rs, r)
-		} else {
-			q.reqs[userID] = []queuedRequest{{Method: method, Params: params}}
-		}
+		q.reqs[userID] = []queuedRequest{{Method: method, Params: params}}
 	}
-
-	return nil
 }
 
 type queuedRequest struct {
-	Method string
-	Params interface{}
+	Method     string
+	Params     interface{}
+	ResHandler func(ctx *jsonrpc.ResCtx)
 }
 
 func (q *Queue) processQueue(userID string) {
-	// todo: register channel before loop so we can capture message even during initialization
+	connID, ok := q.conns.Get(userID)
+	if !ok {
+		return
+	}
 
+	if reqs, ok := q.reqs[userID]; ok {
+		for _, req := range reqs {
+			if err := q.route.SendRequest(connID.(string), req.Method, req.Params, req.ResHandler); err != nil {
+				log.Fatal(err)
+			}
+		}
+	}
 }
