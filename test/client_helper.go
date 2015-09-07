@@ -10,14 +10,15 @@ import (
 	"github.com/nbusy/neptulon/jsonrpc"
 )
 
-// ClientHelper is a JSON-RPC client wrapper with built-in error logging for testing.
+// ClientHelper is a neptulon/jsonrpc.Client wrapper.
+// All the functions are wrapped with proper test runner error logging.
 type ClientHelper struct {
 	client    *jsonrpc.Client
 	testing   *testing.T
 	cert, key []byte
 }
 
-// NewClientHelper creates a new JSON-RPC client wrapper which has built-in error logging for testing.
+// NewClientHelper creates a new client helper object.
 func NewClientHelper(t *testing.T) *ClientHelper {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
@@ -69,7 +70,7 @@ func (c *ClientHelper) Dial() *ClientHelper {
 	return nil
 }
 
-// WriteRequest writes a request to a client connection with error logging for testing.
+// WriteRequest sends a request message through the client connection.
 func (c *ClientHelper) WriteRequest(method string, params interface{}) (reqID string) {
 	id, err := c.client.WriteRequest(method, params)
 	if err != nil {
@@ -78,9 +79,28 @@ func (c *ClientHelper) WriteRequest(method string, params interface{}) (reqID st
 	return id
 }
 
-// ReadMsg reads a JSON-RPC message from a client connection with error logging for testing.
-func (c *ClientHelper) ReadMsg(resultData interface{}) (req *jsonrpc.Request, res *jsonrpc.Response, not *jsonrpc.Notification) {
-	req, res, not, err := c.client.ReadMsg(resultData)
+// WriteRequestArr sends a request message through the client connection. Params object is variadic.
+func (c *ClientHelper) WriteRequestArr(method string, params ...interface{}) (reqID string) {
+	return c.WriteRequest(method, params)
+}
+
+// WriteNotification sends a notification message through the client connection.
+func (c *ClientHelper) WriteNotification(method string, params interface{}) {
+	if err := c.client.WriteNotification(method, params); err != nil {
+		c.testing.Fatal("Failed to write notification to client connection:", err)
+	}
+}
+
+// WriteNotificationArr sends a notification message through the client connection. Params object is variadic.
+func (c *ClientHelper) WriteNotificationArr(method string, params ...interface{}) {
+	c.WriteNotification(method, params)
+}
+
+// ReadMsg reads a JSON-RPC message from a client connection.
+// Optionally, you can pass in a data structure that the returned JSON-RPC response result data will be serialized into (same for request params).
+// Otherwise json.Unmarshal defaults apply.
+func (c *ClientHelper) ReadMsg(resultData interface{}, paramsData interface{}) (req *jsonrpc.Request, res *jsonrpc.Response, not *jsonrpc.Notification) {
+	req, res, not, err := c.client.ReadMsg(resultData, paramsData)
 	if err != nil {
 		c.testing.Fatal("Failed to read message from client connection:", err)
 	}
@@ -89,8 +109,9 @@ func (c *ClientHelper) ReadMsg(resultData interface{}) (req *jsonrpc.Request, re
 }
 
 // ReadRes reads a response object from a client connection. If incoming message is not a response, an error is logged.
+// Optionally, you can pass in a data structure that the returned JSON-RPC response result data will be serialized into. Otherwise json.Unmarshal defaults apply.
 func (c *ClientHelper) ReadRes(resultData interface{}) *jsonrpc.Response {
-	_, res, _, err := c.client.ReadMsg(resultData)
+	_, res, _, err := c.client.ReadMsg(resultData, nil)
 	if err != nil {
 		c.testing.Fatal("Failed to read response from client connection:", err)
 	}
@@ -101,7 +122,7 @@ func (c *ClientHelper) ReadRes(resultData interface{}) *jsonrpc.Response {
 // VerifyConnClosed verifies that the connection is in closed state.
 // Verification is done via reading from the channel and checking that returned error is io.EOF.
 func (c *ClientHelper) VerifyConnClosed() bool {
-	_, _, _, err := c.client.ReadMsg(nil)
+	_, _, _, err := c.client.ReadMsg(nil, nil)
 	if err != io.EOF {
 		return false
 	}

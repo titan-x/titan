@@ -11,18 +11,24 @@ import (
 
 // Server wraps a listener instance and registers default connection and message handlers with the listener.
 type Server struct {
+	neptulon  *neptulon.Server
+	jsonrpc   *jsonrpc.Server
+	pubRoute  *jsonrpc.Router
+	privRoute *jsonrpc.Router
+
+	db      DB
+	certMgr *CertMgr
+	queue   Queue
+
 	debug    bool
 	err      error
-	neptulon *neptulon.App
-	mutex    sync.Mutex
-	db       DB
-	certMgr  *CertMgr
+	errMutex sync.Mutex
 }
 
 // NewServer creates and returns a new server instance with a listener created using given parameters.
 // Debug mode dumps raw TCP data to stderr using log.Println().
 func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, debug bool) (*Server, error) {
-	nep, err := neptulon.NewApp(cert, privKey, clientCACert, laddr, debug)
+	nep, err := neptulon.NewServer(cert, privKey, clientCACert, laddr, debug)
 	if err != nil {
 		return nil, err
 	}
@@ -34,39 +40,68 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		certMgr:  NewCertMgr(clientCACert, clientCAKey),
 	}
 
-	rpc, err := jsonrpc.NewApp(nep)
+	s.jsonrpc, err = jsonrpc.NewServer(nep)
 	if err != nil {
 		return nil, err
 	}
 
-	pubRoute, err := jsonrpc.NewRouter(rpc)
+	s.pubRoute, err = jsonrpc.NewRouter(s.jsonrpc)
 	if err != nil {
 		return nil, err
 	}
 
-	pubRoute.Request("auth.google", func(ctx *jsonrpc.ReqContext) {
+	s.pubRoute.Request("auth.google", func(ctx *jsonrpc.ReqCtx) {
 		googleAuth(ctx, s.db, s.certMgr)
 	})
 
-	_, err = jsonrpc.NewCertAuth(rpc)
+	s.pubRoute.Notification("conn.close", func(ctx *jsonrpc.NotCtx) {
+		ctx.Done = true
+		ctx.Conn.Close()
+	})
+
+	// pubRoute.NotFound(...)
+	// todo: if the first incoming message in public route is not one of close/google.auth,
+	// close the connection right away (and maybe wait for client to return ACK then close?)
+
+	_, err = NewCertAuth(s.jsonrpc)
 	if err != nil {
 		return nil, err
 	}
 
-	privRoute, err := jsonrpc.NewRouter(rpc)
+	s.privRoute, err = jsonrpc.NewRouter(s.jsonrpc)
 	if err != nil {
 		return nil, err
 	}
 
-	privRoute.Request("echo", func(ctx *jsonrpc.ReqContext) {
-		ctx.Res = ctx.Req.Params
+	s.queue = NewQueue(s.privRoute)
+
+	s.privRoute.Request("msg.echo", func(ctx *jsonrpc.ReqCtx) {
+		ctx.Params(&ctx.Res)
 		if ctx.Res == nil {
 			ctx.Res = ""
 		}
 	})
 
-	// p.Middleware(NotFoundHandler()) // 404-like handler
-	// p.Middleware(Logger()) // request-response logger (the pointer fields in request/response objects will have to change for this to work)
+	type sendMsgReq struct {
+		to      string
+		message string
+	}
+
+	s.privRoute.Request("msg.send", func(ctx *jsonrpc.ReqCtx) {
+		// try to send the incoming message right away
+		var r sendMsgReq
+		ctx.Params(&r)
+		s.queue.AddRequest(r.to, "msg.recv", r.message, func(ctx *jsonrpc.ResCtx) {
+			// todo: handle response (which is probably just ACK so this might be automated as a part of Queue or with something like MsgHandler)
+		})
+	})
+
+	s.privRoute.Request("msg.recv", func(ctx *jsonrpc.ReqCtx) {
+
+	})
+
+	// privRoute.Middleware(NotFoundHandler()) // 404-like handler
+	// privRoute/pubRoute.Middleware(Logger()) // request-response logger (the pointer fields in request/response objects will have to change for this to work)
 
 	return &s, nil
 }
@@ -85,9 +120,9 @@ func (s *Server) Start() error {
 		log.Fatalln("Listener returned an error while closing:", err)
 	}
 
-	s.mutex.Lock()
+	s.errMutex.Lock()
 	s.err = err
-	s.mutex.Unlock()
+	s.errMutex.Unlock()
 
 	return err
 }
@@ -97,10 +132,10 @@ func (s *Server) Start() error {
 func (s *Server) Stop() error {
 	err := s.neptulon.Stop()
 
-	s.mutex.Lock()
+	s.errMutex.Lock()
 	if s.err != nil {
 		return fmt.Errorf("Past internal error: %v", s.err)
 	}
-	s.mutex.Unlock()
+	s.errMutex.Unlock()
 	return err
 }

@@ -1,21 +1,15 @@
 package devastator
 
-import "github.com/nbusy/neptulon"
-
 // User encapsulates user information.
 type User struct {
-	ID              uint32
+	ID              string
 	Email           string
 	PhoneNumber     uint64
 	GCMRegID        string
 	APNSDeviceToken string
 	Name            string
 	Picture         []byte
-	Conn            *neptulon.Conn
 	Cert            []byte
-
-	// MsgQueue may contain request, response, or notification messages.
-	MsgQueue []interface{}
 }
 
 // Send sends given data to to a device using device specific infrastructure.

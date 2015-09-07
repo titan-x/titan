@@ -8,7 +8,7 @@ Devastator is a messaging server for delivering chat messages to mobile and Web 
 Example
 -------
 
-ToDo
+See [example_test.go](example_test.go) file.
 
 Architecture
 ------------
@@ -37,6 +37,8 @@ Following is the overview of the server application's components:
 
 Client-Server Protocol
 ----------------------
+
+(Devastator server is entirely built on top of [Neptulon](https://github.com/nbusy/neptulon) framework. You can browse Neptulon repository to get more in-depth info.)
 
 Client server communication protocol is based on [JSON RPC](http://www.jsonrpc.org/specification) 2.0 specs. Mobile devices connect with the TLS endpoint and the Web browsers utilizes the WebSocket endpoint. The message framing on the TLS endpoint is quite simple:
 
@@ -88,7 +90,7 @@ Any message that was not acknowledged by the client will be delivered again (hen
 Testing
 -------
 
-All the tests can be executed by `GORACE="halt_on_error=1" go test -race -cover ./...` command. Optionally you can add `-v` flag to observe all connection logs. Integration tests require environment variables defined in the next section. If they are missing, integration tests are skipped.
+All the tests can be executed with `GORACE="halt_on_error=1" go test -race -cover ./...` command. Optionally you can add `-v` flag to observe all connection logs. Integration tests require environment variables defined in the next section. If they are missing, integration tests are skipped.
 
 Environment Variables
 ---------------------

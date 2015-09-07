@@ -1,14 +1,67 @@
 package devastator
 
-// Queue is a message queue for connected devices.
-// Messages are mapped from user ID to []interface{} array which may contain request, response, or notification messages.
-type Queue map[uint32][]interface{}
+import (
+	"log"
 
-// Send sends a message immediately to .
-func (q *Queue) Send() {}
+	"github.com/nbusy/cmap"
+	"github.com/nbusy/neptulon/jsonrpc"
+)
 
-// Queue .
-func (q *Queue) Queue() {}
+// Queue is a message queue for queueing and sending messages to users.
+type Queue struct {
+	conns *cmap.CMap                   // user ID -> conn ID
+	route *jsonrpc.Router              // route to send messages through
+	reqs  map[string]([]queuedRequest) // user ID -> []queuedRequest
+}
 
-// LocalQueue is an in-memory queue.
-type LocalQueue struct{}
+// NewQueue creates a new queue object.
+func NewQueue(r *jsonrpc.Router) Queue {
+	return Queue{
+		conns: cmap.New(),
+		route: r,
+		reqs:  make(map[string]([]queuedRequest)),
+	}
+}
+
+// SetConn associates a user with a connection by ID.
+// If there are pending messages for the user, they are started to be send immediately.
+func (q *Queue) SetConn(userID, connID string) {
+	q.conns.Set(userID, connID)
+	go q.processQueue(userID)
+}
+
+// RemoveConn removes a user's associated connection ID.
+func (q *Queue) RemoveConn(userID string) {
+	q.conns.Delete(userID)
+}
+
+// AddRequest queues a request message to be sent to the given user.
+func (q *Queue) AddRequest(userID string, method string, params interface{}, resHandler func(ctx *jsonrpc.ResCtx)) {
+	r := queuedRequest{Method: method, Params: params, ResHandler: resHandler}
+	if rs, ok := q.reqs[userID]; ok {
+		q.reqs[userID] = append(rs, r)
+	} else {
+		q.reqs[userID] = []queuedRequest{{Method: method, Params: params}}
+	}
+}
+
+type queuedRequest struct {
+	Method     string
+	Params     interface{}
+	ResHandler func(ctx *jsonrpc.ResCtx)
+}
+
+func (q *Queue) processQueue(userID string) {
+	connID, ok := q.conns.Get(userID)
+	if !ok {
+		return
+	}
+
+	if reqs, ok := q.reqs[userID]; ok {
+		for _, req := range reqs {
+			if err := q.route.SendRequest(connID.(string), req.Method, req.Params, req.ResHandler); err != nil {
+				log.Fatal(err)
+			}
+		}
+	}
+}
