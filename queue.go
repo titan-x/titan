@@ -27,7 +27,7 @@ func NewQueue(r *jsonrpc.Router) Queue {
 // If there are pending messages for the user, they are started to be send immediately.
 func (q *Queue) SetConn(userID, connID string) {
 	q.conns.Set(userID, connID)
-	go q.processQueue(userID)
+	q.processQueue(userID)
 }
 
 // RemoveConn removes a user's associated connection ID.
@@ -43,6 +43,8 @@ func (q *Queue) AddRequest(userID string, method string, params interface{}, res
 	} else {
 		q.reqs[userID] = []queuedRequest{{Method: method, Params: params}}
 	}
+
+	q.processQueue(userID) // todo: prevent concurrent runs of processQueue
 }
 
 type queuedRequest struct {
@@ -61,6 +63,8 @@ func (q *Queue) processQueue(userID string) {
 		for _, req := range reqs {
 			if err := q.route.SendRequest(connID.(string), req.Method, req.Params, req.ResHandler); err != nil {
 				log.Fatal(err)
+			} else {
+				// todo: delete from queue
 			}
 		}
 	}
