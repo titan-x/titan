@@ -1,6 +1,8 @@
 package devastator
 
 // todo: move this into a sub directory as a tool and use Conf object to initialize Server instance
+//       ideally, nbusy package should use the code from main.go here to initialize the server and
+//       implement DB interfaces with google datastore package or similar
 
 // package main
 //
