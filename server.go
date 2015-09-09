@@ -11,22 +11,24 @@ import (
 
 // Server wraps a listener instance and registers default connection and message handlers with the listener.
 type Server struct {
+	// neptulon framework components
 	neptulon  *neptulon.Server
 	jsonrpc   *jsonrpc.Server
 	pubRoute  *jsonrpc.Router
 	privRoute *jsonrpc.Router
 
+	// devastator server components
 	db      DB
 	certMgr CertMgr
 	queue   Queue
 
-	debug    bool
-	err      error
+	debug    bool  // dump raw TCP message to stderr using log.Println()
+	err      error // last error returned by neptulon framework before closing listener
 	errMutex sync.Mutex
 }
 
 // NewServer creates and returns a new server instance with a listener created using given parameters.
-// Debug mode dumps raw TCP data to stderr using log.Println().
+// Debug mode dumps raw TCP messages to stderr using log.Println().
 func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, debug bool) (*Server, error) {
 	nep, err := neptulon.NewServer(cert, privKey, clientCACert, laddr, debug)
 	if err != nil {
