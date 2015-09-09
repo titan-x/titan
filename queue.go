@@ -14,7 +14,7 @@ type Queue struct {
 	reqs  map[string]([]queuedRequest) // user ID -> []queuedRequest
 }
 
-// NewQueue creates a new queue object.
+// NewQueue creates a new queue object and registers the JSON-RPC router to be used for sending queued messages.
 func NewQueue(r *jsonrpc.Router) Queue {
 	return Queue{
 		conns: cmap.New(),

@@ -17,7 +17,7 @@ type Server struct {
 	privRoute *jsonrpc.Router
 
 	db      DB
-	certMgr *CertMgr
+	certMgr CertMgr
 	queue   Queue
 
 	debug    bool
@@ -51,7 +51,7 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 	}
 
 	s.pubRoute.Request("auth.google", func(ctx *jsonrpc.ReqCtx) {
-		googleAuth(ctx, s.db, s.certMgr)
+		googleAuth(ctx, s.db, &s.certMgr)
 	})
 
 	s.pubRoute.Notification("conn.close", func(ctx *jsonrpc.NotCtx) {
@@ -74,31 +74,7 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 	}
 
 	s.queue = NewQueue(s.privRoute)
-
-	s.privRoute.Request("msg.echo", func(ctx *jsonrpc.ReqCtx) {
-		ctx.Params(&ctx.Res)
-		if ctx.Res == nil {
-			ctx.Res = ""
-		}
-	})
-
-	type sendMsgReq struct {
-		to      string
-		message string
-	}
-
-	s.privRoute.Request("msg.send", func(ctx *jsonrpc.ReqCtx) {
-		// try to send the incoming message right away
-		var r sendMsgReq
-		ctx.Params(&r)
-		s.queue.AddRequest(r.to, "msg.recv", r.message, func(ctx *jsonrpc.ResCtx) {
-			// todo: handle response (which is probably just ACK so this might be automated as a part of Queue or with something like MsgHandler)
-		})
-	})
-
-	s.privRoute.Request("msg.recv", func(ctx *jsonrpc.ReqCtx) {
-
-	})
+	initPrivRoutes(s.privRoute, &s.queue)
 
 	// privRoute.Middleware(NotFoundHandler()) // 404-like handler
 	// privRoute/pubRoute.Middleware(Logger()) // request-response logger (the pointer fields in request/response objects will have to change for this to work)

@@ -13,8 +13,8 @@ type CertMgr struct {
 }
 
 // NewCertMgr initializes a new certificate manager with given client CA certificate and private key.
-func NewCertMgr(clientCACert, clientCAKey []byte) *CertMgr {
-	return &CertMgr{clientCACert: clientCACert, clientCAKey: clientCAKey}
+func NewCertMgr(clientCACert, clientCAKey []byte) CertMgr {
+	return CertMgr{clientCACert: clientCACert, clientCAKey: clientCAKey}
 }
 
 // GenClientCert generates a client certificate.
