@@ -52,7 +52,8 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 
 	initPubRoutes(s.pubRoute, s.db, &s.certMgr)
 
-	// all requests below this point must be authenticated
+	// --- all requests below this point must be authenticated ---
+
 	_, err = NewCertAuth(s.jsonrpc)
 	if err != nil {
 		return nil, err

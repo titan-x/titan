@@ -16,7 +16,7 @@ import (
 type CertAuth struct {
 }
 
-// NewCertAuth creates and registers a new certificate authentication middleware instance with a Neptulon JSON-RPC server.
+// NewCertAuth creates and registers a new TLS client-certificate authentication middleware instance with a Neptulon JSON-RPC server.
 func NewCertAuth(server *jsonrpc.Server) (*CertAuth, error) {
 	a := CertAuth{}
 	server.ReqMiddleware(a.reqMiddleware)
