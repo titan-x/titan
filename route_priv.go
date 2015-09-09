@@ -3,9 +3,11 @@ package devastator
 import "github.com/nbusy/neptulon/jsonrpc"
 
 func initPrivRoutes(r *jsonrpc.Router, q *Queue) {
+	// r.Middleware(Logger()) - request-response logger (the pointer fields in request/response objects will have to change for this to work)
 	r.Request("msg.echo", initEchoMsgHandler())
 	r.Request("msg.send", initSendMsgHandler(q))
 	r.Request("msg.recv", initRecvMsgHandler())
+	// r.Middleware(NotFoundHandler()) - 404-like handler
 }
 
 func initEchoMsgHandler() func(ctx *jsonrpc.ReqCtx) {

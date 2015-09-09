@@ -50,19 +50,9 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		return nil, err
 	}
 
-	s.pubRoute.Request("auth.google", func(ctx *jsonrpc.ReqCtx) {
-		googleAuth(ctx, s.db, &s.certMgr)
-	})
+	initPubRoutes(s.pubRoute, s.db, &s.certMgr)
 
-	s.pubRoute.Notification("conn.close", func(ctx *jsonrpc.NotCtx) {
-		ctx.Done = true
-		ctx.Conn.Close()
-	})
-
-	// pubRoute.NotFound(...)
-	// todo: if the first incoming message in public route is not one of close/google.auth,
-	// close the connection right away (and maybe wait for client to return ACK then close?)
-
+	// all requests below this point must be authenticated
 	_, err = NewCertAuth(s.jsonrpc)
 	if err != nil {
 		return nil, err
@@ -75,9 +65,6 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 
 	s.queue = NewQueue(s.privRoute)
 	initPrivRoutes(s.privRoute, &s.queue)
-
-	// privRoute.Middleware(NotFoundHandler()) // 404-like handler
-	// privRoute/pubRoute.Middleware(Logger()) // request-response logger (the pointer fields in request/response objects will have to change for this to work)
 
 	return &s, nil
 }
