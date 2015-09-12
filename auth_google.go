@@ -59,12 +59,13 @@ func googleAuth(ctx *jsonrpc.ReqCtx, db DB, certMgr *CertMgr) {
 			log.Fatal("Failed to persist user information:", err)
 		}
 
-		user.Cert, user.Key, err = certMgr.GenClientCert(string(user.ID))
+		// use the newly generated user ID as the subject for the client certificate
+		user.Cert, user.Key, err = certMgr.GenClientCert(user.ID)
 		if err != nil {
 			log.Fatalf("Failed to generate client certificate for user %v: %v", user.ID, err)
 		}
 
-		// save user info with the new cert & key
+		// now save the full user info complete with the new cert & key
 		if err := db.SaveUser(user); err != nil {
 			log.Fatal("Failed to persist user information along with the client-certificate:", err)
 		}

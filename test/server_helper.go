@@ -10,10 +10,18 @@ import (
 // ServerHelper is a devastator.Server wrapper.
 // All the functions are wrapped with proper test runner error logging.
 type ServerHelper struct {
-	DB         devastator.InMemDB
+	db         devastator.InMemDB
 	server     *devastator.Server
 	testing    *testing.T
 	listenerWG sync.WaitGroup // server listener goroutine wait group
+
+	// PEM encoded X.509 certificate and private key pairs
+	RootCACert,
+	RootCAKey,
+	IntCACert,
+	IntCAKey,
+	ServerCert,
+	ServerKey []byte
 }
 
 // NewServerHelper creates a new server helper object.
@@ -37,7 +45,7 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 		t.Fatal("Failed to attach InMemDB to server instance:", err)
 	}
 
-	h := ServerHelper{DB: db, server: s, testing: t}
+	h := ServerHelper{db: db, server: s, testing: t}
 
 	h.listenerWG.Add(1)
 	go func() {
@@ -51,8 +59,8 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 // SeedDB populates the database with:
 // - 2 users with their client certificates
 func (s *ServerHelper) SeedDB() *ServerHelper {
-	s.DB.SaveUser(&devastator.User{ID: "1", Cert: certChain.ClientCert})
-	s.DB.SaveUser(&devastator.User{ID: "2", Cert: client2Cert})
+	s.db.SaveUser(&devastator.User{ID: "1", Cert: certChain.ClientCert, Key: certChain.ClientKey})
+	s.db.SaveUser(&devastator.User{ID: "2", Cert: client2Cert, Key: client2Key})
 	return s
 }
 
