@@ -48,7 +48,8 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 	return &h
 }
 
-// SeedDB populates the database.
+// SeedDB populates the database with:
+// - 2 users with their client certificates
 func (s *ServerHelper) SeedDB() *ServerHelper {
 	s.DB.SaveUser(&devastator.User{ID: "1", Cert: certChain.ClientCert})
 	s.DB.SaveUser(&devastator.User{ID: "2", Cert: client2Cert})
