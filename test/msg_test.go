@@ -24,15 +24,18 @@ func TestSendEcho(t *testing.T) {
 	// t.Fatal("Could not send an ACK for an incoming message")
 }
 
-func TestReceiveEcho(t *testing.T) {
-	// send message to user with ID: "client.127.0.0.1"
+func TestMsgSend(t *testing.T) {
+	s := NewServerHelper(t).SeedDB()
+	defer s.Stop()
+	c1 := NewClientHelper(t).DefaultCert().Dial()
+	defer c1.Close()
+	c2 := NewClientHelper(t).Cert(client2Cert, client2Key).Dial()
+	defer c2.Close()
+
+	// t.Fatal("Failed to send message to an online peer.")
 }
 
-func TestPing(t *testing.T) {
-	// t.Fatal("Pong/ACK was not sent for ping")
-}
-
-func TestReceiveOfflineQueue(t *testing.T) {
+func TestMsgRecv(t *testing.T) {
 	s := NewServerHelper(t).SeedDB()
 	defer s.Stop()
 	c1 := NewClientHelper(t).DefaultCert().Dial()
