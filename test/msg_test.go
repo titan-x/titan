@@ -1,9 +1,6 @@
 package test
 
-import (
-	"log"
-	"testing"
-)
+import "testing"
 
 func TestSendEcho(t *testing.T) {
 	s := NewServerHelper(t).SeedDB()
@@ -43,7 +40,7 @@ func TestMsgSend(t *testing.T) {
 	c1.WriteRequest("msg.send", sendMsgReq{to: "2", message: "lorem ip sum"})
 	res := c1.ReadRes(nil)
 	if res.Result != "ACK" {
-		log.Fatal("Failed to send message to peer with response:", res)
+		t.Fatal("Failed to send message to peer with response:", res)
 	}
 
 	type recvMsgReq struct {
@@ -51,8 +48,11 @@ func TestMsgSend(t *testing.T) {
 		message string
 	}
 
-	// var r recvMsgReq
-	// req := c2.ReadReq(&r)
+	var r recvMsgReq
+	c2.ReadReq(&r)
+	if r.from != "1" {
+		t.Fatal("Received message from wrong sender instead of 1:", r.from)
+	}
 
 	// t.Fatal("Failed to send message to an online peer.")
 }
