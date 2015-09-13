@@ -11,9 +11,9 @@ func TestAuth(t *testing.T) {
 }
 
 func TestValidClientCertAuth(t *testing.T) {
-	s := NewServerHelper(t)
+	s := NewServerHelper(t).SeedDB()
 	defer s.Stop()
-	c := NewClientHelper(t, s).DefaultCert().Dial()
+	c := NewClientHelper(t, s).AsUser(&s.SeedData.User1).Dial()
 	defer c.Close()
 	id := c.WriteRequest("msg.echo", nil)
 	_, res, _ := c.ReadMsg(nil, nil)
@@ -64,7 +64,7 @@ func TestGoogleAuth(t *testing.T) {
 
 	// now connect to server with our new client certificate
 	s = NewServerHelper(t)
-	c = NewClientHelper(t, s).Cert(resData.Cert, resData.Key).Dial()
+	c = NewClientHelper(t, s).WithCert(resData.Cert, resData.Key).Dial()
 
 	_ = c.WriteRequest("msg.echo", nil)
 	res = c.ReadRes(nil)
