@@ -38,7 +38,7 @@ func TestMsgSend(t *testing.T) {
 	}
 
 	c1.WriteRequest("msg.send", sendMsgReq{to: "2", message: "lorem ip sum"})
-	// res := c2.ReadReq(resultData interface{})
+	res := c2.ReadReq(nil)
 
 	// t.Fatal("Failed to send message to an online peer.")
 }

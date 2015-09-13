@@ -26,7 +26,7 @@ func NewCertAuth(server *jsonrpc.Server) (*CertAuth, error) {
 }
 
 func (a *CertAuth) reqMiddleware(ctx *jsonrpc.ReqCtx) {
-	if _, ok := ctx.Conn.Data.Get("userid"); ok {
+	if _, ok := ctx.Conn.Data.GetOk("userid"); ok {
 		return
 	}
 
@@ -45,7 +45,7 @@ func (a *CertAuth) reqMiddleware(ctx *jsonrpc.ReqCtx) {
 }
 
 func (a *CertAuth) resMiddleware(ctx *jsonrpc.ResCtx) {
-	if _, ok := ctx.Conn.Data.Get("userid"); ok {
+	if _, ok := ctx.Conn.Data.GetOk("userid"); ok {
 		return
 	}
 
@@ -54,7 +54,7 @@ func (a *CertAuth) resMiddleware(ctx *jsonrpc.ResCtx) {
 }
 
 func (a *CertAuth) notMiddleware(ctx *jsonrpc.NotCtx) {
-	if _, ok := ctx.Conn.Data.Get("userid"); ok {
+	if _, ok := ctx.Conn.Data.GetOk("userid"); ok {
 		return
 	}
 

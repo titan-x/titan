@@ -25,11 +25,18 @@ func initSendMsgHandler(q *Queue) func(ctx *jsonrpc.ReqCtx) {
 		message string
 	}
 
+	type recvMsgReq struct {
+		from    string
+		message string
+	}
+
 	return func(ctx *jsonrpc.ReqCtx) {
-		var r sendMsgReq
-		ctx.Params(&r)
-		q.AddRequest(r.to, "msg.recv", r.message, func(ctx *jsonrpc.ResCtx) {
-			// todo: send 'delivered' message to sender about this message (or failed depending on output)
+		var s sendMsgReq
+		ctx.Params(&s)
+
+		r := recvMsgReq{from: ctx.Conn.Data.Get("userid").(string), message: s.message}
+		q.AddRequest(s.to, "msg.recv", r, func(ctx *jsonrpc.ResCtx) {
+			// todo: send 'delivered' message to sender (as a request?) about this message (or failed depending on output)
 		})
 
 		ctx.Res = "ACK"

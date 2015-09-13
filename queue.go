@@ -54,7 +54,7 @@ type queuedRequest struct {
 }
 
 func (q *Queue) processQueue(userID string) {
-	connID, ok := q.conns.Get(userID)
+	connID, ok := q.conns.GetOk(userID)
 	if !ok {
 		return
 	}
