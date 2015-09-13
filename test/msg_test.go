@@ -1,6 +1,9 @@
 package test
 
-import "testing"
+import (
+	"log"
+	"testing"
+)
 
 func TestSendEcho(t *testing.T) {
 	s := NewServerHelper(t).SeedDB()
@@ -38,7 +41,18 @@ func TestMsgSend(t *testing.T) {
 	}
 
 	c1.WriteRequest("msg.send", sendMsgReq{to: "2", message: "lorem ip sum"})
-	res := c2.ReadReq(nil)
+	res := c1.ReadRes(nil)
+	if res.Result != "ACK" {
+		log.Fatal("Failed to send message to peer with response:", res)
+	}
+
+	type recvMsgReq struct {
+		from    string
+		message string
+	}
+
+	// var r recvMsgReq
+	// req := c2.ReadReq(&r)
 
 	// t.Fatal("Failed to send message to an online peer.")
 }
