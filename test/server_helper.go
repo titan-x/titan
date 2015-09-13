@@ -3,16 +3,19 @@ package test
 import (
 	"sync"
 	"testing"
+	"time"
 
+	"github.com/nbusy/ca"
 	"github.com/nbusy/devastator"
 )
 
 // ServerHelper is a devastator.Server wrapper.
 // All the functions are wrapped with proper test runner error logging.
 type ServerHelper struct {
-	db         devastator.InMemDB
-	server     *devastator.Server
-	testing    *testing.T
+	db      devastator.InMemDB
+	server  *devastator.Server
+	testing *testing.T
+
 	listenerWG sync.WaitGroup // server listener goroutine wait group
 
 	// PEM encoded X.509 certificate and private key pairs
@@ -30,8 +33,10 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 		t.Skip("Skipping integration test in short testing mode")
 	}
 
-	if certChain.RootCACert == nil {
-		createCertChain(t)
+	// generate TLS certs
+	certChain, err := ca.GenCertChain("FooBar", "127.0.0.1", "127.0.0.1", time.Hour, 512)
+	if err != nil {
+		t.Fatal("Failed to create TLS certificate chain:", err)
 	}
 
 	laddr := "127.0.0.1:" + devastator.Conf.App.Port
@@ -45,7 +50,13 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 		t.Fatal("Failed to attach InMemDB to server instance:", err)
 	}
 
-	h := ServerHelper{db: db, server: s, testing: t}
+	h := ServerHelper{
+		db:      db,
+		server:  s,
+		testing: t,
+
+		RootCACert: certChain.RootCACert,
+	}
 
 	h.listenerWG.Add(1)
 	go func() {
@@ -56,11 +67,30 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 	return &h
 }
 
-// SeedDB populates the database with:
-// - 2 users with their client certificates
+// SeedData is the data user for seeding the database.
+type SeedData struct {
+	User1 devastator.User
+	User2 devastator.User
+}
+
+// SeedDB populates the database with the seed data.
 func (s *ServerHelper) SeedDB() *ServerHelper {
-	s.db.SaveUser(&devastator.User{ID: "1", Cert: certChain.ClientCert, Key: certChain.ClientKey})
-	s.db.SaveUser(&devastator.User{ID: "2", Cert: client2Cert, Key: client2Key})
+	// if certChain.ClientCert, certChain.ClientKey, err = ca.GenClientCert(pkix.Name{
+	// 	Organization: []string{"FooBar"},
+	// 	CommonName:   "1",
+	// }, time.Hour, 512, certChain.IntCACert, certChain.IntCAKey); err != nil {
+	// 	t.Fatal(err)
+	// }
+	//
+	// if client2Cert, client2Key, err = ca.GenClientCert(pkix.Name{
+	// 	Organization: []string{"FooBar"},
+	// 	CommonName:   "2",
+	// }, time.Hour, 512, certChain.IntCACert, certChain.IntCAKey); err != nil {
+	// 	t.Fatal(err)
+	// }
+
+	s.db.SaveUser(&devastator.User{ID: "1"})
+	s.db.SaveUser(&devastator.User{ID: "2"})
 	return s
 }
 

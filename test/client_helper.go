@@ -14,23 +14,24 @@ import (
 // All the functions are wrapped with proper test runner error logging.
 type ClientHelper struct {
 	client    *jsonrpc.Client
+	server    *ServerHelper
 	testing   *testing.T
 	cert, key []byte
 }
 
 // NewClientHelper creates a new client helper object.
-func NewClientHelper(t *testing.T) *ClientHelper {
+func NewClientHelper(t *testing.T, s *ServerHelper) *ClientHelper {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
 	}
 
-	return &ClientHelper{testing: t}
+	return &ClientHelper{testing: t, server: s}
 }
 
 // DefaultCert attaches default test client certificate to the connection.
 func (c *ClientHelper) DefaultCert() *ClientHelper {
-	c.cert = certChain.ClientCert
-	c.key = certChain.ClientKey
+	// c.cert = certChain.ClientCert
+	// c.key = certChain.ClientKey
 	return c
 }
 
@@ -47,7 +48,7 @@ func (c *ClientHelper) Dial() *ClientHelper {
 
 	// retry connect in case we're operating on a very slow machine
 	for i := 0; i <= 5; i++ {
-		client, err := jsonrpc.Dial(addr, certChain.IntCACert, c.cert, c.key, false) // no need for debug mode on client conn as we have it on server conn already
+		client, err := jsonrpc.Dial(addr, c.server.IntCACert, c.cert, c.key, false) // no need for debug mode on client conn as we have it on server conn already
 		if err != nil {
 			if operr, ok := err.(*net.OpError); ok && operr.Op == "dial" && operr.Err.Error() == "connection refused" {
 				time.Sleep(time.Millisecond * 50)
