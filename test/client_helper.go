@@ -109,8 +109,10 @@ func (c *ClientHelper) ReadMsg(resultData interface{}, paramsData interface{}) (
 	return
 }
 
-// ReadRes reads a response object from a client connection. If incoming message is not a response, an error is logged.
-// Optionally, you can pass in a data structure that the returned JSON-RPC response result data will be serialized into. Otherwise json.Unmarshal defaults apply.
+// ReadRes reads a response object from a client connection.
+// If incoming message is not a response, a fatal error is logged.
+// Optionally, you can pass in a data structure that the returned JSON-RPC response result data will be serialized into.
+// Otherwise json.Unmarshal defaults apply.
 func (c *ClientHelper) ReadRes(resultData interface{}) *jsonrpc.Response {
 	_, res, _, err := c.client.ReadMsg(resultData, nil)
 	if err != nil {
@@ -118,6 +120,19 @@ func (c *ClientHelper) ReadRes(resultData interface{}) *jsonrpc.Response {
 	}
 
 	return res
+}
+
+// ReadReq reads a request object from a client connection.
+// If incoming message is not a request, a fatal error is logged.
+// Optionally, you can pass in a data structure that the returned JSON-RPC request params data will be serialized into.
+// Otherwise json.Unmarshal defaults apply.
+func (c *ClientHelper) ReadReq(paramsData interface{}) *jsonrpc.Request {
+	req, _, _, err := c.client.ReadMsg(nil, paramsData)
+	if err != nil {
+		c.testing.Fatal("Failed to read request from client connection:", err)
+	}
+
+	return req
 }
 
 // VerifyConnClosed verifies that the connection is in closed state.

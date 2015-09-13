@@ -32,6 +32,14 @@ func TestMsgSend(t *testing.T) {
 	c2 := NewClientHelper(t, s).AsUser(&s.SeedData.User2).Dial()
 	defer c2.Close()
 
+	type sendMsgReq struct {
+		to      string
+		message string
+	}
+
+	c1.WriteRequest("msg.send", sendMsgReq{to: "2", message: "lorem ip sum"})
+	// res := c2.ReadReq(resultData interface{})
+
 	// t.Fatal("Failed to send message to an online peer.")
 }
 

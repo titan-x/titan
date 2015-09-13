@@ -29,9 +29,10 @@ func initSendMsgHandler(q *Queue) func(ctx *jsonrpc.ReqCtx) {
 		var r sendMsgReq
 		ctx.Params(&r)
 		q.AddRequest(r.to, "msg.recv", r.message, func(ctx *jsonrpc.ResCtx) {
-			// todo: auto handle response (which is probably just ACK so this might be automated as a part of Queue or with something like MsgHandler)
-			// or q.AddRequest(..).ACK();
+			// todo: send 'delivered' message to sender about this message (or failed depending on output)
 		})
+
+		ctx.Res = "ACK"
 	}
 }
 
