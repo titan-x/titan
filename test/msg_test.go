@@ -5,7 +5,7 @@ import "testing"
 func TestSendEcho(t *testing.T) {
 	s := NewServerHelper(t)
 	defer s.Stop()
-	c := NewClientHelper(t).DefaultCert().Dial()
+	c := NewClientHelper(t, s).DefaultCert().Dial()
 	defer c.Close()
 
 	id := c.WriteRequest("msg.echo", map[string]string{"echo": "echo"})
@@ -27,9 +27,9 @@ func TestSendEcho(t *testing.T) {
 func TestMsgSend(t *testing.T) {
 	s := NewServerHelper(t).SeedDB()
 	defer s.Stop()
-	c1 := NewClientHelper(t).DefaultCert().Dial()
+	c1 := NewClientHelper(t, s).DefaultCert().Dial()
 	defer c1.Close()
-	c2 := NewClientHelper(t).Cert(client2Cert, client2Key).Dial()
+	c2 := NewClientHelper(t, s).Cert(client2Cert, client2Key).Dial()
 	defer c2.Close()
 
 	// t.Fatal("Failed to send message to an online peer.")
@@ -38,13 +38,13 @@ func TestMsgSend(t *testing.T) {
 func TestMsgRecv(t *testing.T) {
 	s := NewServerHelper(t).SeedDB()
 	defer s.Stop()
-	c1 := NewClientHelper(t).DefaultCert().Dial()
+	c1 := NewClientHelper(t, s).DefaultCert().Dial()
 	defer c1.Close()
 
 	_ = c1.WriteRequest("msg.send", map[string]string{"to": "2", "msg": "How do you do?"})
 	// todo: read ack manually or automate ack (just like sender does with channels and promises)
 
-	c2 := NewClientHelper(t).Cert(client2Cert, client2Key).Dial()
+	c2 := NewClientHelper(t, s).Cert(client2Cert, client2Key).Dial()
 	defer c2.Close()
 
 	// _ = c1.WriteRequest("msg.recv", nil)

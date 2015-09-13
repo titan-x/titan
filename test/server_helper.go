@@ -1,6 +1,7 @@
 package test
 
 import (
+	"crypto/x509/pkix"
 	"sync"
 	"testing"
 	"time"
@@ -12,6 +13,8 @@ import (
 // ServerHelper is a devastator.Server wrapper.
 // All the functions are wrapped with proper test runner error logging.
 type ServerHelper struct {
+	SeedData SeedData // Populated only when SeedDB() method is called.
+
 	db      devastator.InMemDB
 	server  *devastator.Server
 	testing *testing.T
@@ -56,6 +59,11 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 		testing: t,
 
 		RootCACert: certChain.RootCACert,
+		RootCAKey:  certChain.RootCAKey,
+		IntCACert:  certChain.IntCACert,
+		IntCAKey:   certChain.IntCAKey,
+		ServerCert: certChain.ServerCert,
+		ServerKey:  certChain.ServerKey,
 	}
 
 	h.listenerWG.Add(1)
@@ -75,22 +83,32 @@ type SeedData struct {
 
 // SeedDB populates the database with the seed data.
 func (s *ServerHelper) SeedDB() *ServerHelper {
-	// if certChain.ClientCert, certChain.ClientKey, err = ca.GenClientCert(pkix.Name{
-	// 	Organization: []string{"FooBar"},
-	// 	CommonName:   "1",
-	// }, time.Hour, 512, certChain.IntCACert, certChain.IntCAKey); err != nil {
-	// 	t.Fatal(err)
-	// }
-	//
-	// if client2Cert, client2Key, err = ca.GenClientCert(pkix.Name{
-	// 	Organization: []string{"FooBar"},
-	// 	CommonName:   "2",
-	// }, time.Hour, 512, certChain.IntCACert, certChain.IntCAKey); err != nil {
-	// 	t.Fatal(err)
-	// }
+	cc1, ck1, err := ca.GenClientCert(pkix.Name{
+		Organization: []string{"FooBar"},
+		CommonName:   "1",
+	}, time.Hour, 512, s.IntCACert, s.IntCAKey)
+	if err != nil {
+		s.testing.Fatal(err)
+	}
 
-	s.db.SaveUser(&devastator.User{ID: "1"})
-	s.db.SaveUser(&devastator.User{ID: "2"})
+	cc2, ck2, err := ca.GenClientCert(pkix.Name{
+		Organization: []string{"FooBar"},
+		CommonName:   "2",
+	}, time.Hour, 512, s.IntCACert, s.IntCAKey)
+	if err != nil {
+		s.testing.Fatal(err)
+	}
+
+	sd := SeedData{
+		User1: devastator.User{ID: "1", Cert: cc1, Key: ck1},
+		User2: devastator.User{ID: "2", Cert: cc2, Key: ck2},
+	}
+
+	s.db.SaveUser(&sd.User1)
+	s.db.SaveUser(&sd.User2)
+
+	s.SeedData = sd
+
 	return s
 }
 

@@ -28,15 +28,15 @@ func NewClientHelper(t *testing.T, s *ServerHelper) *ClientHelper {
 	return &ClientHelper{testing: t, server: s}
 }
 
-// DefaultCert attaches default test client certificate to the connection.
-func (c *ClientHelper) DefaultCert() *ClientHelper {
-	// c.cert = certChain.ClientCert
-	// c.key = certChain.ClientKey
+// AsUser attaches given user's client certificate and private key to the connection.
+func (c *ClientHelper) AsUser(u *devastator.User) *ClientHelper {
+	c.cert = u.Cert
+	c.key = u.Key
 	return c
 }
 
-// Cert attaches given PEM encoded client certificate to the connection.
-func (c *ClientHelper) Cert(cert, key []byte) *ClientHelper {
+// WithCert attaches given PEM encoded client certificate and private key to the connection.
+func (c *ClientHelper) WithCert(cert, key []byte) *ClientHelper {
 	c.cert = cert
 	c.key = key
 	return c
