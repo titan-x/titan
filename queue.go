@@ -36,7 +36,7 @@ func (q *Queue) RemoveConn(userID string) {
 }
 
 // AddRequest queues a request message to be sent to the given user.
-func (q *Queue) AddRequest(userID string, method string, params interface{}, resHandler func(ctx *jsonrpc.ResCtx)) {
+func (q *Queue) AddRequest(userID string, method string, params interface{}, resHandler func(ctx *jsonrpc.ResCtx)) error {
 	r := queuedRequest{Method: method, Params: params, ResHandler: resHandler}
 	if rs, ok := q.reqs[userID]; ok {
 		q.reqs[userID] = append(rs, r)
@@ -45,6 +45,7 @@ func (q *Queue) AddRequest(userID string, method string, params interface{}, res
 	}
 
 	q.processQueue(userID) // todo: prevent concurrent runs of processQueue
+	return nil
 }
 
 type queuedRequest struct {

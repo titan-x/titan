@@ -35,9 +35,14 @@ func initSendMsgHandler(q *Queue) func(ctx *jsonrpc.ReqCtx) {
 		ctx.Params(&s)
 
 		r := recvMsgReq{from: ctx.Conn.Data.Get("userid").(string), message: s.message}
-		q.AddRequest(s.to, "msg.recv", r, func(ctx *jsonrpc.ResCtx) {
+		err := q.AddRequest(s.to, "msg.recv", r, func(ctx *jsonrpc.ResCtx) {
 			// todo: send 'delivered' message to sender (as a request?) about this message (or failed depending on output)
 		})
+
+		if err != nil {
+			// todo: return error or "NACK" ?
+			return
+		}
 
 		ctx.Res = "ACK"
 	}
