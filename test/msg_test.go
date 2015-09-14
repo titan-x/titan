@@ -32,13 +32,17 @@ func TestMsgSend(t *testing.T) {
 	c2 := NewClientHelper(t, s).AsUser(&s.SeedData.User2).Dial()
 	defer c2.Close()
 
+	// send echo message from user 2 to announce availability and complete client-cert auth
+	c2.WriteRequest("msg.echo", map[string]string{"echo": "echo"})
+	_, res, _ := c2.ReadMsg(nil, nil)
+
 	type sendMsgReq struct {
 		To      string `json:"to"`
 		Message string `json:"message"`
 	}
 
-	c1.WriteRequest("msg.send", sendMsgReq{To: "2", Message: "lorem ip sum"})
-	res := c1.ReadRes(nil)
+	c1.WriteRequest("msg.send", sendMsgReq{To: "2", Message: "lorem ip sum dolor sit amet"})
+	res = c1.ReadRes(nil)
 	if res.Result != "ACK" {
 		t.Fatal("Failed to send message to peer with response:", res)
 	}
@@ -52,9 +56,9 @@ func TestMsgSend(t *testing.T) {
 	c2.ReadReq(&r)
 	if r.From != "1" {
 		t.Fatal("Received message from wrong sender instead of 1:", r.From)
+	} else if r.Message != "lorem ip sum dolor sit amet" {
+		t.Fatal("Received wrong message content:", r.Message)
 	}
-
-	// t.Fatal("Failed to send message to an online peer.")
 }
 
 func TestMsgRecv(t *testing.T) {
