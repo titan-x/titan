@@ -97,16 +97,17 @@ func (c *ClientHelper) WriteNotificationArr(method string, params ...interface{}
 	c.WriteNotification(method, params)
 }
 
-// ReadMsg reads a JSON-RPC message from a client connection.
-// Optionally, you can pass in a data structure that the returned JSON-RPC response result data will be serialized into (same for request params).
+// ReadReq reads a request object from a client connection.
+// If incoming message is not a request, a fatal error is logged.
+// Optionally, you can pass in a data structure that the returned JSON-RPC request params data will be serialized into.
 // Otherwise json.Unmarshal defaults apply.
-func (c *ClientHelper) ReadMsg(resultData interface{}, paramsData interface{}) (req *jsonrpc.Request, res *jsonrpc.Response, not *jsonrpc.Notification) {
-	req, res, not, err := c.client.ReadMsg(resultData, paramsData)
+func (c *ClientHelper) ReadReq(paramsData interface{}) *jsonrpc.Request {
+	req, _, _, err := c.client.ReadMsg(nil, paramsData)
 	if err != nil {
-		c.testing.Fatal("Failed to read message from client connection:", err)
+		c.testing.Fatal("Failed to read request from client connection:", err)
 	}
 
-	return
+	return req
 }
 
 // ReadRes reads a response object from a client connection.
@@ -122,17 +123,16 @@ func (c *ClientHelper) ReadRes(resultData interface{}) *jsonrpc.Response {
 	return res
 }
 
-// ReadReq reads a request object from a client connection.
-// If incoming message is not a request, a fatal error is logged.
-// Optionally, you can pass in a data structure that the returned JSON-RPC request params data will be serialized into.
+// ReadMsg reads a JSON-RPC message from a client connection. If possible, use more specific ReadReq/ReadRes/ReadNot methods instead.
+// Optionally, you can pass in a data structure that the returned JSON-RPC response result data will be serialized into (same for request params).
 // Otherwise json.Unmarshal defaults apply.
-func (c *ClientHelper) ReadReq(paramsData interface{}) *jsonrpc.Request {
-	req, _, _, err := c.client.ReadMsg(nil, paramsData)
+func (c *ClientHelper) ReadMsg(resultData interface{}, paramsData interface{}) (req *jsonrpc.Request, res *jsonrpc.Response, not *jsonrpc.Notification) {
+	req, res, not, err := c.client.ReadMsg(resultData, paramsData)
 	if err != nil {
-		c.testing.Fatal("Failed to read request from client connection:", err)
+		c.testing.Fatal("Failed to read message from client connection:", err)
 	}
 
-	return req
+	return
 }
 
 // VerifyConnClosed verifies that the connection is in closed state.

@@ -9,7 +9,7 @@ func TestSendEcho(t *testing.T) {
 	defer c.Close()
 
 	id := c.WriteRequest("msg.echo", map[string]string{"echo": "echo"})
-	_, res, _ := c.ReadMsg(nil, nil)
+	res := c.ReadRes(nil)
 
 	resMap := res.Result.(map[string]interface{})
 	if res.ID != id || resMap["echo"] != "echo" {
@@ -32,9 +32,12 @@ func TestMsgSend(t *testing.T) {
 	c2 := NewClientHelper(t, s).AsUser(&s.SeedData.User2).Dial()
 	defer c2.Close()
 
-	// send echo message from user 2 to announce availability and complete client-cert auth
-	c2.WriteRequest("msg.echo", map[string]string{"echo": "echo"})
-	_, res, _ := c2.ReadMsg(nil, nil)
+	// send msg.recv request from user 2 to announce availability and complete client-cert auth
+	c2.WriteRequest("msg.recv", nil)
+	res := c2.ReadRes(nil)
+	if res.Result != "ACK" {
+		t.Fatal("Failed to send msg.recv request from client 2 with error:", res)
+	}
 
 	// todo: rather than echo, add something like auth.cert or msg.recv just to complete client-cert auth
 
@@ -46,7 +49,7 @@ func TestMsgSend(t *testing.T) {
 	c1.WriteRequest("msg.send", sendMsgReq{To: "2", Message: "lorem ip sum dolor sit amet"})
 	res = c1.ReadRes(nil)
 	if res.Result != "ACK" {
-		t.Fatal("Failed to send message to peer with response:", res)
+		t.Fatal("Failed to send message to peer with error:", res)
 	}
 
 	type recvMsgReq struct {
