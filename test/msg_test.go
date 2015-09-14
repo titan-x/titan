@@ -33,25 +33,25 @@ func TestMsgSend(t *testing.T) {
 	defer c2.Close()
 
 	type sendMsgReq struct {
-		to      string
-		message string
+		To      string `json:"to"`
+		Message string `json:"message"`
 	}
 
-	c1.WriteRequest("msg.send", sendMsgReq{to: "2", message: "lorem ip sum"})
+	c1.WriteRequest("msg.send", sendMsgReq{To: "2", Message: "lorem ip sum"})
 	res := c1.ReadRes(nil)
 	if res.Result != "ACK" {
 		t.Fatal("Failed to send message to peer with response:", res)
 	}
 
 	type recvMsgReq struct {
-		from    string
-		message string
+		From    string `json:"from"`
+		Message string `json:"message"`
 	}
 
 	var r recvMsgReq
 	c2.ReadReq(&r)
-	if r.from != "1" {
-		t.Fatal("Received message from wrong sender instead of 1:", r.from)
+	if r.From != "1" {
+		t.Fatal("Received message from wrong sender instead of 1:", r.From)
 	}
 
 	// t.Fatal("Failed to send message to an online peer.")

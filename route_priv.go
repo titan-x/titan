@@ -21,21 +21,21 @@ func initEchoMsgHandler() func(ctx *jsonrpc.ReqCtx) {
 
 func initSendMsgHandler(q *Queue) func(ctx *jsonrpc.ReqCtx) {
 	type sendMsgReq struct {
-		to      string
-		message string
+		To      string `json:"to"`
+		Message string `json:"message"`
 	}
 
 	type recvMsgReq struct {
-		from    string
-		message string
+		From    string `json:"from"`
+		Message string `json:"message"`
 	}
 
 	return func(ctx *jsonrpc.ReqCtx) {
 		var s sendMsgReq
 		ctx.Params(&s)
 
-		r := recvMsgReq{from: ctx.Conn.Data.Get("userid").(string), message: s.message}
-		err := q.AddRequest(s.to, "msg.recv", r, func(ctx *jsonrpc.ResCtx) {
+		r := recvMsgReq{From: ctx.Conn.Data.Get("userid").(string), Message: s.Message}
+		err := q.AddRequest(s.To, "msg.recv", r, func(ctx *jsonrpc.ResCtx) {
 			// todo: send 'delivered' message to sender (as a request?) about this message (or failed depending on output)
 		})
 
