@@ -71,7 +71,6 @@ func googleAuth(ctx *jsonrpc.ReqCtx, db DB, certMgr *CertMgr) {
 		}
 	}
 
-	ctx.Conn.Data.Set("userid", user.ID)
 	ctx.Res = googleAuthRes{Cert: user.Cert, Key: user.Key}
 	return
 }

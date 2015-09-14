@@ -56,7 +56,7 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 
 	// --- all requests below this point must be authenticated ---
 
-	_, err = NewCertAuth(s.jsonrpc)
+	_, err = NewCertAuth(s.jsonrpc, &s.queue) // todo: cert auth depending on queue seems very redundant!
 	if err != nil {
 		return nil, err
 	}

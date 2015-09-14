@@ -14,11 +14,12 @@ import (
 
 // CertAuth is a TLS certificate authentication middleware for Neptulon JSON-RPC server.
 type CertAuth struct {
+	queue *Queue
 }
 
 // NewCertAuth creates and registers a new TLS client-certificate authentication middleware instance with a Neptulon JSON-RPC server.
-func NewCertAuth(server *jsonrpc.Server) (*CertAuth, error) {
-	a := CertAuth{}
+func NewCertAuth(server *jsonrpc.Server, q *Queue) (*CertAuth, error) {
+	a := CertAuth{queue: q}
 	server.ReqMiddleware(a.reqMiddleware)
 	server.ResMiddleware(a.resMiddleware)
 	server.NotMiddleware(a.notMiddleware)
@@ -41,6 +42,7 @@ func (a *CertAuth) reqMiddleware(ctx *jsonrpc.ReqCtx) {
 
 	userID := certs[0].Subject.CommonName
 	ctx.Conn.Data.Set("userid", userID)
+	a.queue.SetConn(userID, ctx.Conn.ID)
 	log.Println("Client-certificate authenticated:", ctx.Conn.RemoteAddr(), userID)
 }
 
