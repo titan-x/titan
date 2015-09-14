@@ -36,6 +36,8 @@ func TestMsgSend(t *testing.T) {
 	c2.WriteRequest("msg.echo", map[string]string{"echo": "echo"})
 	_, res, _ := c2.ReadMsg(nil, nil)
 
+	// todo: rather than echo, add something like auth.cert or msg.recv just to complete client-cert auth
+
 	type sendMsgReq struct {
 		To      string `json:"to"`
 		Message string `json:"message"`
@@ -59,6 +61,10 @@ func TestMsgSend(t *testing.T) {
 	} else if r.Message != "lorem ip sum dolor sit amet" {
 		t.Fatal("Received wrong message content:", r.Message)
 	}
+
+	// todo: send back an answer to client 1
+	// todo: verify that we receive ACK for sent response
+	// todo: verify that we receive message on client 1
 }
 
 func TestMsgRecv(t *testing.T) {
@@ -68,7 +74,10 @@ func TestMsgRecv(t *testing.T) {
 	defer c1.Close()
 
 	_ = c1.WriteRequest("msg.send", map[string]string{"to": "2", "msg": "How do you do?"})
-	// todo: read ack manually or automate ack (just like sender does with channels and promises)
+	res := c1.ReadRes(nil)
+	if res.Result != "ACK" {
+		t.Fatal("Failed to send message to peer with response:", res)
+	}
 
 	c2 := NewClientHelper(t, s).AsUser(&s.SeedData.User2).Dial()
 	defer c2.Close()
