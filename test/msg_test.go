@@ -39,8 +39,6 @@ func TestMsgSend(t *testing.T) {
 		t.Fatal("Failed to send msg.recv request from client 2 with error:", res)
 	}
 
-	// todo: rather than echo, add something like auth.cert or msg.recv just to complete client-cert auth
-
 	type sendMsgReq struct {
 		To      string `json:"to"`
 		Message string `json:"message"`
