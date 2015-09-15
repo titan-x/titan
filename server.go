@@ -63,9 +63,12 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		return nil, err
 	}
 
-	// todo: make queue into a middleware to be able to check 'queue.SetConn(userID, ctx.Conn.ID)' on each incoming message?
-	s.queue = NewQueue(s.privRoute)
+	s.queue = NewQueue(s.jsonrpc, s.privRoute)
 	initPrivRoutes(s.privRoute, &s.queue)
+
+	nep.Disconn(func(c *neptulon.Conn) {
+		s.queue.RemoveConn(c.Data.Get("userid").(string))
+	})
 
 	return &s, nil
 }
