@@ -114,6 +114,10 @@ func (c *ClientHelper) ReadReq(paramsData interface{}) *jsonrpc.Request {
 		c.testing.Fatal("Failed to read request from client connection:", err)
 	}
 
+	if req == nil {
+		c.testing.Fatal("Read message was not a request message.")
+	}
+
 	return req
 }
 
@@ -125,6 +129,10 @@ func (c *ClientHelper) ReadRes(resultData interface{}) *jsonrpc.Response {
 	_, res, _, err := c.client.ReadMsg(resultData, nil)
 	if err != nil {
 		c.testing.Fatal("Failed to read response from client connection:", err)
+	}
+
+	if res == nil {
+		c.testing.Fatal("Read message was not a response message.")
 	}
 
 	return res

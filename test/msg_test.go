@@ -24,6 +24,16 @@ func TestSendEcho(t *testing.T) {
 	// t.Fatal("Could not send an ACK for an incoming message")
 }
 
+type sendMsgReq struct {
+	To      string `json:"to"`
+	Message string `json:"message"`
+}
+
+type recvMsgReq struct {
+	From    string `json:"from"`
+	Message string `json:"message"`
+}
+
 func TestSendMsgOnline(t *testing.T) {
 	s := NewServerHelper(t).SeedDB()
 	defer s.Stop()
@@ -32,31 +42,21 @@ func TestSendMsgOnline(t *testing.T) {
 	c2 := NewClientHelper(t, s).AsUser(&s.SeedData.User2).Dial()
 	defer c2.Close()
 
-	type sendMsgReq struct {
-		To      string `json:"to"`
-		Message string `json:"message"`
-	}
-
-	type recvMsgReq struct {
-		From    string `json:"from"`
-		Message string `json:"message"`
-	}
-
 	// send msg.recv request from user 2 to announce availability and complete client-cert auth
 	c2.WriteRequest("msg.recv", nil)
 	res := c2.ReadRes(nil)
 	if res.Result != "ACK" {
-		t.Fatal("Failed to send msg.recv request from client 2 with error:", res)
+		t.Fatal("Failed to send msg.recv request from client 2 to server:", res)
 	}
 
-	// msg.send to user 2 with a basic hello message
+	// send message to user 2 with a basic hello message
 	c1.WriteRequest("msg.send", sendMsgReq{To: "2", Message: "Hello, how are you?"})
 	res = c1.ReadRes(nil)
 	if res.Result != "ACK" {
-		t.Fatal("Failed to send message to user 2 with error:", res)
+		t.Fatal("Failed to send message to user 2:", res)
 	}
 
-	// receive the hello message from user 2 (online)
+	// receive the hello message from user 1 (online) as user 2 (online)
 	var c2r recvMsgReq
 	c2req := c2.ReadReq(&c2r)
 	if c2r.From != "1" {
@@ -67,14 +67,14 @@ func TestSendMsgOnline(t *testing.T) {
 
 	c2.WriteResponse(c2req.ID, "ACK", nil)
 
-	// send back a hello response to user 1
+	// send back a hello response to user 1 (online) as user 2 (online)
 	c2.WriteRequest("msg.send", sendMsgReq{To: "1", Message: "I'm fine, thank you."})
 	res = c2.ReadRes(nil)
 	if res.Result != "ACK" {
-		t.Fatal("Failed to send message to user 1 with error:", res)
+		t.Fatal("Failed to send message to user 1:", res)
 	}
 
-	// receive hello response from user 1 (online)
+	// receive hello response from user 1 (online) as user 2 (online)
 	var c1r recvMsgReq
 	c1req := c1.ReadReq(&c1r)
 	if c1r.From != "2" {
@@ -100,16 +100,33 @@ func TestSendMsgOffline(t *testing.T) {
 	c1 := NewClientHelper(t, s).AsUser(&s.SeedData.User1).Dial()
 	defer c1.Close()
 
-	_ = c1.WriteRequest("msg.send", map[string]string{"to": "2", "msg": "How do you do?"})
+	// send message to user 2 with a basic hello message
+	c1.WriteRequest("msg.send", sendMsgReq{To: "2", Message: "Hello, how are you?"})
 	res := c1.ReadRes(nil)
 	if res.Result != "ACK" {
-		t.Fatal("Failed to send message to peer with response:", res)
+		t.Fatal("Failed to send message to user 2:", res)
 	}
 
+	// connect as user 2 and send msg.recv request to announce availability and complete client-cert auth
 	c2 := NewClientHelper(t, s).AsUser(&s.SeedData.User2).Dial()
 	defer c2.Close()
 
-	// _ = c1.WriteRequest("msg.recv", nil)
+	c2.WriteRequest("msg.recv", nil)
+	res = c2.ReadRes(nil)
+	if res.Result != "ACK" {
+		t.Fatal("Failed to send msg.recv request from client 2 to server:", res)
+	}
+
+	// receive the hello message from user 1 (online) as user 2 (was offline at the time message was sent)
+	var c2r recvMsgReq
+	c2req := c2.ReadReq(&c2r)
+	if c2r.From != "1" {
+		t.Fatal("Received message from wrong sender instead of 1:", c2r.From)
+	} else if c2r.Message != "Hello, how are you?" {
+		t.Fatal("Received wrong message content:", c2r.Message)
+	}
+
+	c2.WriteResponse(c2req.ID, "ACK", nil)
 
 	// t.Fatal("Failed to receive queued messages after coming online")
 	// t.Fatal("Failed to send ACK for received message queue")
