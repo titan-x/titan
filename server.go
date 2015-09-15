@@ -56,10 +56,7 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 
 	// --- all requests below this point must be authenticated ---
 
-	_, err = NewCertAuth(s.jsonrpc)
-	if err != nil {
-		return nil, err
-	}
+	CertAuth(s.jsonrpc)
 
 	s.privRoute, err = jsonrpc.NewRouter(s.jsonrpc)
 	if err != nil {
