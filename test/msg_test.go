@@ -32,6 +32,16 @@ func TestMsgSend(t *testing.T) {
 	c2 := NewClientHelper(t, s).AsUser(&s.SeedData.User2).Dial()
 	defer c2.Close()
 
+	type sendMsgReq struct {
+		To      string `json:"to"`
+		Message string `json:"message"`
+	}
+
+	type recvMsgReq struct {
+		From    string `json:"from"`
+		Message string `json:"message"`
+	}
+
 	// send msg.recv request from user 2 to announce availability and complete client-cert auth
 	c2.WriteRequest("msg.recv", nil)
 	res := c2.ReadRes(nil)
@@ -39,12 +49,7 @@ func TestMsgSend(t *testing.T) {
 		t.Fatal("Failed to send msg.recv request from client 2 with error:", res)
 	}
 
-	// msg.send to user 2 with a hello message
-	type sendMsgReq struct {
-		To      string `json:"to"`
-		Message string `json:"message"`
-	}
-
+	// msg.send to user 2 with a basic hello message
 	c1.WriteRequest("msg.send", sendMsgReq{To: "2", Message: "Hello, how are you?"})
 	res = c1.ReadRes(nil)
 	if res.Result != "ACK" {
@@ -52,21 +57,15 @@ func TestMsgSend(t *testing.T) {
 	}
 
 	// receive the hello message from user 2 (online)
-	type recvMsgReq struct {
-		From    string `json:"from"`
-		Message string `json:"message"`
-	}
-
 	var c2r recvMsgReq
-	c2.ReadReq(&c2r)
+	c2req := c2.ReadReq(&c2r)
 	if c2r.From != "1" {
 		t.Fatal("Received message from wrong sender instead of 1:", c2r.From)
 	} else if c2r.Message != "Hello, how are you?" {
 		t.Fatal("Received wrong message content:", c2r.Message)
 	}
 
-	// received message is good so ACK it
-	// c2.WriteResponse(req.ID, "ACK", nil)
+	c2.WriteResponse(c2req.ID, "ACK", nil)
 
 	// send back a hello response to user 1
 	c2.WriteRequest("msg.send", sendMsgReq{To: "1", Message: "I'm fine, thank you."})
@@ -77,16 +76,14 @@ func TestMsgSend(t *testing.T) {
 
 	// receive hello response from user 1 (online)
 	var c1r recvMsgReq
-	c1.ReadReq(&c1r)
+	c1req := c1.ReadReq(&c1r)
 	if c1r.From != "2" {
 		t.Fatal("Received message from wrong sender instead of 2:", c1r.From)
 	} else if c1r.Message != "I'm fine, thank you." {
 		t.Fatal("Received wrong message content:", c1r.Message)
 	}
 
-	// todo: send back an answer to client 1
-	// todo: verify that we receive ACK for sent response
-	// todo: verify that we receive message on client 1
+	c1.WriteResponse(c1req.ID, "ACK", nil)
 }
 
 func TestMsgRecv(t *testing.T) {
