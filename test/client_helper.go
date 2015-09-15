@@ -97,6 +97,13 @@ func (c *ClientHelper) WriteNotificationArr(method string, params ...interface{}
 	c.WriteNotification(method, params)
 }
 
+// WriteResponse sends a response message through the client connection.
+func (c *ClientHelper) WriteResponse(id string, result interface{}, err *jsonrpc.ResError) {
+	if err := c.client.WriteResponse(id, result, err); err != nil {
+		c.testing.Fatal("Failed to write response to client connection:", err)
+	}
+}
+
 // ReadReq reads a request object from a client connection.
 // If incoming message is not a request, a fatal error is logged.
 // Optionally, you can pass in a data structure that the returned JSON-RPC request params data will be serialized into.
