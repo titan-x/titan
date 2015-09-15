@@ -10,7 +10,7 @@ func initPrivRoutes(r *jsonrpc.Router, q *Queue) {
 	// r.Middleware(Logger()) - request-response logger (the pointer fields in request/response objects will have to change for this to work)
 	r.Request("msg.echo", initEchoMsgHandler())
 	r.Request("msg.send", initSendMsgHandler(q))
-	r.Request("msg.recv", initRecvMsgHandler())
+	r.Request("msg.recv", initRecvMsgHandler(q))
 	// r.Middleware(NotFoundHandler()) - 404-like handler
 }
 
@@ -64,8 +64,9 @@ func initSendMsgHandler(q *Queue) func(ctx *jsonrpc.ReqCtx) {
 
 // Used only for a client to announce its presence.
 // If there are any messages meant for this user, they are started to be sent with this call (via the cert-auth middleware).
-func initRecvMsgHandler() func(ctx *jsonrpc.ReqCtx) {
+func initRecvMsgHandler(q *Queue) func(ctx *jsonrpc.ReqCtx) {
 	return func(ctx *jsonrpc.ReqCtx) {
+		q.SetConn(ctx.Conn.Data.Get("userid").(string), ctx.Conn.ID)
 		ctx.Res = "ACK"
 	}
 }

@@ -63,7 +63,7 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		return nil, err
 	}
 
-	// todo: make queue into a middleware to be able to: queue.SetConn(userID, ctx.Conn.ID)
+	// todo: make queue into a middleware to be able to check 'queue.SetConn(userID, ctx.Conn.ID)' on each incoming message?
 	s.queue = NewQueue(s.privRoute)
 	initPrivRoutes(s.privRoute, &s.queue)
 
