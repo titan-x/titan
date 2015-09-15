@@ -84,6 +84,14 @@ func TestMsgSend(t *testing.T) {
 	}
 
 	c1.WriteResponse(c1req.ID, "ACK", nil)
+
+	// todo: verify that there are no pending requests for either user 1 or 2
+	// todo: below is a placeholder since writing last ACK response will never finish as we never wait for it
+	c1.WriteRequest("msg.echo", map[string]string{"echo": "echo"})
+	resfin := c1.ReadRes(nil).Result.(map[string]interface{})["echo"]
+	if resfin != "echo" {
+		t.Fatal("Last echo did return an invalid response:", resfin)
+	}
 }
 
 func TestMsgRecv(t *testing.T) {

@@ -41,7 +41,7 @@ func (q *Queue) AddRequest(userID string, method string, params interface{}, res
 	if rs, ok := q.reqs[userID]; ok {
 		q.reqs[userID] = append(rs, r)
 	} else {
-		q.reqs[userID] = []queuedRequest{{Method: method, Params: params}}
+		q.reqs[userID] = []queuedRequest{{Method: method, Params: params, ResHandler: resHandler}}
 	}
 
 	q.processQueue(userID) // todo: prevent concurrent runs of processQueue
