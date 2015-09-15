@@ -24,7 +24,7 @@ func TestSendEcho(t *testing.T) {
 	// t.Fatal("Could not send an ACK for an incoming message")
 }
 
-func TestMsgSend(t *testing.T) {
+func TestSendMsgOnline(t *testing.T) {
 	s := NewServerHelper(t).SeedDB()
 	defer s.Stop()
 	c1 := NewClientHelper(t, s).AsUser(&s.SeedData.User1).Dial()
@@ -94,7 +94,7 @@ func TestMsgSend(t *testing.T) {
 	}
 }
 
-func TestMsgRecv(t *testing.T) {
+func TestSendMsgOffline(t *testing.T) {
 	s := NewServerHelper(t).SeedDB()
 	defer s.Stop()
 	c1 := NewClientHelper(t, s).AsUser(&s.SeedData.User1).Dial()
