@@ -56,7 +56,7 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 
 	// --- all requests below this point must be authenticated ---
 
-	_, err = NewCertAuth(s.jsonrpc, &s.queue) // todo: cert auth depending on queue seems very redundant!
+	_, err = NewCertAuth(s.jsonrpc)
 	if err != nil {
 		return nil, err
 	}
@@ -66,6 +66,7 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		return nil, err
 	}
 
+	// todo: make queue into a middleware to be able to: queue.SetConn(userID, ctx.Conn.ID)
 	s.queue = NewQueue(s.privRoute)
 	initPrivRoutes(s.privRoute, &s.queue)
 
