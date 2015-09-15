@@ -63,7 +63,7 @@ func (q *Queue) processQueue(userID string) {
 	if reqs, ok := q.reqs[userID]; ok {
 		for i, req := range reqs {
 			if err := q.route.SendRequest(connID.(string), req.Method, req.Params, req.ResHandler); err != nil {
-				log.Fatal(err)
+				log.Fatal(err) // todo: log fatal only in debug mode
 			} else {
 				reqs, reqs[len(reqs)-1] = append(reqs[:i], reqs[i+1:]...), queuedRequest{} // todo: this might not be needed if function is not a pointer val
 			}
