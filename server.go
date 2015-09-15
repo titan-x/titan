@@ -67,7 +67,9 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 	initPrivRoutes(s.privRoute, &s.queue)
 
 	nep.Disconn(func(c *neptulon.Conn) {
-		s.queue.RemoveConn(c.Data.Get("userid").(string))
+		if id, ok := c.Data.GetOk("userid"); ok {
+			s.queue.RemoveConn(id.(string))
+		}
 	})
 
 	return &s, nil
