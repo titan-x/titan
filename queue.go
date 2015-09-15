@@ -61,11 +61,11 @@ func (q *Queue) processQueue(userID string) {
 	}
 
 	if reqs, ok := q.reqs[userID]; ok {
-		for _, req := range reqs {
+		for i, req := range reqs {
 			if err := q.route.SendRequest(connID.(string), req.Method, req.Params, req.ResHandler); err != nil {
 				log.Fatal(err)
 			} else {
-				// todo: delete from queue
+				reqs, reqs[len(reqs)-1] = append(reqs[:i], reqs[i+1:]...), queuedRequest{} // todo: this might not be needed if function is not a pointer val
 			}
 		}
 	}
