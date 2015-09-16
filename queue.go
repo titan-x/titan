@@ -9,31 +9,39 @@ import (
 
 // Queue is a message queue for queueing and sending messages to users.
 type Queue struct {
-	conns *cmap.CMap                   // user ID -> conn ID
-	s     *Server                      // route to send messages through
-	reqs  map[string]([]queuedRequest) // user ID -> []queuedRequest
+	conns  *cmap.CMap                   // user ID -> conn ID
+	router *jsonrpc.Router              // route to send and receive messages through
+	reqs   map[string]([]queuedRequest) // user ID -> []queuedRequest
 }
 
-// NewQueue creates a new queue object, registers the JSON-RPC router to be used for sending queued messages,
+// NewQueue creates a new queue object, ,
 // and attaches proper Neptulon middleware to initiate queue processing on client connection.
-func NewQueue(s *Server) Queue {
+func NewQueue() Queue {
 	q := Queue{
 		conns: cmap.New(),
-		s:     s,
 		reqs:  make(map[string]([]queuedRequest)),
 	}
 
-	s.jsonrpc.ReqMiddleware(func(ctx *jsonrpc.ReqCtx) {
-		q.SetConn(ctx.Conn.Data.Get("userid").(string), ctx.Conn.ID)
-	})
-	s.jsonrpc.ResMiddleware(func(ctx *jsonrpc.ResCtx) {
-		q.SetConn(ctx.Conn.Data.Get("userid").(string), ctx.Conn.ID)
-	})
-	s.jsonrpc.NotMiddleware(func(ctx *jsonrpc.NotCtx) {
-		q.SetConn(ctx.Conn.Data.Get("userid").(string), ctx.Conn.ID)
-	})
-
 	return q
+}
+
+// Middleware registers a queue middleware to register user/connection IDs
+// for connecting users (upon their first incoming-message).
+func (q *Queue) Middleware(s *jsonrpc.Server) {
+	s.ReqMiddleware(func(ctx *jsonrpc.ReqCtx) {
+		q.SetConn(ctx.Conn.Data.Get("userid").(string), ctx.Conn.ID)
+	})
+	s.ResMiddleware(func(ctx *jsonrpc.ResCtx) {
+		q.SetConn(ctx.Conn.Data.Get("userid").(string), ctx.Conn.ID)
+	})
+	s.NotMiddleware(func(ctx *jsonrpc.NotCtx) {
+		q.SetConn(ctx.Conn.Data.Get("userid").(string), ctx.Conn.ID)
+	})
+}
+
+// SetRouter registers the JSON-RPC router to be used for sending queued messages and expecting responses through.
+func (q *Queue) SetRouter(r *jsonrpc.Router) {
+	q.router = r
 }
 
 // SetConn associates a user with a connection by ID.
@@ -78,7 +86,7 @@ func (q *Queue) processQueue(userID string) {
 
 	if reqs, ok := q.reqs[userID]; ok {
 		for i, req := range reqs {
-			if err := q.s.privRoute.SendRequest(connID.(string), req.Method, req.Params, req.ResHandler); err != nil {
+			if err := q.router.SendRequest(connID.(string), req.Method, req.Params, req.ResHandler); err != nil {
 				log.Fatal(err) // todo: log fatal only in debug mode
 			} else {
 				reqs, reqs[len(reqs)-1] = append(reqs[:i], reqs[i+1:]...), queuedRequest{} // todo: this might not be needed if function is not a pointer val

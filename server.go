@@ -40,6 +40,7 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		neptulon: nep,
 		db:       NewInMemDB(),
 		certMgr:  NewCertMgr(clientCACert, clientCAKey),
+		queue:    NewQueue(),
 	}
 
 	s.jsonrpc, err = jsonrpc.NewServer(nep)
@@ -54,11 +55,11 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 
 	initPubRoutes(s.pubRoute, s.db, &s.certMgr)
 
-	// --- all requests below this point must be authenticated ---
+	// --- all communication below this point is authenticated --- //
 
 	CertAuth(s.jsonrpc)
 
-	s.queue = NewQueue(&s) // todo: doing this like this is really weird (queue middleware can be separated from queue type)
+	s.queue.Middleware(s.jsonrpc)
 
 	s.privRoute, err = jsonrpc.NewRouter(s.jsonrpc)
 	if err != nil {
@@ -66,6 +67,8 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 	}
 
 	initPrivRoutes(s.privRoute, &s.queue)
+
+	s.queue.SetRouter(s.privRoute) // todo: research a better way to handle inner-circular dependencies so remove these lines back into Server contructor (maybe via dereferencing: http://openmymind.net/Things-I-Wish-Someone-Had-Told-Me-About-Go/)
 
 	nep.Disconn(func(c *neptulon.Conn) {
 		if id, ok := c.Data.GetOk("userid"); ok {

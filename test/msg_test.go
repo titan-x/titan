@@ -119,6 +119,7 @@ func TestSendMsgOffline(t *testing.T) {
 
 	// receive the hello message from user 1 (online) as user 2 (was offline at the time message was sent)
 	var c2r recvMsgReq
+	// c2req := c2.ReadReq(&c2r)
 	c2.ReadReq(&c2r)
 	if c2r.From != "1" {
 		t.Fatal("Received message from wrong sender instead of 1:", c2r.From)
