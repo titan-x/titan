@@ -119,14 +119,14 @@ func TestSendMsgOffline(t *testing.T) {
 
 	// receive the hello message from user 1 (online) as user 2 (was offline at the time message was sent)
 	var c2r recvMsgReq
-	c2req := c2.ReadReq(&c2r)
+	c2.ReadReq(&c2r)
 	if c2r.From != "1" {
 		t.Fatal("Received message from wrong sender instead of 1:", c2r.From)
 	} else if c2r.Message != "Hello, how are you?" {
 		t.Fatal("Received wrong message content:", c2r.Message)
 	}
 
-	c2.WriteResponse(c2req.ID, "ACK", nil)
+	// c2.WriteResponse(c2req.ID, "ACK", nil)
 
 	// t.Fatal("Failed to receive queued messages after coming online")
 	// t.Fatal("Failed to send ACK for received message queue")
