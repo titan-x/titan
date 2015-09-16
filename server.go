@@ -58,12 +58,14 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 
 	CertAuth(s.jsonrpc)
 
-	s.queue = NewQueue(s.jsonrpc, s.privRoute)
+	s.queue = NewQueue(s.jsonrpc)
 
 	s.privRoute, err = jsonrpc.NewRouter(s.jsonrpc)
 	if err != nil {
 		return nil, err
 	}
+
+	s.queue.SetRouter(s.privRoute) // todo: doing this in two pieces is really weird (so queue middleware can be separated from queue type)
 
 	initPrivRoutes(s.privRoute, &s.queue)
 

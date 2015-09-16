@@ -14,26 +14,29 @@ type Queue struct {
 	reqs  map[string]([]queuedRequest) // user ID -> []queuedRequest
 }
 
-// NewQueue creates a new queue object and registers the JSON-RPC router to be used for sending queued messages.
-// Also attaches proper Neptulon middleware to initiate queue processing.
-func NewQueue(server *jsonrpc.Server, r *jsonrpc.Router) Queue {
+// NewQueue creates a new queue object and attaches proper Neptulon middleware to initiate queue processing on client connection.
+func NewQueue(s *jsonrpc.Server) Queue {
 	q := Queue{
 		conns: cmap.New(),
-		route: r,
 		reqs:  make(map[string]([]queuedRequest)),
 	}
 
-	server.ReqMiddleware(func(ctx *jsonrpc.ReqCtx) {
+	s.ReqMiddleware(func(ctx *jsonrpc.ReqCtx) {
 		q.SetConn(ctx.Conn.Data.Get("userid").(string), ctx.Conn.ID)
 	})
-	server.ResMiddleware(func(ctx *jsonrpc.ResCtx) {
+	s.ResMiddleware(func(ctx *jsonrpc.ResCtx) {
 		q.SetConn(ctx.Conn.Data.Get("userid").(string), ctx.Conn.ID)
 	})
-	server.NotMiddleware(func(ctx *jsonrpc.NotCtx) {
+	s.NotMiddleware(func(ctx *jsonrpc.NotCtx) {
 		q.SetConn(ctx.Conn.Data.Get("userid").(string), ctx.Conn.ID)
 	})
 
 	return q
+}
+
+// SetRouter registers the JSON-RPC router to be used for sending queued messages.
+func (q *Queue) SetRouter(r *jsonrpc.Router) {
+	q.route = r
 }
 
 // SetConn associates a user with a connection by ID.
@@ -78,6 +81,7 @@ func (q *Queue) processQueue(userID string) {
 
 	if reqs, ok := q.reqs[userID]; ok {
 		for i, req := range reqs {
+			log.Println(q.route)
 			if err := q.route.SendRequest(connID.(string), req.Method, req.Params, req.ResHandler); err != nil {
 				log.Fatal(err) // todo: log fatal only in debug mode
 			} else {
