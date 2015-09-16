@@ -136,6 +136,7 @@ func TestSendMsgOffline(t *testing.T) {
 		t.Fatal("Last echo did return an invalid response:", resfin)
 	}
 
+	// todo: as client_helper is implicitly logging errors with t.Fatal(), we can't currently add useful information like below:
 	// t.Fatal("Failed to receive queued messages after coming online")
 	// t.Fatal("Failed to send ACK for received message queue")
 }
