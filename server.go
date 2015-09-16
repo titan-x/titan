@@ -68,7 +68,7 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 
 	initPrivRoutes(s.privRoute, &s.queue)
 
-	s.queue.SetRouter(s.privRoute) // todo: research a better way to handle inner-circular dependencies so remove these lines back into Server contructor (maybe via dereferencing: http://openmymind.net/Things-I-Wish-Someone-Had-Told-Me-About-Go/)
+	s.queue.SetRouter(s.privRoute) // todo: research a better way to handle inner-circular dependencies so remove these lines back into Server contructor (maybe via dereferencing: http://openmymind.net/Things-I-Wish-Someone-Had-Told-Me-About-Go/, but then initializers actually using the pointer values would have to be lazy!)
 
 	nep.Disconn(func(c *neptulon.Conn) {
 		if id, ok := c.Data.GetOk("userid"); ok {
