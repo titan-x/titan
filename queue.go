@@ -81,7 +81,6 @@ func (q *Queue) processQueue(userID string) {
 
 	if reqs, ok := q.reqs[userID]; ok {
 		for i, req := range reqs {
-			log.Println(q.route)
 			if err := q.route.SendRequest(connID.(string), req.Method, req.Params, req.ResHandler); err != nil {
 				log.Fatal(err) // todo: log fatal only in debug mode
 			} else {
