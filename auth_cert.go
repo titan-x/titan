@@ -44,6 +44,6 @@ func certAuth(c *neptulon.Conn) bool {
 
 	userID := certs[0].Subject.CommonName
 	c.Data.Set("userid", userID)
-	log.Println("Client-certificate authenticated:", c.RemoteAddr(), userID)
+	log.Printf("Client-certificate authenticated. IP: %v, User ID: %v, Conn ID: %v\n", c.RemoteAddr(), userID, c.ID)
 	return true
 }

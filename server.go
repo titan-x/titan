@@ -58,12 +58,13 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 
 	CertAuth(s.jsonrpc)
 
+	s.queue = NewQueue(s.jsonrpc, s.privRoute)
+
 	s.privRoute, err = jsonrpc.NewRouter(s.jsonrpc)
 	if err != nil {
 		return nil, err
 	}
 
-	s.queue = NewQueue(s.jsonrpc, s.privRoute)
 	initPrivRoutes(s.privRoute, &s.queue)
 
 	nep.Disconn(func(c *neptulon.Conn) {
