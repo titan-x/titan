@@ -67,6 +67,6 @@ func initSendMsgHandler(q *Queue) func(ctx *jsonrpc.ReqCtx) {
 func initRecvMsgHandler(q *Queue) func(ctx *jsonrpc.ReqCtx) {
 	return func(ctx *jsonrpc.ReqCtx) {
 		q.SetConn(ctx.Conn.Data.Get("userid").(string), ctx.Conn.ID)
-		ctx.Res = "ACK"
+		ctx.Res = "ACK" // todo: this could rather send the remaining queue size for the client
 	}
 }
