@@ -11,22 +11,24 @@ import (
 
 // Server wraps a listener instance and registers default connection and message handlers with the listener.
 type Server struct {
+	// neptulon framework components
 	neptulon  *neptulon.Server
 	jsonrpc   *jsonrpc.Server
 	pubRoute  *jsonrpc.Router
 	privRoute *jsonrpc.Router
 
+	// devastator server components
 	db      DB
-	certMgr *CertMgr
+	certMgr CertMgr
 	queue   Queue
 
-	debug    bool
-	err      error
+	debug    bool  // dump raw TCP message to stderr using log.Println()
+	err      error // last error returned by neptulon framework before closing listener
 	errMutex sync.Mutex
 }
 
 // NewServer creates and returns a new server instance with a listener created using given parameters.
-// Debug mode dumps raw TCP data to stderr using log.Println().
+// Debug mode dumps raw TCP messages to stderr using log.Println().
 func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, debug bool) (*Server, error) {
 	nep, err := neptulon.NewServer(cert, privKey, clientCACert, laddr, debug)
 	if err != nil {
@@ -38,6 +40,7 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		neptulon: nep,
 		db:       NewInMemDB(),
 		certMgr:  NewCertMgr(clientCACert, clientCAKey),
+		queue:    NewQueue(),
 	}
 
 	s.jsonrpc, err = jsonrpc.NewServer(nep)
@@ -50,58 +53,28 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		return nil, err
 	}
 
-	s.pubRoute.Request("auth.google", func(ctx *jsonrpc.ReqCtx) {
-		googleAuth(ctx, s.db, s.certMgr)
-	})
+	initPubRoutes(s.pubRoute, s.db, &s.certMgr)
 
-	s.pubRoute.Notification("conn.close", func(ctx *jsonrpc.NotCtx) {
-		ctx.Done = true
-		ctx.Conn.Close()
-	})
+	// --- all communication below this point is authenticated --- //
 
-	// pubRoute.NotFound(...)
-	// todo: if the first incoming message in public route is not one of close/google.auth,
-	// close the connection right away (and maybe wait for client to return ACK then close?)
+	CertAuth(s.jsonrpc)
 
-	_, err = NewCertAuth(s.jsonrpc)
-	if err != nil {
-		return nil, err
-	}
+	s.queue.Middleware(s.jsonrpc)
 
 	s.privRoute, err = jsonrpc.NewRouter(s.jsonrpc)
 	if err != nil {
 		return nil, err
 	}
 
-	s.queue = NewQueue(s.privRoute)
+	initPrivRoutes(s.privRoute, &s.queue)
 
-	s.privRoute.Request("msg.echo", func(ctx *jsonrpc.ReqCtx) {
-		ctx.Params(&ctx.Res)
-		if ctx.Res == nil {
-			ctx.Res = ""
+	s.queue.SetRouter(s.privRoute) // todo: research a better way to handle inner-circular dependencies so remove these lines back into Server contructor (maybe via dereferencing: http://openmymind.net/Things-I-Wish-Someone-Had-Told-Me-About-Go/, but then initializers actually using the pointer values would have to be lazy!)
+
+	nep.Disconn(func(c *neptulon.Conn) {
+		if id, ok := c.Data.GetOk("userid"); ok {
+			s.queue.RemoveConn(id.(string))
 		}
 	})
-
-	type sendMsgReq struct {
-		to      string
-		message string
-	}
-
-	s.privRoute.Request("msg.send", func(ctx *jsonrpc.ReqCtx) {
-		// try to send the incoming message right away
-		var r sendMsgReq
-		ctx.Params(&r)
-		s.queue.AddRequest(r.to, "msg.recv", r.message, func(ctx *jsonrpc.ResCtx) {
-			// todo: handle response (which is probably just ACK so this might be automated as a part of Queue or with something like MsgHandler)
-		})
-	})
-
-	s.privRoute.Request("msg.recv", func(ctx *jsonrpc.ReqCtx) {
-
-	})
-
-	// privRoute.Middleware(NotFoundHandler()) // 404-like handler
-	// privRoute/pubRoute.Middleware(Logger()) // request-response logger (the pointer fields in request/response objects will have to change for this to work)
 
 	return &s, nil
 }

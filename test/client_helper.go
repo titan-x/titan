@@ -14,28 +14,29 @@ import (
 // All the functions are wrapped with proper test runner error logging.
 type ClientHelper struct {
 	client    *jsonrpc.Client
+	server    *ServerHelper // server that this client will be connecting to
 	testing   *testing.T
 	cert, key []byte
 }
 
 // NewClientHelper creates a new client helper object.
-func NewClientHelper(t *testing.T) *ClientHelper {
+func NewClientHelper(t *testing.T, s *ServerHelper) *ClientHelper {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
 	}
 
-	return &ClientHelper{testing: t}
+	return &ClientHelper{testing: t, server: s}
 }
 
-// DefaultCert attaches default test client certificate to the connection.
-func (c *ClientHelper) DefaultCert() *ClientHelper {
-	c.cert = certChain.ClientCert
-	c.key = certChain.ClientKey
+// AsUser attaches given user's client certificate and private key to the connection.
+func (c *ClientHelper) AsUser(u *devastator.User) *ClientHelper {
+	c.cert = u.Cert
+	c.key = u.Key
 	return c
 }
 
-// Cert attaches given PEM encoded client certificate to the connection.
-func (c *ClientHelper) Cert(cert, key []byte) *ClientHelper {
+// WithCert attaches given PEM encoded client certificate and private key to the connection.
+func (c *ClientHelper) WithCert(cert, key []byte) *ClientHelper {
 	c.cert = cert
 	c.key = key
 	return c
@@ -47,7 +48,7 @@ func (c *ClientHelper) Dial() *ClientHelper {
 
 	// retry connect in case we're operating on a very slow machine
 	for i := 0; i <= 5; i++ {
-		client, err := jsonrpc.Dial(addr, certChain.IntCACert, c.cert, c.key, false) // no need for debug mode on client conn as we have it on server conn already
+		client, err := jsonrpc.Dial(addr, c.server.IntCACert, c.cert, c.key, false) // no need for debug mode on client conn as we have it on server conn already
 		if err != nil {
 			if operr, ok := err.(*net.OpError); ok && operr.Op == "dial" && operr.Err.Error() == "connection refused" {
 				time.Sleep(time.Millisecond * 50)
@@ -96,7 +97,48 @@ func (c *ClientHelper) WriteNotificationArr(method string, params ...interface{}
 	c.WriteNotification(method, params)
 }
 
-// ReadMsg reads a JSON-RPC message from a client connection.
+// WriteResponse sends a response message through the client connection.
+func (c *ClientHelper) WriteResponse(id string, result interface{}, err *jsonrpc.ResError) {
+	if err := c.client.WriteResponse(id, result, err); err != nil {
+		c.testing.Fatal("Failed to write response to client connection:", err)
+	}
+}
+
+// ReadReq reads a request object from a client connection.
+// If incoming message is not a request, a fatal error is logged.
+// Optionally, you can pass in a data structure that the returned JSON-RPC request params data will be serialized into.
+// Otherwise json.Unmarshal defaults apply.
+func (c *ClientHelper) ReadReq(paramsData interface{}) *jsonrpc.Request {
+	req, _, _, err := c.client.ReadMsg(nil, paramsData)
+	if err != nil {
+		c.testing.Fatal("Failed to read request from client connection:", err)
+	}
+
+	if req == nil {
+		c.testing.Fatal("Read message was not a request message.")
+	}
+
+	return req
+}
+
+// ReadRes reads a response object from a client connection.
+// If incoming message is not a response, a fatal error is logged.
+// Optionally, you can pass in a data structure that the returned JSON-RPC response result data will be serialized into.
+// Otherwise json.Unmarshal defaults apply.
+func (c *ClientHelper) ReadRes(resultData interface{}) *jsonrpc.Response {
+	_, res, _, err := c.client.ReadMsg(resultData, nil)
+	if err != nil {
+		c.testing.Fatal("Failed to read response from client connection:", err)
+	}
+
+	if res == nil {
+		c.testing.Fatal("Read message was not a response message.")
+	}
+
+	return res
+}
+
+// ReadMsg reads a JSON-RPC message from a client connection. If possible, use more specific ReadReq/ReadRes/ReadNot methods instead.
 // Optionally, you can pass in a data structure that the returned JSON-RPC response result data will be serialized into (same for request params).
 // Otherwise json.Unmarshal defaults apply.
 func (c *ClientHelper) ReadMsg(resultData interface{}, paramsData interface{}) (req *jsonrpc.Request, res *jsonrpc.Response, not *jsonrpc.Notification) {
@@ -106,17 +148,6 @@ func (c *ClientHelper) ReadMsg(resultData interface{}, paramsData interface{}) (
 	}
 
 	return
-}
-
-// ReadRes reads a response object from a client connection. If incoming message is not a response, an error is logged.
-// Optionally, you can pass in a data structure that the returned JSON-RPC response result data will be serialized into. Otherwise json.Unmarshal defaults apply.
-func (c *ClientHelper) ReadRes(resultData interface{}) *jsonrpc.Response {
-	_, res, _, err := c.client.ReadMsg(resultData, nil)
-	if err != nil {
-		c.testing.Fatal("Failed to read response from client connection:", err)
-	}
-
-	return res
 }
 
 // VerifyConnClosed verifies that the connection is in closed state.

@@ -11,12 +11,12 @@ func TestAuth(t *testing.T) {
 }
 
 func TestValidClientCertAuth(t *testing.T) {
-	s := NewServerHelper(t)
+	s := NewServerHelper(t).SeedDB()
 	defer s.Stop()
-	c := NewClientHelper(t).DefaultCert().Dial()
+	c := NewClientHelper(t, s).AsUser(&s.SeedData.User1).Dial()
 	defer c.Close()
 	id := c.WriteRequest("msg.echo", nil)
-	_, res, _ := c.ReadMsg(nil, nil)
+	res := c.ReadRes(nil)
 
 	if res.ID != id {
 		t.Fatal("Authentication failed with a valid client certificate. Got server response:", res)
@@ -26,7 +26,7 @@ func TestValidClientCertAuth(t *testing.T) {
 func TestInvalidClientCertAuth(t *testing.T) {
 	s := NewServerHelper(t)
 	defer s.Stop()
-	c := NewClientHelper(t).Dial()
+	c := NewClientHelper(t, s).Dial()
 	defer c.Close()
 
 	_ = c.WriteRequest("msg.echo", nil)
@@ -49,7 +49,7 @@ func TestGoogleAuth(t *testing.T) {
 	}
 
 	s := NewServerHelper(t)
-	c := NewClientHelper(t).Dial()
+	c := NewClientHelper(t, s).Dial()
 
 	c.WriteRequest("auth.google", map[string]string{"accessToken": token})
 	var resData googleAuthRes
@@ -64,7 +64,7 @@ func TestGoogleAuth(t *testing.T) {
 
 	// now connect to server with our new client certificate
 	s = NewServerHelper(t)
-	c = NewClientHelper(t).Cert(resData.Cert, resData.Key).Dial()
+	c = NewClientHelper(t, s).WithCert(resData.Cert, resData.Key).Dial()
 
 	_ = c.WriteRequest("msg.echo", nil)
 	res = c.ReadRes(nil)
@@ -80,7 +80,7 @@ func TestGoogleAuth(t *testing.T) {
 func TestInvalidGoogleAuth(t *testing.T) {
 	s := NewServerHelper(t)
 	defer s.Stop()
-	c := NewClientHelper(t).Dial()
+	c := NewClientHelper(t, s).Dial()
 	defer c.Close()
 
 	// t.Fatal("Google+ second sign-in (regular) failed with valid credentials")

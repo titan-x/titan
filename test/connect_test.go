@@ -3,25 +3,25 @@ package test
 import "testing"
 
 func TestClientDisconnect(t *testing.T) {
-	s := NewServerHelper(t)
-	c := NewClientHelper(t).DefaultCert().Dial()
+	s := NewServerHelper(t).SeedDB()
+	c := NewClientHelper(t, s).AsUser(&s.SeedData.User1).Dial()
 
 	c.Close()
 	s.Stop()
 }
 
 func TestServerDisconnect(t *testing.T) {
-	s := NewServerHelper(t)
-	c := NewClientHelper(t).DefaultCert().Dial()
+	s := NewServerHelper(t).SeedDB()
+	c := NewClientHelper(t, s).AsUser(&s.SeedData.User1).Dial()
 
 	s.Stop()
 	c.Close()
 }
 
 func TestClientClose(t *testing.T) {
-	s := NewServerHelper(t)
+	s := NewServerHelper(t).SeedDB()
 	defer s.Stop()
-	c := NewClientHelper(t).DefaultCert().Dial()
+	c := NewClientHelper(t, s).AsUser(&s.SeedData.User1).Dial()
 	defer c.Close()
 
 	// c.WriteNotification("conn.close", nil)
