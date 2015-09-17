@@ -14,7 +14,7 @@ import (
 // All the functions are wrapped with proper test runner error logging.
 type ClientHelper struct {
 	client    *jsonrpc.Client
-	server    *ServerHelper
+	server    *ServerHelper // server that this client will be connecting to
 	testing   *testing.T
 	cert, key []byte
 }
