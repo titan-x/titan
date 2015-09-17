@@ -20,6 +20,7 @@ type ClientHelper struct {
 }
 
 // NewClientHelper creates a new client helper object.
+// Takes target server as an argument to retrieve server certs, address, etc.
 func NewClientHelper(t *testing.T, s *ServerHelper) *ClientHelper {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
