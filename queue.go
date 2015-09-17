@@ -2,6 +2,7 @@ package devastator
 
 import (
 	"log"
+	"sync"
 
 	"github.com/nbusy/cmap"
 	"github.com/nbusy/neptulon/jsonrpc"
@@ -9,17 +10,18 @@ import (
 
 // Queue is a message queue for queueing and sending messages to users.
 type Queue struct {
-	conns  *cmap.CMap                   // user ID -> conn ID
-	router *jsonrpc.Router              // route to send and receive messages through
-	reqs   map[string]([]queuedRequest) // user ID -> []queuedRequest
+	conns   *cmap.CMap      // user ID -> conn ID
+	router  *jsonrpc.Router // route to send and receive messages through
+	reqs    *cmap.CMap      // user ID -> []queuedRequest
+	mutexes *cmap.CMap      // user ID -> sync.RWMutex
 }
 
-// NewQueue creates a new queue object, ,
-// and attaches proper Neptulon middleware to initiate queue processing on client connection.
+// NewQueue creates a new queue object.
 func NewQueue() Queue {
 	q := Queue{
-		conns: cmap.New(),
-		reqs:  make(map[string]([]queuedRequest)),
+		conns:   cmap.New(),
+		reqs:    cmap.New(),
+		mutexes: cmap.New(),
 	}
 
 	return q
@@ -49,6 +51,7 @@ func (q *Queue) SetRouter(r *jsonrpc.Router) {
 func (q *Queue) SetConn(userID, connID string) {
 	if _, ok := q.conns.GetOk(userID); !ok {
 		q.conns.Set(userID, connID)
+		q.mutexes.Set(userID, sync.RWMutex{})
 		go q.processQueue(userID)
 	}
 }
@@ -56,18 +59,23 @@ func (q *Queue) SetConn(userID, connID string) {
 // RemoveConn removes a user's associated connection ID.
 func (q *Queue) RemoveConn(userID string) {
 	q.conns.Delete(userID)
+	q.mutexes.Delete(userID)
 }
 
 // AddRequest queues a request message to be sent to the given user.
 func (q *Queue) AddRequest(userID string, method string, params interface{}, resHandler func(ctx *jsonrpc.ResCtx)) error {
 	r := queuedRequest{Method: method, Params: params, ResHandler: resHandler}
-	if rs, ok := q.reqs[userID]; ok {
-		q.reqs[userID] = append(rs, r)
-	} else {
-		q.reqs[userID] = []queuedRequest{{Method: method, Params: params, ResHandler: resHandler}}
-	}
 
-	go q.processQueue(userID)
+	go func() {
+		if rs, ok := q.reqs.GetOk(userID); ok {
+			q.reqs.Set(userID, append(rs.([]queuedRequest), r))
+		} else {
+			q.reqs.Set(userID, []queuedRequest{{Method: method, Params: params, ResHandler: resHandler}})
+		}
+
+		go q.processQueue(userID)
+	}()
+
 	return nil
 }
 
@@ -84,7 +92,10 @@ func (q *Queue) processQueue(userID string) {
 		return
 	}
 
-	if reqs, ok := q.reqs[userID]; ok {
+	mutex := q.mutexes.Get(userID).(sync.RWMutex)
+	mutex.Lock()
+	if ireqs, ok := q.reqs.GetOk(userID); ok {
+		reqs := ireqs.([]queuedRequest)
 		for i, req := range reqs {
 			if err := q.router.SendRequest(connID.(string), req.Method, req.Params, req.ResHandler); err != nil {
 				log.Fatal(err) // todo: log fatal only in debug mode
@@ -92,5 +103,8 @@ func (q *Queue) processQueue(userID string) {
 				reqs, reqs[len(reqs)-1] = append(reqs[:i], reqs[i+1:]...), queuedRequest{} // todo: this might not be needed if function is not a pointer val
 			}
 		}
+
+		q.reqs.Set(userID, reqs)
 	}
+	mutex.Unlock()
 }
