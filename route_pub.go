@@ -1,6 +1,6 @@
 package devastator
 
-import "github.com/nbusy/neptulon/jsonrpc"
+import "github.com/neptulon/jsonrpc"
 
 func initPubRoutes(r *jsonrpc.Router, db DB, certMgr *CertMgr) {
 	r.Request("auth.google", initGoogleAuthHandler(db, certMgr))

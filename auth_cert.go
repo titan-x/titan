@@ -3,8 +3,8 @@ package devastator
 import (
 	"log"
 
-	"github.com/nbusy/neptulon"
-	"github.com/nbusy/neptulon/jsonrpc"
+	"github.com/neptulon/jsonrpc"
+	"github.com/neptulon/neptulon"
 )
 
 // CertAuth does TLS client-auth check and sets user ID in connection session store.
