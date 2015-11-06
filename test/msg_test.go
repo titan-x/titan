@@ -140,3 +140,10 @@ func TestSendMsgOffline(t *testing.T) {
 	// t.Fatal("Failed to receive queued messages after coming online")
 	// t.Fatal("Failed to send ACK for received message queue")
 }
+
+func TestSendAsync(t *testing.T) {
+	// test case to do all of the following simultaneously to test the async nature of devastator server
+	// - cert.auth
+	// - msg.recv
+	// - msg.send (bath to multiple people where some of whom are online)
+}

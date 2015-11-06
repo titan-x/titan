@@ -7,7 +7,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/nbusy/neptulon/jsonrpc"
+	"github.com/neptulon/jsonrpc"
 )
 
 // Response from GET https://www.googleapis.com/plus/v1/people/me?access_token=... (with scope 'profile' and 'email')

@@ -4,7 +4,7 @@ import (
 	"crypto/x509/pkix"
 	"time"
 
-	"github.com/nbusy/ca"
+	"github.com/neptulon/ca"
 )
 
 // CertMgr handles creation of client certificates.

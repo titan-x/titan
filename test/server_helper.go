@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nbusy/ca"
 	"github.com/nbusy/devastator"
+	"github.com/neptulon/ca"
 )
 
 // ServerHelper is a devastator.Server wrapper.

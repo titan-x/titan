@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/nbusy/devastator"
-	"github.com/nbusy/neptulon/jsonrpc"
+	"github.com/neptulon/jsonrpc"
 )
 
 // ClientHelper is a neptulon/jsonrpc.Client wrapper.

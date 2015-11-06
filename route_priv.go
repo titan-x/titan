@@ -3,7 +3,7 @@ package devastator
 import (
 	"log"
 
-	"github.com/nbusy/neptulon/jsonrpc"
+	"github.com/neptulon/jsonrpc"
 )
 
 func initPrivRoutes(r *jsonrpc.Router, q *Queue) {

@@ -4,8 +4,8 @@ import (
 	"log"
 	"sync"
 
-	"github.com/nbusy/cmap"
-	"github.com/nbusy/neptulon/jsonrpc"
+	"github.com/neptulon/cmap"
+	"github.com/neptulon/jsonrpc"
 )
 
 // Queue is a message queue for queueing and sending messages to users.
