@@ -1,10 +1,10 @@
-package devastator
+package titan
 
 import (
 	"log"
 	"strconv"
 
-	"github.com/nbusy/gcm/ccs"
+	"github.com/nb-titan/gcm/ccs"
 )
 
 func listenGCM() {
@@ -13,7 +13,7 @@ func listenGCM() {
 		log.Fatalln("Failed to connect to GCM CCS with error:", err)
 	}
 
-	log.Println("devastator message server started.")
+	log.Println("titan message server started.")
 
 	for {
 		m, err := c.Receive()

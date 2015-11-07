@@ -6,17 +6,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nbusy/devastator"
+	"github.com/nb-titan/titan"
 	"github.com/neptulon/ca"
 )
 
-// ServerHelper is a devastator.Server wrapper.
+// ServerHelper is a titan.Server wrapper.
 // All the functions are wrapped with proper test runner error logging.
 type ServerHelper struct {
 	SeedData SeedData // Populated only when SeedDB() method is called.
 
-	db      devastator.InMemDB
-	server  *devastator.Server
+	db      titan.InMemDB
+	server  *titan.Server
 	testing *testing.T
 
 	listenerWG sync.WaitGroup // server listener goroutine wait group
@@ -42,13 +42,13 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 		t.Fatal("Failed to create TLS certificate chain:", err)
 	}
 
-	laddr := "127.0.0.1:" + devastator.Conf.App.Port
-	s, err := devastator.NewServer(certChain.ServerCert, certChain.ServerKey, certChain.IntCACert, certChain.IntCAKey, laddr, devastator.Conf.App.Debug)
+	laddr := "127.0.0.1:" + titan.Conf.App.Port
+	s, err := titan.NewServer(certChain.ServerCert, certChain.ServerKey, certChain.IntCACert, certChain.IntCAKey, laddr, titan.Conf.App.Debug)
 	if err != nil {
 		t.Fatal("Failed to create server:", err)
 	}
 
-	db := devastator.NewInMemDB()
+	db := titan.NewInMemDB()
 	if err := s.UseDB(db); err != nil {
 		t.Fatal("Failed to attach InMemDB to server instance:", err)
 	}
@@ -77,8 +77,8 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 
 // SeedData is the data user for seeding the database.
 type SeedData struct {
-	User1 devastator.User
-	User2 devastator.User
+	User1 titan.User
+	User2 titan.User
 }
 
 // SeedDB populates the database with the seed data.
@@ -100,8 +100,8 @@ func (s *ServerHelper) SeedDB() *ServerHelper {
 	}
 
 	sd := SeedData{
-		User1: devastator.User{ID: "1", Cert: cc1, Key: ck1},
-		User2: devastator.User{ID: "2", Cert: cc2, Key: ck2},
+		User1: titan.User{ID: "1", Cert: cc1, Key: ck1},
+		User2: titan.User{ID: "2", Cert: cc2, Key: ck2},
 	}
 
 	s.db.SaveUser(&sd.User1)

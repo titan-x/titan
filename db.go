@@ -1,4 +1,4 @@
-package devastator
+package titan
 
 // DB wraps all database related functions.
 type DB interface {

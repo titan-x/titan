@@ -1,4 +1,4 @@
-package devastator
+package titan
 
 import "testing"
 
@@ -27,6 +27,6 @@ func TestConfig(t *testing.T) {
 }
 
 func TestGoEnv(t *testing.T) {
-	// GO_ENV should be used if "DEVASTATOR_ENV" is empty
+	// GO_ENV should be used if "TITAN_ENV" is empty
 	// if both are empty, should be env = dev
 }

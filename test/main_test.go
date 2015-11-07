@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/nbusy/devastator"
+	"github.com/nb-titan/titan"
 )
 
 // TestMain is the top level test runner with top level setup and teardown functions.
@@ -13,7 +13,7 @@ import (
 // http://golang.org/pkg/testing/#hdr-Main
 func TestMain(m *testing.M) {
 	// setup
-	devastator.InitConf("test")
+	titan.InitConf("test")
 	// execute tests
 	res := m.Run()
 	// teardown

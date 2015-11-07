@@ -1,4 +1,4 @@
-package devastator
+package titan
 
 import (
 	"encoding/json"
@@ -13,7 +13,7 @@ var googleAuthResStr = []byte(`{
  "gender": "male",
  "emails": [
   {
-   "value": "chuck@devastator.com",
+   "value": "chuck@titan.com",
    "type": "account"
   }
  ],
@@ -37,7 +37,7 @@ var googleAuthResStr = []byte(`{
 
 var (
 	displayName = "Chuck Norris"
-	email       = "chuck@devastator.com"
+	email       = "chuck@titan.com"
 	imgURL      = "https://lh3.googleusercontent.com/asdfgsgdsfs/afsdggg/sdafdsff/1234dfgg/photo.jpg?sz=50"
 )
 

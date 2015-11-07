@@ -1,4 +1,4 @@
-package devastator
+package titan
 
 import (
 	"fmt"
@@ -17,7 +17,7 @@ type Server struct {
 	pubRoute  *jsonrpc.Router
 	privRoute *jsonrpc.Router
 
-	// devastator server components
+	// titan server components
 	db      DB
 	certMgr CertMgr
 	queue   Queue

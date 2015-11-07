@@ -1,4 +1,4 @@
-package devastator
+package titan
 
 import (
 	"crypto/x509/pkix"

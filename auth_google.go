@@ -1,4 +1,4 @@
-package devastator
+package titan
 
 import (
 	"encoding/json"

@@ -1,4 +1,4 @@
-package devastator
+package titan
 
 import (
 	"log"
@@ -6,13 +6,13 @@ import (
 )
 
 const (
-	// devastator server envrinment variables
+	// titan server envrinment variables
 	goEnv           = "GO_ENV"
-	devastatorEnv   = "DEVASTATOR_ENV"
-	devastatorDebug = "DEVASTATOR_DEBUG"
-	devastatorPort  = "DEVASTATOR_PORT"
+	titanEnv   = "TITAN_ENV"
+	titanDebug = "TITAN_DEBUG"
+	titanPort  = "TITAN_PORT"
 
-	// possible DEVASTATOR_ENV values
+	// possible TITAN_ENV values
 	envDev  = "development"
 	envTest = "test"
 	envProd = "production"
@@ -29,10 +29,10 @@ const (
 	portTest    = "3001"
 )
 
-// Conf contains all the global configuration for the devastator server.
+// Conf contains all the global configuration for the titan server.
 var Conf Config
 
-// Config describes the global configuration for the devastator server.
+// Config describes the global configuration for the titan server.
 type Config struct {
 	App App
 	GCM GCM
@@ -63,15 +63,15 @@ func (gcm *GCM) APIKey() string {
 // If given, env parameter overrides environment configuration. This is useful for testing.
 func InitConf(env string) {
 	if env == "" {
-		env = os.Getenv(devastatorEnv)
+		env = os.Getenv(titanEnv)
 	}
 	if env == "" {
 		if env = os.Getenv(goEnv); env == "" {
 			env = envDev
 		}
 	}
-	debug := os.Getenv(devastatorDebug) != "" || (env != envProd)
-	port := os.Getenv(devastatorPort)
+	debug := os.Getenv(titanDebug) != "" || (env != envProd)
+	port := os.Getenv(titanPort)
 	if port == "" {
 		switch env {
 		case envTest:

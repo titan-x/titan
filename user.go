@@ -1,4 +1,4 @@
-package devastator
+package titan
 
 // User profile.
 type User struct {

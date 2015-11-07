@@ -1,4 +1,4 @@
-package devastator
+package titan
 
 import "github.com/neptulon/jsonrpc"
 

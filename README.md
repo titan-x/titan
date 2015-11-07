@@ -1,9 +1,9 @@
-# Devastator
+# Titan
 
-[![Build Status](https://travis-ci.org/nbusy/devastator.svg?branch=master)](https://travis-ci.org/nbusy/devastator)
-[![GoDoc](https://godoc.org/github.com/nbusy/devastator?status.svg)](https://godoc.org/github.com/nbusy/devastator)
+[![Build Status](https://travis-ci.org/nb-titan/titan.svg?branch=master)](https://travis-ci.org/nb-titan/titan)
+[![GoDoc](https://godoc.org/github.com/nb-titan/titan?status.svg)](https://godoc.org/github.com/nb-titan/titan)
 
-Devastator is a messaging server for delivering chat messages to mobile and Web clients. For each delivery target, the server uses different protocol. i.e. GCM for Android apps, WebSockets for browsers, etc. The server is completely written in Go and makes huge use of goroutines and channels. Client server communication is full-duplex bidirectional.
+Titan is a messaging server for delivering chat messages to mobile and Web clients (in progress). For each delivery target, the server uses different protocol. i.e. GCM for Android apps, WebSockets for browsers, etc. The server is completely written in Go and makes huge use of goroutines and channels. Client server communication is full-duplex bidirectional.
 
 ## Example
 
@@ -35,7 +35,7 @@ Following is the overview of the server application's components:
 
 ## Client-Server Protocol
 
-(Devastator server is entirely built on top of [Neptulon](https://github.com/nbusy/neptulon) framework. You can browse Neptulon repository to get more in-depth info.)
+(Titan server is entirely built on top of [Neptulon](https://github.com/neptulon/neptulon) framework. You can browse Neptulon repository to get more in-depth info.)
 
 Client server communication protocol is based on [JSON RPC](http://www.jsonrpc.org/specification) 2.0 specs. Mobile devices connect with the TLS endpoint and the Web browsers utilizes the WebSocket endpoint. The message framing on the TLS endpoint is quite simple:
 
@@ -81,6 +81,10 @@ Client-server communication sequence is pretty similar to that of XMPP, except w
 ```
 
 Any message that was not acknowledged by the client will be delivered again (hence at-least-once delivery princinple), unless TTL of the message was reached. Client implementations should be ready to handle occasional duplicate deliveries of messages by the server. Message IDs will remain the same for duplicates.
+
+## Users
+
+[NBusy](https://github.com/nbusy/nbusy) server is running on top of Titan server. You can visit its repo to see a complete use case of Titan server.
 
 ## Testing
 

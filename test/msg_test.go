@@ -142,7 +142,7 @@ func TestSendMsgOffline(t *testing.T) {
 }
 
 func TestSendAsync(t *testing.T) {
-	// test case to do all of the following simultaneously to test the async nature of devastator server
+	// test case to do all of the following simultaneously to test the async nature of titan server
 	// - cert.auth
 	// - msg.recv
 	// - msg.send (bath to multiple people where some of whom are online)

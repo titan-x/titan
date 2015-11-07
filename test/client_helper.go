@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nbusy/devastator"
+	"github.com/nb-titan/titan"
 	"github.com/neptulon/jsonrpc"
 )
 
@@ -30,7 +30,7 @@ func NewClientHelper(t *testing.T, s *ServerHelper) *ClientHelper {
 }
 
 // AsUser attaches given user's client certificate and private key to the connection.
-func (c *ClientHelper) AsUser(u *devastator.User) *ClientHelper {
+func (c *ClientHelper) AsUser(u *titan.User) *ClientHelper {
 	c.cert = u.Cert
 	c.key = u.Key
 	return c
@@ -45,7 +45,7 @@ func (c *ClientHelper) WithCert(cert, key []byte) *ClientHelper {
 
 // Dial initiates a connection.
 func (c *ClientHelper) Dial() *ClientHelper {
-	addr := "127.0.0.1:" + devastator.Conf.App.Port
+	addr := "127.0.0.1:" + titan.Conf.App.Port
 
 	// retry connect in case we're operating on a very slow machine
 	for i := 0; i <= 5; i++ {
