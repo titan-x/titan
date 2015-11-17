@@ -4,7 +4,7 @@ import "testing"
 
 func TestClientDisconnect(t *testing.T) {
 	s := NewServerHelper(t).SeedDB()
-	c := NewClientHelper(t, s).AsUser(&s.SeedData.User1).Dial()
+	c := NewConnHelper(t, s).AsUser(&s.SeedData.User1).Dial()
 
 	c.Close()
 	s.Stop()
@@ -12,7 +12,7 @@ func TestClientDisconnect(t *testing.T) {
 
 func TestServerDisconnect(t *testing.T) {
 	s := NewServerHelper(t).SeedDB()
-	c := NewClientHelper(t, s).AsUser(&s.SeedData.User1).Dial()
+	c := NewConnHelper(t, s).AsUser(&s.SeedData.User1).Dial()
 
 	s.Stop()
 	c.Close()
@@ -21,7 +21,7 @@ func TestServerDisconnect(t *testing.T) {
 func TestClientClose(t *testing.T) {
 	s := NewServerHelper(t).SeedDB()
 	defer s.Stop()
-	c := NewClientHelper(t, s).AsUser(&s.SeedData.User1).Dial()
+	c := NewConnHelper(t, s).AsUser(&s.SeedData.User1).Dial()
 	defer c.Close()
 
 	// c.WriteNotification("conn.close", nil)

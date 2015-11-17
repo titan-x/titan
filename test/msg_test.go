@@ -5,7 +5,7 @@ import "testing"
 func TestSendEcho(t *testing.T) {
 	s := NewServerHelper(t).SeedDB()
 	defer s.Stop()
-	c := NewClientHelper(t, s).AsUser(&s.SeedData.User1).Dial()
+	c := NewConnHelper(t, s).AsUser(&s.SeedData.User1).Dial()
 	defer c.Close()
 
 	id := c.WriteRequest("msg.echo", map[string]string{"echo": "echo"})
@@ -37,9 +37,9 @@ type recvMsgReq struct {
 func TestSendMsgOnline(t *testing.T) {
 	s := NewServerHelper(t).SeedDB()
 	defer s.Stop()
-	c1 := NewClientHelper(t, s).AsUser(&s.SeedData.User1).Dial()
+	c1 := NewConnHelper(t, s).AsUser(&s.SeedData.User1).Dial()
 	defer c1.Close()
-	c2 := NewClientHelper(t, s).AsUser(&s.SeedData.User2).Dial()
+	c2 := NewConnHelper(t, s).AsUser(&s.SeedData.User2).Dial()
 	defer c2.Close()
 
 	// send msg.recv request from user 2 to announce availability and complete client-cert auth
@@ -97,7 +97,7 @@ func TestSendMsgOnline(t *testing.T) {
 func TestSendMsgOffline(t *testing.T) {
 	s := NewServerHelper(t).SeedDB()
 	defer s.Stop()
-	c1 := NewClientHelper(t, s).AsUser(&s.SeedData.User1).Dial()
+	c1 := NewConnHelper(t, s).AsUser(&s.SeedData.User1).Dial()
 	defer c1.Close()
 
 	// send message to user 2 with a basic hello message
@@ -108,7 +108,7 @@ func TestSendMsgOffline(t *testing.T) {
 	}
 
 	// connect as user 2 and send msg.recv request to announce availability and complete client-cert auth
-	c2 := NewClientHelper(t, s).AsUser(&s.SeedData.User2).Dial()
+	c2 := NewConnHelper(t, s).AsUser(&s.SeedData.User2).Dial()
 	defer c2.Close()
 
 	c2.WriteRequest("msg.recv", nil)
