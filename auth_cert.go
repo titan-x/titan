@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/neptulon/jsonrpc"
-	"github.com/neptulon/neptulon"
 )
 
 // CertAuth does TLS client-auth check and sets user ID in connection session store.
@@ -29,7 +28,7 @@ func CertAuth(server *jsonrpc.Server) {
 
 // certAuth does client-auth check and sets user ID in connection session store.
 // Returns true if authentication is successful.
-func certAuth(c *neptulon.Conn) bool {
+func certAuth(c *jsonrpc.Conn) bool {
 	if _, ok := c.Data.GetOk("userid"); ok {
 		return true
 	}

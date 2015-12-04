@@ -79,8 +79,8 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 	return &s, nil
 }
 
-// UseDB sets the database to be used by the server. If not supplied, in-memory database implementation is used.
-func (s *Server) UseDB(db DB) error {
+// SetDB sets the database to be used by the server. If not supplied, in-memory database implementation is used.
+func (s *Server) SetDB(db DB) error {
 	s.db = db
 	return nil
 }
