@@ -19,7 +19,7 @@ type ServerHelper struct {
 	server  *titan.Server
 	testing *testing.T
 
-	listenerWG sync.WaitGroup // server listener goroutine wait group
+	serverWG sync.WaitGroup // server instance goroutine wait group
 
 	// PEM encoded X.509 certificate and private key pairs
 	RootCACert,
@@ -66,9 +66,9 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 		ServerKey:  certChain.ServerKey,
 	}
 
-	h.listenerWG.Add(1)
+	h.serverWG.Add(1)
 	go func() {
-		defer h.listenerWG.Done()
+		defer h.serverWG.Done()
 		s.Start()
 	}()
 
@@ -117,5 +117,5 @@ func (s *ServerHelper) Stop() {
 	if err := s.server.Stop(); err != nil {
 		s.testing.Fatal("Failed to stop the server:", err)
 	}
-	s.listenerWG.Wait()
+	s.serverWG.Wait()
 }
