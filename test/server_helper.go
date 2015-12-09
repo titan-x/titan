@@ -10,16 +10,10 @@ import (
 	"github.com/neptulon/ca"
 )
 
-// ServerHelper is a titan.Server wrapper.
+// ServerHelper is a titan.Server wrapper for testing.
 // All the functions are wrapped with proper test runner error logging.
 type ServerHelper struct {
 	SeedData SeedData // Populated only when SeedDB() method is called.
-
-	db      titan.InMemDB
-	server  *titan.Server
-	testing *testing.T
-
-	serverWG sync.WaitGroup // server instance goroutine wait group
 
 	// PEM encoded X.509 certificate and private key pairs
 	RootCACert,
@@ -28,9 +22,15 @@ type ServerHelper struct {
 	IntCAKey,
 	ServerCert,
 	ServerKey []byte
+
+	testing  *testing.T
+	server   *titan.Server
+	serverWG sync.WaitGroup // server instance goroutine wait group
+	db       titan.InMemDB
 }
 
 // NewServerHelper creates a new server helper object.
+// Titan server instance is initialized and ready to accept connection after this function returns.
 func NewServerHelper(t *testing.T) *ServerHelper {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
@@ -72,6 +72,8 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 		s.Start()
 	}()
 
+	time.Sleep(time.Millisecond) // give Start() enough time to initiate
+
 	return &h
 }
 
@@ -112,7 +114,7 @@ func (s *ServerHelper) SeedDB() *ServerHelper {
 	return s
 }
 
-// Stop stops a server instance.
+// Stop stops the server instance.
 func (s *ServerHelper) Stop() {
 	if err := s.server.Stop(); err != nil {
 		s.testing.Fatal("Failed to stop the server:", err)
