@@ -40,7 +40,7 @@ func initSendMsgHandler(q *Queue) func(ctx *jsonrpc.ReqCtx) {
 		var s sendMsgReq
 		ctx.Params(&s)
 
-		uid := ctx.Conn.Data.Get("userid").(string)
+		uid := ctx.Conn.Session().Get("userid").(string)
 		r := recvMsgReq{From: uid, Message: s.Message}
 		err := q.AddRequest(s.To, "msg.recv", r, func(ctx *jsonrpc.ResCtx) {
 			var res string
@@ -66,7 +66,7 @@ func initSendMsgHandler(q *Queue) func(ctx *jsonrpc.ReqCtx) {
 // If there are any messages meant for this user, they are started to be sent with this call (via the cert-auth middleware).
 func initRecvMsgHandler(q *Queue) func(ctx *jsonrpc.ReqCtx) {
 	return func(ctx *jsonrpc.ReqCtx) {
-		q.SetConn(ctx.Conn.Data.Get("userid").(string), ctx.Conn.ID)
+		q.SetConn(ctx.Conn.Session().Get("userid").(string), ctx.Conn.ConnID())
 		ctx.Res = "ACK" // todo: this could rather send the remaining queue size for the client
 	}
 }

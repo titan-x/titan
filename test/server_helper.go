@@ -49,7 +49,7 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 	}
 
 	db := titan.NewInMemDB()
-	if err := s.UseDB(db); err != nil {
+	if err := s.SetDB(db); err != nil {
 		t.Fatal("Failed to attach InMemDB to server instance:", err)
 	}
 

@@ -31,13 +31,13 @@ func NewQueue() Queue {
 // for connecting users (upon their first incoming-message).
 func (q *Queue) Middleware(s *jsonrpc.Server) {
 	s.ReqMiddleware(func(ctx *jsonrpc.ReqCtx) {
-		q.SetConn(ctx.Conn.Data.Get("userid").(string), ctx.Conn.ID)
+		q.SetConn(ctx.Conn.Session().Get("userid").(string), ctx.Conn.ConnID())
 	})
 	s.ResMiddleware(func(ctx *jsonrpc.ResCtx) {
-		q.SetConn(ctx.Conn.Data.Get("userid").(string), ctx.Conn.ID)
+		q.SetConn(ctx.Conn.Session().Get("userid").(string), ctx.Conn.ConnID())
 	})
 	s.NotMiddleware(func(ctx *jsonrpc.NotCtx) {
-		q.SetConn(ctx.Conn.Data.Get("userid").(string), ctx.Conn.ID)
+		q.SetConn(ctx.Conn.Session().Get("userid").(string), ctx.Conn.ConnID())
 	})
 }
 

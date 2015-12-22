@@ -5,6 +5,7 @@ import (
 	"log"
 	"sync"
 
+	"github.com/neptulon/client"
 	"github.com/neptulon/jsonrpc"
 	"github.com/neptulon/neptulon"
 )
@@ -30,7 +31,7 @@ type Server struct {
 // NewServer creates and returns a new server instance with a listener created using given parameters.
 // Debug mode dumps raw TCP messages to stderr using log.Println().
 func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, debug bool) (*Server, error) {
-	nep, err := neptulon.NewServer(cert, privKey, clientCACert, laddr, debug)
+	nep, err := neptulon.NewTLSServer(cert, privKey, clientCACert, laddr, debug)
 	if err != nil {
 		return nil, err
 	}
@@ -70,9 +71,9 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 
 	s.queue.SetRouter(s.privRoute) // todo: research a better way to handle inner-circular dependencies so remove these lines back into Server contructor (maybe via dereferencing: http://openmymind.net/Things-I-Wish-Someone-Had-Told-Me-About-Go/, but then initializers actually using the pointer values would have to be lazy!)
 
-	nep.Disconn(func(c *neptulon.Conn) {
+	nep.Disconn(func(c *client.Client) {
 		// only handle this event for previously authenticated
-		if id, ok := c.Data.GetOk("userid"); ok {
+		if id, ok := c.Session().GetOk("userid"); ok {
 			s.queue.RemoveConn(id.(string))
 		}
 	})
@@ -89,7 +90,7 @@ func (s *Server) SetDB(db DB) error {
 // Start starts accepting connections on the internal listener and handles connections with registered onnection and message handlers.
 // This function blocks and never returns, unless there was an error while accepting a new connection or the server was closed.
 func (s *Server) Start() error {
-	err := s.neptulon.Run()
+	err := s.neptulon.Start()
 	if err != nil && s.debug {
 		log.Fatalln("Listener returned an error while closing:", err)
 	}
@@ -104,7 +105,7 @@ func (s *Server) Start() error {
 // Stop stops the server and closes all of the active connections discarding any read/writes that is going on currently.
 // This is not a problem as we always require an ACK but it will also mean that message deliveries will be at-least-once; to-and-from the server.
 func (s *Server) Stop() error {
-	err := s.neptulon.Stop()
+	err := s.neptulon.Close()
 
 	s.errMutex.Lock()
 	if s.err != nil {

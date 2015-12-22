@@ -1,10 +1,6 @@
 package titan
 
-import (
-	"log"
-
-	"github.com/neptulon/jsonrpc"
-)
+import "github.com/neptulon/jsonrpc"
 
 // CertAuth does TLS client-auth check and sets user ID in connection session store.
 // Connection is closed without returning any reason if cert is invalid.
@@ -29,20 +25,20 @@ func CertAuth(server *jsonrpc.Server) {
 // certAuth does client-auth check and sets user ID in connection session store.
 // Returns true if authentication is successful.
 func certAuth(c *jsonrpc.Conn) bool {
-	if _, ok := c.Data.GetOk("userid"); ok {
+	if _, ok := c.Session().GetOk("userid"); ok {
 		return true
 	}
 
 	// if provided, client certificate is verified by the TLS listener so the peerCerts list in the connection is trusted
-	certs := c.ConnectionState().PeerCertificates
-	if len(certs) == 0 {
-		log.Println("Invalid client-certificate authentication attempt:", c.RemoteAddr())
-		c.Close()
-		return false
-	}
-
-	userID := certs[0].Subject.CommonName
-	c.Data.Set("userid", userID)
-	log.Printf("Client authenticated. TLS/IP: %v, User ID: %v, Conn ID: %v\n", c.RemoteAddr(), userID, c.ID)
+	// certs := c.ConnectionState().PeerCertificates
+	// if len(certs) == 0 {
+	// 	log.Println("Invalid client-certificate authentication attempt:", c.RemoteAddr())
+	// 	c.Close()
+	// 	return false
+	// }
+	//
+	// userID := certs[0].Subject.CommonName
+	// c.Session().Set("userid", userID)
+	// log.Printf("Client authenticated. TLS/IP: %v, User ID: %v, Conn ID: %v\n", c.RemoteAddr(), userID, c.ConnID())
 	return true
 }
