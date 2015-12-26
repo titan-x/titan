@@ -9,20 +9,23 @@ import (
 // CertAuth does TLS client-auth check and sets user ID in connection session store.
 // Connection is closed without returning any reason if cert is invalid.
 func CertAuth(server *jsonrpc.Server) {
-	server.ReqMiddleware(func(ctx *jsonrpc.ReqCtx) {
+	server.ReqMiddleware(func(ctx *jsonrpc.ReqCtx) error {
 		if !certAuth(ctx.Conn) {
-			ctx.Done = true
+			return nil
 		}
+		return ctx.Next()
 	})
-	server.ResMiddleware(func(ctx *jsonrpc.ResCtx) {
+	server.ResMiddleware(func(ctx *jsonrpc.ResCtx) error {
 		if !certAuth(ctx.Conn) {
 			ctx.Done = true
 		}
+		return nil
 	})
-	server.NotMiddleware(func(ctx *jsonrpc.NotCtx) {
+	server.NotMiddleware(func(ctx *jsonrpc.NotCtx) error {
 		if !certAuth(ctx.Conn) {
 			ctx.Done = true
 		}
+		return nil
 	})
 }
 

@@ -10,15 +10,19 @@ func initPubRoutes(r *jsonrpc.Router, db DB, certMgr *CertMgr) {
 	// close the connection right away (and maybe wait for client to return ACK then close?)
 }
 
-func initGoogleAuthHandler(db DB, certMgr *CertMgr) func(ctx *jsonrpc.ReqCtx) {
-	return func(ctx *jsonrpc.ReqCtx) {
-		googleAuth(ctx, db, certMgr)
+func initGoogleAuthHandler(db DB, certMgr *CertMgr) func(ctx *jsonrpc.ReqCtx) error {
+	return func(ctx *jsonrpc.ReqCtx) error {
+		if err := googleAuth(ctx, db, certMgr); err != nil {
+			return err
+		}
+		return ctx.Next()
 	}
 }
 
-func initCloseConnHandler() func(ctx *jsonrpc.NotCtx) {
-	return func(ctx *jsonrpc.NotCtx) {
+func initCloseConnHandler() func(ctx *jsonrpc.NotCtx) error {
+	return func(ctx *jsonrpc.NotCtx) error {
 		ctx.Done = true
 		ctx.Conn.Close()
+		return nil
 	}
 }

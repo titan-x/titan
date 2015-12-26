@@ -5,9 +5,9 @@ import (
 	"log"
 	"sync"
 
-	"github.com/neptulon/client"
 	"github.com/neptulon/jsonrpc"
 	"github.com/neptulon/neptulon"
+	"github.com/neptulon/neptulon/client"
 )
 
 // Server wraps a listener instance and registers default connection and message handlers with the listener.

@@ -1,7 +1,7 @@
 package titan
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/neptulon/jsonrpc"
 )
@@ -15,17 +15,18 @@ func initPrivRoutes(r *jsonrpc.Router, q *Queue) {
 }
 
 // Echoes message sent by the client back to the client.
-func initEchoMsgHandler() func(ctx *jsonrpc.ReqCtx) {
-	return func(ctx *jsonrpc.ReqCtx) {
+func initEchoMsgHandler() func(ctx *jsonrpc.ReqCtx) error {
+	return func(ctx *jsonrpc.ReqCtx) error {
 		ctx.Params(&ctx.Res)
 		if ctx.Res == nil {
 			ctx.Res = ""
 		}
+		return ctx.Next()
 	}
 }
 
 // Allows clients to send messages to each other, online or offline.
-func initSendMsgHandler(q *Queue) func(ctx *jsonrpc.ReqCtx) {
+func initSendMsgHandler(q *Queue) func(ctx *jsonrpc.ReqCtx) error {
 	type sendMsgReq struct {
 		To      string `json:"to"`
 		Message string `json:"message"`
@@ -36,7 +37,7 @@ func initSendMsgHandler(q *Queue) func(ctx *jsonrpc.ReqCtx) {
 		Message string `json:"message"`
 	}
 
-	return func(ctx *jsonrpc.ReqCtx) {
+	return func(ctx *jsonrpc.ReqCtx) error {
 		var s sendMsgReq
 		ctx.Params(&s)
 
@@ -54,19 +55,20 @@ func initSendMsgHandler(q *Queue) func(ctx *jsonrpc.ReqCtx) {
 		})
 
 		if err != nil {
-			log.Fatal("Failed to add request to queue with error:", err)
-			return
+			return fmt.Errorf("Failed to add request to queue with error: %v", err)
 		}
 
 		ctx.Res = "ACK"
+		return ctx.Next()
 	}
 }
 
 // Used only for a client to announce its presence.
 // If there are any messages meant for this user, they are started to be sent with this call (via the cert-auth middleware).
-func initRecvMsgHandler(q *Queue) func(ctx *jsonrpc.ReqCtx) {
-	return func(ctx *jsonrpc.ReqCtx) {
+func initRecvMsgHandler(q *Queue) func(ctx *jsonrpc.ReqCtx) error {
+	return func(ctx *jsonrpc.ReqCtx) error {
 		q.SetConn(ctx.Conn.Session().Get("userid").(string), ctx.Conn.ConnID())
 		ctx.Res = "ACK" // todo: this could rather send the remaining queue size for the client
+		return ctx.Next()
 	}
 }

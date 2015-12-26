@@ -30,14 +30,17 @@ func NewQueue() Queue {
 // Middleware registers a queue middleware to register user/connection IDs
 // for connecting users (upon their first incoming-message).
 func (q *Queue) Middleware(s *jsonrpc.Server) {
-	s.ReqMiddleware(func(ctx *jsonrpc.ReqCtx) {
+	s.ReqMiddleware(func(ctx *jsonrpc.ReqCtx) error {
 		q.SetConn(ctx.Conn.Session().Get("userid").(string), ctx.Conn.ConnID())
+		return ctx.Next()
 	})
-	s.ResMiddleware(func(ctx *jsonrpc.ResCtx) {
+	s.ResMiddleware(func(ctx *jsonrpc.ResCtx) error {
 		q.SetConn(ctx.Conn.Session().Get("userid").(string), ctx.Conn.ConnID())
+		return nil
 	})
-	s.NotMiddleware(func(ctx *jsonrpc.NotCtx) {
+	s.NotMiddleware(func(ctx *jsonrpc.NotCtx) error {
 		q.SetConn(ctx.Conn.Session().Get("userid").(string), ctx.Conn.ConnID())
+		return nil
 	})
 }
 
