@@ -7,7 +7,6 @@ import (
 
 	"github.com/neptulon/jsonrpc"
 	"github.com/neptulon/neptulon"
-	"github.com/neptulon/neptulon/client"
 )
 
 // Server wraps a listener instance and registers default connection and message handlers with the listener.
@@ -49,7 +48,7 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		return nil, err
 	}
 
-	s.pubRoute, err = jsonrpc.NewRouter(s.jsonrpc)
+	s.pubRoute, err = jsonrpc.NewRouter(&s.jsonrpc.Middleware)
 	if err != nil {
 		return nil, err
 	}
@@ -62,16 +61,16 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 
 	s.queue.Middleware(s.jsonrpc)
 
-	s.privRoute, err = jsonrpc.NewRouter(s.jsonrpc)
+	s.privRoute, err = jsonrpc.NewRouter(&s.jsonrpc.Middleware)
 	if err != nil {
 		return nil, err
 	}
 
 	initPrivRoutes(s.privRoute, &s.queue)
 
-	s.queue.SetRouter(s.privRoute) // todo: research a better way to handle inner-circular dependencies so remove these lines back into Server contructor (maybe via dereferencing: http://openmymind.net/Things-I-Wish-Someone-Had-Told-Me-About-Go/, but then initializers actually using the pointer values would have to be lazy!)
+	s.queue.SetServer(s.jsonrpc) // todo: research a better way to handle inner-circular dependencies so remove these lines back into Server contructor (maybe via dereferencing: http://openmymind.net/Things-I-Wish-Someone-Had-Told-Me-About-Go/, but then initializers actually using the pointer values would have to be lazy!)
 
-	nep.Disconn(func(c *client.Client) {
+	nep.Disconn(func(c *neptulon.Client) {
 		// only handle this event for previously authenticated
 		if id, ok := c.Session().GetOk("userid"); ok {
 			s.queue.RemoveConn(id.(string))

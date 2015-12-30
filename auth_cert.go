@@ -10,28 +10,28 @@ import (
 // Connection is closed without returning any reason if cert is invalid.
 func CertAuth(server *jsonrpc.Server) {
 	server.ReqMiddleware(func(ctx *jsonrpc.ReqCtx) error {
-		if !certAuth(ctx.Conn) {
+		if !certAuth(ctx.Client) {
 			return nil
 		}
 		return ctx.Next()
 	})
 	server.ResMiddleware(func(ctx *jsonrpc.ResCtx) error {
-		if !certAuth(ctx.Conn) {
-			ctx.Done = true
+		if !certAuth(ctx.Client) {
+			return nil
 		}
-		return nil
+		return ctx.Next()
 	})
 	server.NotMiddleware(func(ctx *jsonrpc.NotCtx) error {
-		if !certAuth(ctx.Conn) {
-			ctx.Done = true
+		if !certAuth(ctx.Client) {
+			return nil
 		}
-		return nil
+		return ctx.Next()
 	})
 }
 
 // certAuth does client-auth check and sets user ID in connection session store.
 // Returns true if authentication is successful.
-func certAuth(c *jsonrpc.Conn) bool {
+func certAuth(c *jsonrpc.Client) bool {
 	if _, ok := c.Session().GetOk("userid"); ok {
 		return true
 	}

@@ -21,8 +21,7 @@ func initGoogleAuthHandler(db DB, certMgr *CertMgr) func(ctx *jsonrpc.ReqCtx) er
 
 func initCloseConnHandler() func(ctx *jsonrpc.NotCtx) error {
 	return func(ctx *jsonrpc.NotCtx) error {
-		ctx.Done = true
-		ctx.Conn.Close()
+		ctx.Client.Conn.Close()
 		return nil
 	}
 }

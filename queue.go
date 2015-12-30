@@ -11,7 +11,7 @@ import (
 // Queue is a message queue for queueing and sending messages to users.
 type Queue struct {
 	conns   *cmap.CMap      // user ID -> conn ID
-	router  *jsonrpc.Router // route to send and receive messages through
+	server  *jsonrpc.Server // server instance to send and receive messages through
 	reqs    *cmap.CMap      // user ID -> []queuedRequest
 	mutexes *cmap.CMap      // user ID -> sync.RWMutex
 }
@@ -31,22 +31,22 @@ func NewQueue() Queue {
 // for connecting users (upon their first incoming-message).
 func (q *Queue) Middleware(s *jsonrpc.Server) {
 	s.ReqMiddleware(func(ctx *jsonrpc.ReqCtx) error {
-		q.SetConn(ctx.Conn.Session().Get("userid").(string), ctx.Conn.ConnID())
+		q.SetConn(ctx.Client.Session().Get("userid").(string), ctx.Client.ConnID())
 		return ctx.Next()
 	})
 	s.ResMiddleware(func(ctx *jsonrpc.ResCtx) error {
-		q.SetConn(ctx.Conn.Session().Get("userid").(string), ctx.Conn.ConnID())
+		q.SetConn(ctx.Client.Session().Get("userid").(string), ctx.Client.ConnID())
 		return nil
 	})
 	s.NotMiddleware(func(ctx *jsonrpc.NotCtx) error {
-		q.SetConn(ctx.Conn.Session().Get("userid").(string), ctx.Conn.ConnID())
+		q.SetConn(ctx.Client.Session().Get("userid").(string), ctx.Client.ConnID())
 		return nil
 	})
 }
 
-// SetRouter registers the JSON-RPC router to be used for sending queued messages and expecting responses through.
-func (q *Queue) SetRouter(r *jsonrpc.Router) {
-	q.router = r
+// SetServer registers the JSON-RPC server to be used for sending queued messages and expecting responses through.
+func (q *Queue) SetServer(s *jsonrpc.Server) {
+	q.server = s
 }
 
 // SetConn associates a user with a connection by ID.
@@ -66,7 +66,7 @@ func (q *Queue) RemoveConn(userID string) {
 }
 
 // AddRequest queues a request message to be sent to the given user.
-func (q *Queue) AddRequest(userID string, method string, params interface{}, resHandler func(ctx *jsonrpc.ResCtx)) error {
+func (q *Queue) AddRequest(userID string, method string, params interface{}, resHandler func(ctx *jsonrpc.ResCtx) error) error {
 	r := queuedRequest{Method: method, Params: params, ResHandler: resHandler}
 
 	go func() {
@@ -85,7 +85,7 @@ func (q *Queue) AddRequest(userID string, method string, params interface{}, res
 type queuedRequest struct {
 	Method     string
 	Params     interface{}
-	ResHandler func(ctx *jsonrpc.ResCtx)
+	ResHandler func(ctx *jsonrpc.ResCtx) error
 }
 
 // todo: prevent concurrent runs of processQueue or make []queuedRequest thread-safe
@@ -100,7 +100,7 @@ func (q *Queue) processQueue(userID string) {
 	if ireqs, ok := q.reqs.GetOk(userID); ok {
 		reqs := ireqs.([]queuedRequest)
 		for i, req := range reqs {
-			if err := q.router.SendRequest(connID.(string), req.Method, req.Params, req.ResHandler); err != nil {
+			if _, err := q.server.SendRequest(connID.(string), req.Method, req.Params, req.ResHandler); err != nil {
 				log.Fatal(err) // todo: log fatal only in debug mode
 			} else {
 				reqs, reqs[len(reqs)-1] = append(reqs[:i], reqs[i+1:]...), queuedRequest{} // todo: this might not be needed if function is not a pointer val
