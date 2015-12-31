@@ -2,6 +2,7 @@ package titan
 
 import (
 	"sync"
+	"time"
 
 	"github.com/neptulon/cmap"
 	"github.com/neptulon/jsonrpc"
@@ -43,4 +44,29 @@ func (c *Client) SetDeadline(seconds int) {
 // Close closes a client connection.
 func (c *Client) Close() error {
 	return c.client.Close()
+}
+
+// RecvMsg is an incoming chat message.
+type RecvMsg struct {
+	From    string    `json:"from"`
+	Time    time.Time `json:"time"`
+	Message string    `json:"message"`
+}
+
+// ReceiveMessages sends a request to server to receive any pending messages.
+func (c *Client) ReceiveMessages(msgHandler func(m []RecvMsg) error) error {
+	_, err := c.client.SendRequest("msg.recv", nil, func(ctx *jsonrpc.ResCtx) error {
+		var msg []RecvMsg
+		if err := ctx.Result(msg); err != nil {
+			return err
+		}
+
+		if err := msgHandler(msg); err != nil {
+			return err
+		}
+
+		return ctx.Next()
+	})
+
+	return err
 }
