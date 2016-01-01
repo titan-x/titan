@@ -92,3 +92,12 @@ func (c *Client) GetPendingMessages(msgHandler func(m []Message) error) error {
 
 	return err
 }
+
+// SendMessages sends a batch of messages to the server.
+func (c *Client) SendMessages(m []Message) error {
+	_, err := c.client.SendRequest("msg.send", m, func(ctx *jsonrpc.ResCtx) error {
+		return ctx.Next()
+	})
+
+	return err
+}
