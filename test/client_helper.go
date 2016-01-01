@@ -1,7 +1,6 @@
 package test
 
 import (
-	"io"
 	"testing"
 
 	"github.com/nb-titan/titan"
@@ -36,24 +35,7 @@ func (ch *ClientHelper) Connect() *ClientHelper {
 }
 
 // AsUser attaches given user's client certificate and private key to the connection.
-func (ch *ClientHelper) AsUser(u *titan.User) *ClientHelper {
-	return ch.jrpcCH.UseTLS(u.Cert, u.Key)
-}
-
-// WithCert attaches given PEM encoded client certificate and private key to the connection.
-func (ch *ClientHelper) WithCert(cert, key []byte) *ClientHelper {
-	ch.cert = cert
-	ch.key = key
+func (ch *ClientHelper) AsUser(ca []byte, u *titan.User) *ClientHelper {
+	ch.Client.UseTLS(ca, u.Cert, u.Key)
 	return ch
-}
-
-// VerifyConnClosed verifies that the connection is in closed state.
-// Verification is done via reading from the channel and checking that returned error is io.EOF.
-func (ch *ClientHelper) VerifyConnClosed() bool {
-	_, _, _, err := ch.conn.ReadMsg(nil, nil)
-	if err != io.EOF {
-		return false
-	}
-
-	return true
 }
