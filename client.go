@@ -18,10 +18,9 @@ type Client struct {
 // msgWG = (optional) sets the given *sync.WaitGroup reference to be used for counting active gorotuines that are used for handling incoming/outgoing messages.
 // disconnHandler = (optional) registers a function to handle client disconnection events.
 func NewClient(msgWG *sync.WaitGroup, disconnHandler func(client *neptulon.Client)) *Client {
-
-	// todo: register the router middleware and register handlers for expected routes here
-
-	return &Client{client: jsonrpc.NewClient(msgWG, disconnHandler)}
+	c := jsonrpc.NewClient(msgWG, disconnHandler)
+	c.HandleRequest("msg.recv", nil) // todo: use common handler. shall the handlers be obligatory during construction? or we might expect an interface implementation?
+	return &Client{client: c}
 }
 
 // Connect connectes to the server at given network address and starts receiving messages.
@@ -51,7 +50,7 @@ func (c *Client) Close() error {
 
 // ------ incoming message handlers ---------- //
 
-// ------ outgoing message handlers ---------- //
+// ------ outgoing message senders ---------- //
 
 // RecvMsg is an incoming chat message.
 type RecvMsg struct {
@@ -60,8 +59,8 @@ type RecvMsg struct {
 	Message string    `json:"message"`
 }
 
-// ReceiveMessages sends a request to server to receive any pending messages.
-func (c *Client) ReceiveMessages(msgHandler func(m []RecvMsg) error) error {
+// GetPendingMessages sends a request to server to receive any pending messages.
+func (c *Client) GetPendingMessages(msgHandler func(m []RecvMsg) error) error {
 	_, err := c.client.SendRequest("msg.recv", nil, func(ctx *jsonrpc.ResCtx) error {
 		var msg []RecvMsg
 		if err := ctx.Result(msg); err != nil {
