@@ -21,9 +21,9 @@ func NewClient(msgWG *sync.WaitGroup, disconnHandler func(client *neptulon.Clien
 	return &Client{client: jsonrpc.NewClient(msgWG, disconnHandler)}
 }
 
-// Connect connectes to the server at given network address and starts receiving messages.
-func (c *Client) Connect(addr string, debug bool) error {
-	return c.client.Connect(addr, debug)
+// UseClient wraps an established Neptulon JSON-RPC Client into a Titan Client.
+func UseClient(client *jsonrpc.Client) *Client {
+	return &Client{client: client}
 }
 
 // ConnID is a randomly generated unique client connection ID.
@@ -39,6 +39,19 @@ func (c *Client) Session() *cmap.CMap {
 // SetDeadline set the read/write deadlines for the connection, in seconds.
 func (c *Client) SetDeadline(seconds int) {
 	c.client.SetDeadline(seconds)
+}
+
+// UseTLS enables Transport Layer Security for the connection.
+// ca = Optional CA certificate to be used for verifying the server certificate. Useful for using self-signed server certificates.
+// clientCert, clientCertKey = Optional certificate/privat key pair for TLS client certificate authentication.
+// All certificates/private keys are in PEM encoded X.509 format.
+func (c *Client) UseTLS(ca, clientCert, clientCertKey []byte) {
+	c.client.UseTLS(ca, clientCert, clientCertKey)
+}
+
+// Connect connectes to the server at given network address and starts receiving messages.
+func (c *Client) Connect(addr string, debug bool) error {
+	return c.client.Connect(addr, debug)
 }
 
 // Close closes a client connection.
