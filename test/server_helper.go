@@ -30,7 +30,7 @@ type ServerHelper struct {
 }
 
 // NewServerHelper creates a new server helper object.
-// Titan server instance is initialized and ready to accept connection after this function returns.
+// Titan server instance is initialized and ready to accept connection after this function return.
 func NewServerHelper(t *testing.T) *ServerHelper {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
@@ -66,14 +66,6 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 		ServerKey:  certChain.ServerKey,
 	}
 
-	h.serverWG.Add(1)
-	go func() {
-		defer h.serverWG.Done()
-		s.Start()
-	}()
-
-	time.Sleep(time.Millisecond) // give Start() enough time to initiate
-
 	return &h
 }
 
@@ -84,21 +76,21 @@ type SeedData struct {
 }
 
 // SeedDB populates the database with the seed data.
-func (s *ServerHelper) SeedDB() *ServerHelper {
+func (sh *ServerHelper) SeedDB() *ServerHelper {
 	cc1, ck1, err := ca.GenClientCert(pkix.Name{
 		Organization: []string{"FooBar"},
 		CommonName:   "1",
-	}, time.Hour, 512, s.IntCACert, s.IntCAKey)
+	}, time.Hour, 512, sh.IntCACert, sh.IntCAKey)
 	if err != nil {
-		s.testing.Fatal(err)
+		sh.testing.Fatal(err)
 	}
 
 	cc2, ck2, err := ca.GenClientCert(pkix.Name{
 		Organization: []string{"FooBar"},
 		CommonName:   "2",
-	}, time.Hour, 512, s.IntCACert, s.IntCAKey)
+	}, time.Hour, 512, sh.IntCACert, sh.IntCAKey)
 	if err != nil {
-		s.testing.Fatal(err)
+		sh.testing.Fatal(err)
 	}
 
 	sd := SeedData{
@@ -106,23 +98,35 @@ func (s *ServerHelper) SeedDB() *ServerHelper {
 		User2: titan.User{ID: "2", Cert: cc2, Key: ck2},
 	}
 
-	s.db.SaveUser(&sd.User1)
-	s.db.SaveUser(&sd.User2)
+	sh.db.SaveUser(&sd.User1)
+	sh.db.SaveUser(&sd.User2)
 
-	s.SeedData = sd
+	sh.SeedData = sd
 
-	return s
+	return sh
+}
+
+// Start starts the server.
+func (sh *ServerHelper) Start() *ServerHelper {
+	sh.serverWG.Add(1)
+	go func() {
+		defer sh.serverWG.Done()
+		sh.server.Start()
+	}()
+
+	time.Sleep(time.Millisecond) // give Start() enough time to initiate
+	return sh
 }
 
 // GetClientHelper creates and returns a ClientHelper that is connected to this server instance.
-func (s *ServerHelper) GetClientHelper() *ClientHelper {
-	return NewClientHelper(s.testing, s.IntCACert, "127.0.0.1:"+titan.Conf.App.Port)
+func (sh *ServerHelper) GetClientHelper() *ClientHelper {
+	return NewClientHelper(sh.testing, sh.IntCACert, "127.0.0.1:"+titan.Conf.App.Port)
 }
 
 // Stop stops the server instance.
-func (s *ServerHelper) Stop() {
-	if err := s.server.Stop(); err != nil {
-		s.testing.Fatal("Failed to stop the server:", err)
+func (sh *ServerHelper) Stop() {
+	if err := sh.server.Stop(); err != nil {
+		sh.testing.Fatal("Failed to stop the server:", err)
 	}
-	s.serverWG.Wait()
+	sh.serverWG.Wait()
 }

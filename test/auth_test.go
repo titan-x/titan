@@ -8,10 +8,7 @@ func TestAuth(t *testing.T) {
 }
 
 func TestValidClientCertAuth(t *testing.T) {
-
-	// todo: add s.Start() to be consistent with inner server helpers
-
-	s := NewServerHelper(t).SeedDB()
+	s := NewServerHelper(t).SeedDB().Start()
 	defer s.Stop()
 
 	c := s.GetClientHelper().AsUser(&s.SeedData.User1).Connect()
