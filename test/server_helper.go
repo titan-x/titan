@@ -114,6 +114,11 @@ func (s *ServerHelper) SeedDB() *ServerHelper {
 	return s
 }
 
+// GetClientHelper creates and returns a ClientHelper that is connected to this server instance.
+func (s *ServerHelper) GetClientHelper() *ClientHelper {
+	return NewClientHelper(s.testing, s.IntCACert, "127.0.0.1:"+titan.Conf.App.Port)
+}
+
 // Stop stops the server instance.
 func (s *ServerHelper) Stop() {
 	if err := s.server.Stop(); err != nil {
