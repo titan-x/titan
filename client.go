@@ -18,6 +18,9 @@ type Client struct {
 // msgWG = (optional) sets the given *sync.WaitGroup reference to be used for counting active gorotuines that are used for handling incoming/outgoing messages.
 // disconnHandler = (optional) registers a function to handle client disconnection events.
 func NewClient(msgWG *sync.WaitGroup, disconnHandler func(client *neptulon.Client)) *Client {
+
+	// todo: register the router middleware and register handlers for expected routes here
+
 	return &Client{client: jsonrpc.NewClient(msgWG, disconnHandler)}
 }
 
@@ -45,6 +48,10 @@ func (c *Client) SetDeadline(seconds int) {
 func (c *Client) Close() error {
 	return c.client.Close()
 }
+
+// ------ incoming message handlers ---------- //
+
+// ------ outgoing message handlers ---------- //
 
 // RecvMsg is an incoming chat message.
 type RecvMsg struct {
