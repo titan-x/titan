@@ -1,6 +1,11 @@
 package test
 
-import "testing"
+import (
+	"sync"
+	"testing"
+
+	"github.com/nb-titan/titan"
+)
 
 func TestAuth(t *testing.T) {
 	// t.Fatal("Unauthorized clients cannot call any function other than method.auth and method.close") // call to randomized and all registered routes here
@@ -13,6 +18,26 @@ func TestValidClientCertAuth(t *testing.T) {
 
 	c := s.GetClientHelper().AsUser(&s.SeedData.User1).Connect()
 	defer c.Close()
+
+	var wg sync.WaitGroup
+
+	// todo: waitgroup handling is client helper's business as in jsonrpc client helper (see jsonrpc/test.ClientHelper.SendRequest)
+
+	wg.Add(1)
+
+	msg := &titan.Message{Message: "wow"}
+
+	c.Client.Echo(msg, func(m *titan.Message) error {
+		defer wg.Done()
+
+		if m.Message != "wow" {
+			t.Fatalf("expected: %v, got: %v", "wow", m.Message)
+		}
+
+		return nil
+	})
+
+	wg.Wait()
 
 	// id := c.WriteRequest("msg.echo", nil)
 	// res := c.ReadRes(nil)

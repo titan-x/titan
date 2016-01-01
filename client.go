@@ -95,11 +95,9 @@ func (c *Client) GetPendingMessages(msgHandler func(m []Message) error) error {
 		if err := ctx.Result(msg); err != nil {
 			return err
 		}
-
 		if err := msgHandler(msg); err != nil {
 			return err
 		}
-
 		return ctx.Next()
 	})
 
@@ -109,6 +107,23 @@ func (c *Client) GetPendingMessages(msgHandler func(m []Message) error) error {
 // SendMessages sends a batch of messages to the server.
 func (c *Client) SendMessages(m []Message) error {
 	_, err := c.client.SendRequest("msg.send", m, func(ctx *jsonrpc.ResCtx) error {
+		return ctx.Next()
+	})
+
+	return err
+}
+
+// Echo sends a message to server echo endpoint.
+// This is meant to be used for testing connectivity.
+func (c *Client) Echo(m interface{}, msgHandler func(msg *Message) error) error {
+	_, err := c.client.SendRequest("msg.echo", m, func(ctx *jsonrpc.ResCtx) error {
+		var msg Message
+		if err := ctx.Result(&msg); err != nil {
+			return err
+		}
+		if err := msgHandler(&msg); err != nil {
+			return err
+		}
 		return ctx.Next()
 	})
 
