@@ -28,6 +28,7 @@ func TestValidClientCertAuth(t *testing.T) {
 	msg := &titan.Message{Message: "wow"}
 
 	c.Client.Echo(msg, func(m *titan.Message) error {
+
 		defer wg.Done()
 
 		if m.Message != "wow" {
