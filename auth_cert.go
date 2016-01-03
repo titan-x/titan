@@ -7,6 +7,7 @@ import (
 )
 
 // todo: this needs to be a raw Neptulon middleware so we won't miss authentication on non JSON messages
+// todo2: mave this into Neptulon/Middleware package
 
 // CertAuth does TLS client-auth check and sets user ID in connection session store.
 // Connection is closed without returning any reason if cert is invalid.
