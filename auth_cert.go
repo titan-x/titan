@@ -6,6 +6,8 @@ import (
 	"github.com/neptulon/jsonrpc"
 )
 
+// todo: this needs to be a raw Neptulon middleware so we won't miss authentication on non JSON messages
+
 // CertAuth does TLS client-auth check and sets user ID in connection session store.
 // Connection is closed without returning any reason if cert is invalid.
 func CertAuth(server *jsonrpc.Server) {
