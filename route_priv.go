@@ -3,10 +3,11 @@ package titan
 import (
 	"fmt"
 
-	"github.com/neptulon/jsonrpc"
+	"github.com/neptulon/neptulon"
+	"github.com/neptulon/neptulon/middleware"
 )
 
-func initPrivRoutes(r *jsonrpc.Router, q *Queue) {
+func initPrivRoutes(r *middleware.Router, q *Queue) {
 	// r.Middleware(Logger()) - request-response logger (the pointer fields in request/response objects will have to change for this to work)
 	r.Request("msg.echo", initEchoMsgHandler())
 	r.Request("msg.send", initSendMsgHandler(q))
@@ -15,8 +16,8 @@ func initPrivRoutes(r *jsonrpc.Router, q *Queue) {
 }
 
 // Echoes message sent by the client back to the client.
-func initEchoMsgHandler() func(ctx *jsonrpc.ReqCtx) error {
-	return func(ctx *jsonrpc.ReqCtx) error {
+func initEchoMsgHandler() func(ctx *neptulon.ReqCtx) error {
+	return func(ctx *neptulon.ReqCtx) error {
 		ctx.Params(&ctx.Res)
 		if ctx.Res == nil {
 			ctx.Res = ""
@@ -26,7 +27,7 @@ func initEchoMsgHandler() func(ctx *jsonrpc.ReqCtx) error {
 }
 
 // Allows clients to send messages to each other, online or offline.
-func initSendMsgHandler(q *Queue) func(ctx *jsonrpc.ReqCtx) error {
+func initSendMsgHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
 	type sendMsgReq struct {
 		To      string `json:"to"`
 		Message string `json:"message"`
@@ -37,13 +38,13 @@ func initSendMsgHandler(q *Queue) func(ctx *jsonrpc.ReqCtx) error {
 		Message string `json:"message"`
 	}
 
-	return func(ctx *jsonrpc.ReqCtx) error {
+	return func(ctx *neptulon.ReqCtx) error {
 		var s sendMsgReq
 		ctx.Params(&s)
 
 		uid := ctx.Client.Session().Get("userid").(string)
 		r := recvMsgReq{From: uid, Message: s.Message}
-		err := q.AddRequest(s.To, "msg.recv", r, func(ctx *jsonrpc.ResCtx) error {
+		err := q.AddRequest(s.To, "msg.recv", r, func(ctx *neptulon.ResCtx) error {
 			var res string
 			ctx.Result(&res)
 			if res == "ACK" {
@@ -66,8 +67,8 @@ func initSendMsgHandler(q *Queue) func(ctx *jsonrpc.ReqCtx) error {
 
 // Used only for a client to announce its presence.
 // If there are any messages meant for this user, they are started to be sent with this call (via the cert-auth middleware).
-func initRecvMsgHandler(q *Queue) func(ctx *jsonrpc.ReqCtx) error {
-	return func(ctx *jsonrpc.ReqCtx) error {
+func initRecvMsgHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
+	return func(ctx *neptulon.ReqCtx) error {
 		q.SetConn(ctx.Client.Session().Get("userid").(string), ctx.Client.ConnID())
 		ctx.Res = "ACK" // todo: this could rather send the remaining queue size for the client
 		return ctx.Next()

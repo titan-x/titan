@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/neptulon/jsonrpc"
+	"github.com/neptulon/neptulon"
 )
 
 // Response from GET https://www.googleapis.com/plus/v1/people/me?access_token=... (with scope 'profile' and 'email')
@@ -37,13 +37,13 @@ type googleAuthReq struct {
 
 // googleAuth authenticates a user with Google+ using provided OAuth 2.0 access token.
 // If authenticated successfully, user profile is retrieved from Google+ and user is given a TLS client-certificate in return.
-func googleAuth(ctx *jsonrpc.ReqCtx, db DB, certMgr *CertMgr) error {
+func googleAuth(ctx *neptulon.ReqCtx, db DB, certMgr *CertMgr) error {
 	var r googleAuthReq
 	ctx.Params(&r)
 
 	p, i, err := getGProfile(r.accessToken)
 	if err != nil {
-		ctx.Err = &jsonrpc.ResError{Code: 666, Message: "Failed to authenticated user with Google+ OAuth access token."}
+		ctx.Err = &neptulon.ResError{Code: 666, Message: "Failed to authenticated user with Google+ OAuth access token."}
 		return fmt.Errorf("Errored during Google+ profile call using provided access token: %v with error: %v", r.accessToken, err)
 	}
 

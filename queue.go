@@ -5,16 +5,15 @@ import (
 	"sync"
 
 	"github.com/neptulon/cmap"
-	"github.com/neptulon/jsonrpc"
 	"github.com/neptulon/neptulon"
 )
 
 // Queue is a message queue for queueing and sending messages to users.
 type Queue struct {
-	conns   *cmap.CMap      // user ID -> conn ID
-	server  *jsonrpc.Server // server instance to send and receive messages through
-	reqs    *cmap.CMap      // user ID -> []queuedRequest
-	mutexes *cmap.CMap      // user ID -> sync.RWMutex
+	conns   *cmap.CMap       // user ID -> conn ID
+	server  *neptulon.Server // server instance to send and receive messages through
+	reqs    *cmap.CMap       // user ID -> []queuedRequest
+	mutexes *cmap.CMap       // user ID -> sync.RWMutex
 }
 
 // NewQueue creates a new queue object.
@@ -63,7 +62,7 @@ func (q *Queue) RemoveConn(userID string) {
 }
 
 // AddRequest queues a request message to be sent to the given user.
-func (q *Queue) AddRequest(userID string, method string, params interface{}, resHandler func(ctx *jsonrpc.ResCtx) error) error {
+func (q *Queue) AddRequest(userID string, method string, params interface{}, resHandler func(ctx *neptulon.ResCtx) error) error {
 	r := queuedRequest{Method: method, Params: params, ResHandler: resHandler}
 
 	go func() {
@@ -82,7 +81,7 @@ func (q *Queue) AddRequest(userID string, method string, params interface{}, res
 type queuedRequest struct {
 	Method     string
 	Params     interface{}
-	ResHandler func(ctx *jsonrpc.ResCtx) error
+	ResHandler func(ctx *neptulon.ResCtx) error
 }
 
 // todo: prevent concurrent runs of processQueue or make []queuedRequest thread-safe

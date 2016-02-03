@@ -1,29 +1,20 @@
 package titan
 
 import (
-	"sync"
 	"time"
 
 	"github.com/neptulon/cmap"
-	"github.com/neptulon/jsonrpc"
 	"github.com/neptulon/neptulon"
 )
 
-// Client is a Titan API client.
+// Client is a Titan client.
 type Client struct {
-	client *jsonrpc.Client
+	conn *neptulon.Conn
 }
 
 // NewClient creates a new Client object.
-// msgWG = (optional) sets the given *sync.WaitGroup reference to be used for counting active gorotuines that are used for handling incoming/outgoing messages.
-// disconnHandler = (optional) registers a function to handle client disconnection events.
-func NewClient(msgWG *sync.WaitGroup, disconnHandler func(client *neptulon.Client)) *Client {
-	return &Client{client: jsonrpc.NewClient(msgWG, disconnHandler)}
-}
-
-// UseClient wraps an established Neptulon JSON-RPC Client into a Titan Client.
-func UseClient(client *jsonrpc.Client) *Client {
-	return &Client{client: client}
+func NewClient() *Client {
+	return &Client{conn: neptulon.NewConn()}
 }
 
 // ConnID is a randomly generated unique client connection ID.
@@ -72,7 +63,7 @@ type Message struct {
 
 // HandleIncomingMessages registers a handler to accept incoming messages from the server.
 func (c *Client) HandleIncomingMessages(msgHandler func(m []Message) error) {
-	c.client.HandleRequest("msg.recv", func(ctx *jsonrpc.ReqCtx) error {
+	c.client.HandleRequest("msg.recv", func(ctx *neptulon.ReqCtx) error {
 		var msg []Message
 		if err := ctx.Params(msg); err != nil {
 			return err
@@ -90,7 +81,7 @@ func (c *Client) HandleIncomingMessages(msgHandler func(m []Message) error) {
 
 // GetPendingMessages sends a request to server to receive any pending messages.
 func (c *Client) GetPendingMessages(msgHandler func(m []Message) error) error {
-	_, err := c.client.SendRequest("msg.recv", nil, func(ctx *jsonrpc.ResCtx) error {
+	_, err := c.client.SendRequest("msg.recv", nil, func(ctx *neptulon.ResCtx) error {
 		var msg []Message
 		if err := ctx.Result(msg); err != nil {
 			return err
@@ -106,7 +97,7 @@ func (c *Client) GetPendingMessages(msgHandler func(m []Message) error) error {
 
 // SendMessages sends a batch of messages to the server.
 func (c *Client) SendMessages(m []Message) error {
-	_, err := c.client.SendRequest("msg.send", m, func(ctx *jsonrpc.ResCtx) error {
+	_, err := c.client.SendRequest("msg.send", m, func(ctx *neptulon.ResCtx) error {
 		return ctx.Next()
 	})
 
@@ -116,7 +107,7 @@ func (c *Client) SendMessages(m []Message) error {
 // Echo sends a message to server echo endpoint.
 // This is meant to be used for testing connectivity.
 func (c *Client) Echo(m interface{}, msgHandler func(msg *Message) error) error {
-	_, err := c.client.SendRequest("msg.echo", m, func(ctx *jsonrpc.ResCtx) error {
+	_, err := c.client.SendRequest("msg.echo", m, func(ctx *neptulon.ResCtx) error {
 		var msg Message
 		if err := ctx.Result(&msg); err != nil {
 			return err
