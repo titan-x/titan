@@ -7,6 +7,7 @@ import (
 
 	"github.com/neptulon/neptulon"
 	"github.com/neptulon/neptulon/middleware"
+	"github.com/neptulon/neptulon/middleware/jwt"
 )
 
 // Server wraps a listener instance and registers default connection and message handlers with the listener.
@@ -25,8 +26,7 @@ type Server struct {
 	errMutex sync.Mutex
 }
 
-// NewServer creates and returns a new server instance with a listener created using given parameters.
-// Debug mode dumps raw TCP messages to stderr using log.Println().
+// NewServer creates a new server.
 func NewServer(addr string) (*Server, error) {
 	s := Server{
 		server: neptulon.NewServer(addr),
@@ -40,8 +40,8 @@ func NewServer(addr string) (*Server, error) {
 
 	// --- all communication below this point is authenticated --- //
 
-	// CertAuth(s.neptulon)
-	s.queue.Middleware(s.server)
+	s.server.MiddlewareFunc(jwt.HMAC("1234"))
+	s.server.Middleware(&s.queue)
 	s.privRoute = middleware.NewRouter()
 	s.server.Middleware(s.privRoute)
 	initPrivRoutes(s.privRoute, &s.queue)

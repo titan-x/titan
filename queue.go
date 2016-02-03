@@ -29,11 +29,9 @@ func NewQueue() Queue {
 
 // Middleware registers a queue middleware to register user/connection IDs
 // for connecting users (upon their first incoming-message).
-func (q *Queue) Middleware(s *neptulon.Server) {
-	s.MiddlewareFunc(func(ctx *neptulon.ReqCtx) error {
-		q.SetConn(ctx.Conn.Session.Get("userid").(string), ctx.Conn.ID)
-		return ctx.Next()
-	})
+func (q *Queue) Middleware(ctx *neptulon.ReqCtx) error {
+	q.SetConn(ctx.Conn.Session.Get("userid").(string), ctx.Conn.ID)
+	return ctx.Next()
 }
 
 // SetServer registers the Neptulon server to be used for sending queued messages and expecting responses through.
