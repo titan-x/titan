@@ -5,17 +5,16 @@ import (
 	"log"
 	"sync"
 
-	"github.com/neptulon/jsonrpc"
 	"github.com/neptulon/neptulon"
+	"github.com/neptulon/neptulon/middleware"
 )
 
 // Server wraps a listener instance and registers default connection and message handlers with the listener.
 type Server struct {
 	// neptulon framework components
 	neptulon  *neptulon.Server
-	jsonrpc   *jsonrpc.Server
-	pubRoute  *jsonrpc.Router
-	privRoute *jsonrpc.Router
+	pubRoute  *middleware.Router
+	privRoute *middleware.Router
 
 	// titan server components
 	db      DB
@@ -29,8 +28,8 @@ type Server struct {
 
 // NewServer creates and returns a new server instance with a listener created using given parameters.
 // Debug mode dumps raw TCP messages to stderr using log.Println().
-func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, debug bool) (*Server, error) {
-	nep, err := neptulon.NewTLSServer(cert, privKey, clientCACert, laddr, debug)
+func NewServer(addr string) (*Server, error) {
+	nep, err := neptulon.NewServer(laddr)
 	if err != nil {
 		return nil, err
 	}
@@ -43,32 +42,19 @@ func NewServer(cert, privKey, clientCACert, clientCAKey []byte, laddr string, de
 		queue:    NewQueue(),
 	}
 
-	s.jsonrpc, err = jsonrpc.NewServer(nep)
-	if err != nil {
-		return nil, err
-	}
-
-	s.pubRoute, err = jsonrpc.NewRouter(&s.jsonrpc.Middleware)
-	if err != nil {
-		return nil, err
-	}
-
+	s.pubRoute = middleware.NewRouter()
+	nep.Middleware(s.putRoute)
 	initPubRoutes(s.pubRoute, s.db, &s.certMgr)
 
 	// --- all communication below this point is authenticated --- //
 
-	CertAuth(s.jsonrpc)
-
-	s.queue.Middleware(s.jsonrpc)
-
-	s.privRoute, err = jsonrpc.NewRouter(&s.jsonrpc.Middleware)
-	if err != nil {
-		return nil, err
-	}
-
+	CertAuth(s.neptulon)
+	s.queue.Middleware(s.neptulon)
+	s.privRoute = middleware.NewRouter()
+	nep.Middleware(s.privRoute)
 	initPrivRoutes(s.privRoute, &s.queue)
 
-	s.queue.SetServer(s.jsonrpc) // todo: research a better way to handle inner-circular dependencies so remove these lines back into Server contructor (maybe via dereferencing: http://openmymind.net/Things-I-Wish-Someone-Had-Told-Me-About-Go/, but then initializers actually using the pointer values would have to be lazy!)
+	s.queue.SetServer(s.neptulon) // todo: research a better way to handle inner-circular dependencies so remove these lines back into Server contructor (maybe via dereferencing: http://openmymind.net/Things-I-Wish-Someone-Had-Told-Me-About-Go/, but then initializers actually using the pointer values would have to be lazy!)
 
 	nep.Disconn(func(c *neptulon.Client) {
 		// only handle this event for previously authenticated

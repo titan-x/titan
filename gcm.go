@@ -4,7 +4,7 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/nb-titan/gcm/ccs"
+	"github.com/titan-x/gcm/ccs"
 )
 
 func listenGCM() {

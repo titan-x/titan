@@ -6,6 +6,7 @@ import (
 
 	"github.com/neptulon/cmap"
 	"github.com/neptulon/jsonrpc"
+	"github.com/neptulon/neptulon"
 )
 
 // Queue is a message queue for queueing and sending messages to users.
@@ -29,23 +30,19 @@ func NewQueue() Queue {
 
 // Middleware registers a queue middleware to register user/connection IDs
 // for connecting users (upon their first incoming-message).
-func (q *Queue) Middleware(s *jsonrpc.Server) {
-	s.ReqMiddleware(func(ctx *jsonrpc.ReqCtx) error {
+func (q *Queue) Middleware(s *neptulon.Server) {
+	s.ReqMiddleware(func(ctx *neptulon.ReqCtx) error {
 		q.SetConn(ctx.Client.Session().Get("userid").(string), ctx.Client.ConnID())
 		return ctx.Next()
 	})
-	s.ResMiddleware(func(ctx *jsonrpc.ResCtx) error {
-		q.SetConn(ctx.Client.Session().Get("userid").(string), ctx.Client.ConnID())
-		return nil
-	})
-	s.NotMiddleware(func(ctx *jsonrpc.NotCtx) error {
+	s.ResMiddleware(func(ctx *neptulon.ResCtx) error {
 		q.SetConn(ctx.Client.Session().Get("userid").(string), ctx.Client.ConnID())
 		return nil
 	})
 }
 
-// SetServer registers the JSON-RPC server to be used for sending queued messages and expecting responses through.
-func (q *Queue) SetServer(s *jsonrpc.Server) {
+// SetServer registers the Neptulon server to be used for sending queued messages and expecting responses through.
+func (q *Queue) SetServer(s *neptulon.Server) {
 	q.server = s
 }
 
