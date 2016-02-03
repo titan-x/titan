@@ -3,8 +3,8 @@ package test
 import (
 	"testing"
 
-	"github.com/nb-titan/titan"
 	"github.com/neptulon/jsonrpc/test"
+	"github.com/titan-x/titan"
 )
 
 // ClientHelper is a Titan Client wrapper for testing.

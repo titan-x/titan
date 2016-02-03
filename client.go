@@ -72,7 +72,7 @@ func (c *Client) HandleIncomingMessages(msgHandler func(m []Message) error) {
 
 // GetPendingMessages sends a request to server to receive any pending messages.
 func (c *Client) GetPendingMessages(msgHandler func(m []Message) error) error {
-	_, err := c.client.SendRequest("msg.recv", nil, func(ctx *neptulon.ResCtx) error {
+	_, err := c.conn.SendRequest("msg.recv", nil, func(ctx *neptulon.ResCtx) error {
 		var msg []Message
 		if err := ctx.Result(msg); err != nil {
 			return err
@@ -80,7 +80,7 @@ func (c *Client) GetPendingMessages(msgHandler func(m []Message) error) error {
 		if err := msgHandler(msg); err != nil {
 			return err
 		}
-		return ctx.Next()
+		return nil
 	})
 
 	return err
@@ -88,8 +88,8 @@ func (c *Client) GetPendingMessages(msgHandler func(m []Message) error) error {
 
 // SendMessages sends a batch of messages to the server.
 func (c *Client) SendMessages(m []Message) error {
-	_, err := c.client.SendRequest("msg.send", m, func(ctx *neptulon.ResCtx) error {
-		return ctx.Next()
+	_, err := c.conn.SendRequest("msg.send", m, func(ctx *neptulon.ResCtx) error {
+		return nil
 	})
 
 	return err
@@ -98,7 +98,7 @@ func (c *Client) SendMessages(m []Message) error {
 // Echo sends a message to server echo endpoint.
 // This is meant to be used for testing connectivity.
 func (c *Client) Echo(m interface{}, msgHandler func(msg *Message) error) error {
-	_, err := c.client.SendRequest("msg.echo", m, func(ctx *neptulon.ResCtx) error {
+	_, err := c.conn.SendRequest("msg.echo", m, func(ctx *neptulon.ResCtx) error {
 		var msg Message
 		if err := ctx.Result(&msg); err != nil {
 			return err
@@ -106,7 +106,7 @@ func (c *Client) Echo(m interface{}, msgHandler func(msg *Message) error) error 
 		if err := msgHandler(&msg); err != nil {
 			return err
 		}
-		return ctx.Next()
+		return nil
 	})
 
 	return err

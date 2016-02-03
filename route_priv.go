@@ -53,7 +53,7 @@ func initSendMsgHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
 			} else {
 				// todo: auto retry or "msg.failed" ?
 			}
-			return ctx.Next()
+			return nil
 		})
 
 		if err != nil {
@@ -69,7 +69,7 @@ func initSendMsgHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
 // If there are any messages meant for this user, they are started to be sent with this call (via the cert-auth middleware).
 func initRecvMsgHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
 	return func(ctx *neptulon.ReqCtx) error {
-		q.SetConn(ctx.Client.Session().Get("userid").(string), ctx.Client.ConnID())
+		q.SetConn(ctx.Conn.Session.Get("userid").(string), ctx.Conn.ID)
 		ctx.Res = "ACK" // todo: this could rather send the remaining queue size for the client
 		return ctx.Next()
 	}
