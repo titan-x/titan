@@ -30,7 +30,7 @@ func (c *Client) SetDeadline(seconds int) {
 }
 
 // Connect connectes to the server at given network address and starts receiving messages.
-func (c *Client) Connect(addr string, debug bool) error {
+func (c *Client) Connect(addr string) error {
 	return c.conn.Connect(addr)
 }
 

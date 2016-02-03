@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/nb-titan/titan"
+	"github.com/titan-x/titan"
 )
 
 // TestMain is the top level test runner with top level setup and teardown functions.

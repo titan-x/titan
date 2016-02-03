@@ -4,7 +4,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/nb-titan/titan"
+	"github.com/titan-x/titan"
 )
 
 func TestAuth(t *testing.T) {
@@ -17,7 +17,7 @@ func TestValidClientCertAuth(t *testing.T) {
 	defer s.Stop()
 
 	c := s.GetClientHelper().AsUser(&s.SeedData.User1).Connect()
-	defer c.Close()
+	defer c.Client.Close()
 
 	var wg sync.WaitGroup
 

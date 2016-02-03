@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nb-titan/titan"
 	"github.com/neptulon/ca"
+	"github.com/titan-x/titan"
 )
 
 // ServerHelper is a titan.Server wrapper for testing.
@@ -43,7 +43,7 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 	}
 
 	laddr := "127.0.0.1:" + titan.Conf.App.Port
-	s, err := titan.NewServer(certChain.ServerCert, certChain.ServerKey, certChain.IntCACert, certChain.IntCAKey, laddr, titan.Conf.App.Debug)
+	s, err := titan.NewServer(laddr)
 	if err != nil {
 		t.Fatal("Failed to create server:", err)
 	}
@@ -120,7 +120,7 @@ func (sh *ServerHelper) Start() *ServerHelper {
 
 // GetClientHelper creates and returns a ClientHelper that is connected to this server instance.
 func (sh *ServerHelper) GetClientHelper() *ClientHelper {
-	return NewClientHelper(sh.testing, sh.IntCACert, "127.0.0.1:"+titan.Conf.App.Port)
+	return NewClientHelper(sh.testing, "127.0.0.1:"+titan.Conf.App.Port)
 }
 
 // Stop stops the server instance.
