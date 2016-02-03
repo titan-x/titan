@@ -42,7 +42,7 @@ func initSendMsgHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
 		var s sendMsgReq
 		ctx.Params(&s)
 
-		uid := ctx.Client.Session().Get("userid").(string)
+		uid := ctx.Conn.Session.Get("userid").(string)
 		r := recvMsgReq{From: uid, Message: s.Message}
 		err := q.AddRequest(s.To, "msg.recv", r, func(ctx *neptulon.ResCtx) error {
 			var res string

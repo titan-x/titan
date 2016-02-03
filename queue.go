@@ -30,13 +30,9 @@ func NewQueue() Queue {
 // Middleware registers a queue middleware to register user/connection IDs
 // for connecting users (upon their first incoming-message).
 func (q *Queue) Middleware(s *neptulon.Server) {
-	s.ReqMiddleware(func(ctx *neptulon.ReqCtx) error {
-		q.SetConn(ctx.Client.Session().Get("userid").(string), ctx.Client.ConnID())
+	s.Middleware(func(ctx *neptulon.ReqCtx) error {
+		q.SetConn(ctx.Conn.Session.Get("userid").(string), ctx.Conn.ID)
 		return ctx.Next()
-	})
-	s.ResMiddleware(func(ctx *neptulon.ResCtx) error {
-		q.SetConn(ctx.Client.Session().Get("userid").(string), ctx.Client.ConnID())
-		return nil
 	})
 }
 

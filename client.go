@@ -5,49 +5,38 @@ import (
 
 	"github.com/neptulon/cmap"
 	"github.com/neptulon/neptulon"
+	"github.com/neptulon/neptulon/middleware"
 )
 
 // Client is a Titan client.
 type Client struct {
-	conn *neptulon.Conn
+	ID      string     // Randomly generated unique client connection ID.
+	Session *cmap.CMap // Thread-safe data store for storing arbitrary data for this connection session.
+	conn    *neptulon.Conn
 }
 
 // NewClient creates a new Client object.
-func NewClient() *Client {
-	return &Client{conn: neptulon.NewConn()}
-}
-
-// ConnID is a randomly generated unique client connection ID.
-func (c *Client) ConnID() string {
-	return c.client.ConnID()
-}
-
-// Session is a thread-safe data store for storing arbitrary data for this connection session.
-func (c *Client) Session() *cmap.CMap {
-	return c.client.Session()
+func NewClient() (*Client, error) {
+	c, err := neptulon.NewConn()
+	if err != nil {
+		return nil, err
+	}
+	return &Client{ID: c.ID, Session: c.Session, conn: c}, nil
 }
 
 // SetDeadline set the read/write deadlines for the connection, in seconds.
 func (c *Client) SetDeadline(seconds int) {
-	c.client.SetDeadline(seconds)
-}
-
-// UseTLS enables Transport Layer Security for the connection.
-// ca = Optional CA certificate to be used for verifying the server certificate. Useful for using self-signed server certificates.
-// clientCert, clientCertKey = Optional certificate/privat key pair for TLS client certificate authentication.
-// All certificates/private keys are in PEM encoded X.509 format.
-func (c *Client) UseTLS(ca, clientCert, clientCertKey []byte) {
-	c.client.UseTLS(ca, clientCert, clientCertKey)
+	c.conn.SetDeadline(seconds)
 }
 
 // Connect connectes to the server at given network address and starts receiving messages.
 func (c *Client) Connect(addr string, debug bool) error {
-	return c.client.Connect(addr, debug)
+	return c.conn.Connect(addr)
 }
 
 // Close closes a client connection.
 func (c *Client) Close() error {
-	return c.client.Close()
+	return c.conn.Close()
 }
 
 // ---- In/Out Request Objects ------ //
@@ -63,7 +52,9 @@ type Message struct {
 
 // HandleIncomingMessages registers a handler to accept incoming messages from the server.
 func (c *Client) HandleIncomingMessages(msgHandler func(m []Message) error) {
-	c.client.HandleRequest("msg.recv", func(ctx *neptulon.ReqCtx) error {
+	r := middleware.NewRouter()
+	c.conn.Middleware(r)
+	r.Request("msg.recv", func(ctx *neptulon.ReqCtx) error {
 		var msg []Message
 		if err := ctx.Params(msg); err != nil {
 			return err
