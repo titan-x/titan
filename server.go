@@ -64,8 +64,7 @@ func (s *Server) SetDB(db DB) error {
 	return nil
 }
 
-// Start starts accepting connections on the internal listener and handles connections with registered onnection and message handlers.
-// This function blocks and never returns, unless there was an error while accepting a new connection or the server was closed.
+// Start the Titan server. This function blocks until server is closed.
 func (s *Server) Start() error {
 	err := s.server.Start()
 	if err != nil && s.debug {
