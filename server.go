@@ -36,7 +36,7 @@ func NewServer(addr string) (*Server, error) {
 
 	s.pubRoute = middleware.NewRouter()
 	s.server.Middleware(s.pubRoute)
-	initPubRoutes(s.pubRoute, s.db)
+	initPubRoutes(s.pubRoute, s.db, Conf.App.JWTPass)
 
 	// --- all communication below this point is authenticated --- //
 

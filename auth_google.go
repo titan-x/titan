@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/neptulon/neptulon"
 )
 
@@ -27,7 +29,7 @@ type gImage struct {
 
 // googleAuthRes is the success response returned after a successful Google authentication.
 type googleAuthRes struct {
-	JWT []byte `json:"jwt"`
+	JWT string `json:"jwt"`
 }
 
 // googleAuthRequest is the incoming request object.
@@ -37,7 +39,7 @@ type googleAuthReq struct {
 
 // googleAuth authenticates a user with Google+ using provided OAuth 2.0 access token.
 // If authenticated successfully, user profile is retrieved from Google+ and user is given a JWT token in return.
-func googleAuth(ctx *neptulon.ReqCtx, db DB) error {
+func googleAuth(ctx *neptulon.ReqCtx, db DB, pass string) error {
 	var r googleAuthReq
 	ctx.Params(&r)
 
@@ -64,7 +66,16 @@ func googleAuth(ctx *neptulon.ReqCtx, db DB) error {
 		}
 	}
 
-	ctx.Res = googleAuthRes{JWT: []byte("123")}
+	// create the JWT token
+	token := jwt.New(jwt.SigningMethodHS256)
+	token.Claims["id"] = user.ID
+	token.Claims["on"] = time.Now().Unix()
+	tokenString, err := token.SignedString(pass)
+	if err != nil {
+		return fmt.Errorf("auth: google: jwt signing error: %v", err)
+	}
+
+	ctx.Res = googleAuthRes{JWT: tokenString} // todo: generate proper JWT token
 	return nil
 }
 
