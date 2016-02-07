@@ -40,7 +40,7 @@ func NewServer(addr string) (*Server, error) {
 
 	// --- all communication below this point is authenticated --- //
 
-	s.server.MiddlewareFunc(jwt.HMAC("1234"))
+	s.server.MiddlewareFunc(jwt.HMAC(Conf.App.JWTPass))
 	s.server.Middleware(&s.queue)
 	s.privRoute = middleware.NewRouter()
 	s.server.Middleware(s.privRoute)

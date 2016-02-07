@@ -13,11 +13,11 @@ func TestAuth(t *testing.T) {
 }
 
 func TestValidToken(t *testing.T) {
-	s := NewServerHelper(t).SeedDB().Start()
-	defer s.Stop()
+	sh := NewServerHelper(t).SeedDB().Start()
+	defer sh.Stop()
 
-	c := s.GetClientHelper().AsUser(&s.SeedData.User1).Connect()
-	defer c.Client.Close()
+	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect()
+	defer ch.Client.Close()
 
 	var wg sync.WaitGroup
 
@@ -25,9 +25,13 @@ func TestValidToken(t *testing.T) {
 
 	wg.Add(1)
 
-	msg := &titan.Message{Message: "wow"}
+	type M struct {
+		Message, Token string
+	}
 
-	c.Client.Echo(msg, func(m *titan.Message) error {
+	msg := &M{Message: "wow", Token: ch.User.JWT}
+
+	ch.Client.Echo(msg, func(m *titan.Message) error {
 
 		defer wg.Done()
 

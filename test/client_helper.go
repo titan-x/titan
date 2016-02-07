@@ -13,11 +13,11 @@ import (
 // All the functions are wrapped with proper test runner error logging.
 type ClientHelper struct {
 	Client *titan.Client
+	User   *titan.User
 
 	ch         *test.ConnHelper // inner Neptulon Conn helper
 	testing    *testing.T
 	serverAddr string
-	user       *titan.User
 }
 
 // NewClientHelper creates a new client helper object.
@@ -66,6 +66,6 @@ func (ch *ClientHelper) Connect() *ClientHelper {
 
 // AsUser attaches given user's client certificate and private key to the connection.
 func (ch *ClientHelper) AsUser(u *titan.User) *ClientHelper {
-	ch.user = u
+	ch.User = u
 	return ch
 }
