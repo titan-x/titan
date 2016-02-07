@@ -64,7 +64,7 @@ func googleAuth(ctx *neptulon.ReqCtx, db DB, pass string) error {
 		token := jwt.New(jwt.SigningMethodHS256)
 		token.Claims["userid"] = user.ID
 		token.Claims["created"] = time.Now().Unix()
-		user.JWT, err = token.SignedString(pass)
+		user.JWT, err = token.SignedString([]byte(pass))
 		if err != nil {
 			return fmt.Errorf("google-auth: jwt signing error: %v", err)
 		}

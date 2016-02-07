@@ -59,11 +59,11 @@ func (sh *ServerHelper) SeedDB() *ServerHelper {
 	t := jwt.New(jwt.SigningMethodHS256)
 	t.Claims["userid"] = 1
 	t.Claims["created"] = now
-	ts1, err := t.SignedString(titan.Conf.App.JWTPass)
+	ts1, err := t.SignedString([]byte(titan.Conf.App.JWTPass))
 	t2 := jwt.New(jwt.SigningMethodHS256)
 	t2.Claims["userid"] = 2
 	t2.Claims["created"] = now
-	ts2, err := t2.SignedString(titan.Conf.App.JWTPass)
+	ts2, err := t2.SignedString([]byte(titan.Conf.App.JWTPass))
 	if err != nil {
 		sh.testing.Fatalf("server-helper: failed to sign JWT token: %v", err)
 	}
