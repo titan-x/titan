@@ -27,8 +27,8 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 		t.Skip("Skipping integration test in short testing mode")
 	}
 
-	laddr := "127.0.0.1:" + titan.Conf.App.Port
-	s, err := titan.NewServer(laddr)
+	url := "ws://127.0.0.1:" + titan.Conf.App.Port
+	s, err := titan.NewServer(url)
 	if err != nil {
 		t.Fatal("Failed to create server:", err)
 	}
