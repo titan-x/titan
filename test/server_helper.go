@@ -1,12 +1,11 @@
 package test
 
 import (
-	"crypto/x509/pkix"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/neptulon/ca"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/titan-x/titan"
 )
 
@@ -14,14 +13,6 @@ import (
 // All the functions are wrapped with proper test runner error logging.
 type ServerHelper struct {
 	SeedData SeedData // Populated only when SeedDB() method is called.
-
-	// PEM encoded X.509 certificate and private key pairs
-	RootCACert,
-	RootCAKey,
-	IntCACert,
-	IntCAKey,
-	ServerCert,
-	ServerKey []byte
 
 	testing  *testing.T
 	server   *titan.Server
@@ -34,12 +25,6 @@ type ServerHelper struct {
 func NewServerHelper(t *testing.T) *ServerHelper {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
-	}
-
-	// generate TLS certs
-	certChain, err := ca.GenCertChain("FooBar", "127.0.0.1", "127.0.0.1", time.Hour, 512)
-	if err != nil {
-		t.Fatal("Failed to create TLS certificate chain:", err)
 	}
 
 	laddr := "127.0.0.1:" + titan.Conf.App.Port
@@ -57,13 +42,6 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 		db:      db,
 		server:  s,
 		testing: t,
-
-		RootCACert: certChain.RootCACert,
-		RootCAKey:  certChain.RootCAKey,
-		IntCACert:  certChain.IntCACert,
-		IntCAKey:   certChain.IntCAKey,
-		ServerCert: certChain.ServerCert,
-		ServerKey:  certChain.ServerKey,
 	}
 
 	return &h
@@ -77,25 +55,22 @@ type SeedData struct {
 
 // SeedDB populates the database with the seed data.
 func (sh *ServerHelper) SeedDB() *ServerHelper {
-	cc1, ck1, err := ca.GenClientCert(pkix.Name{
-		Organization: []string{"FooBar"},
-		CommonName:   "1",
-	}, time.Hour, 512, sh.IntCACert, sh.IntCAKey)
+	now := time.Now().Unix()
+	t := jwt.New(jwt.SigningMethodHS256)
+	t.Claims["userid"] = 1
+	t.Claims["created"] = now
+	ts1, err := t.SignedString(titan.Conf.App.JWTPass)
+	t2 := jwt.New(jwt.SigningMethodHS256)
+	t2.Claims["userid"] = 2
+	t2.Claims["created"] = now
+	ts2, err := t2.SignedString(titan.Conf.App.JWTPass)
 	if err != nil {
-		sh.testing.Fatal(err)
-	}
-
-	cc2, ck2, err := ca.GenClientCert(pkix.Name{
-		Organization: []string{"FooBar"},
-		CommonName:   "2",
-	}, time.Hour, 512, sh.IntCACert, sh.IntCAKey)
-	if err != nil {
-		sh.testing.Fatal(err)
+		sh.testing.Fatalf("server-helper: failed to sign JWT token: %v", err)
 	}
 
 	sd := SeedData{
-		User1: titan.User{ID: "1", Cert: cc1, Key: ck1},
-		User2: titan.User{ID: "2", Cert: cc2, Key: ck2},
+		User1: titan.User{ID: "1", JWT: ts1},
+		User2: titan.User{ID: "2", JWT: ts2},
 	}
 
 	sh.db.SaveUser(&sd.User1)

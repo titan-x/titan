@@ -9,4 +9,5 @@ type User struct {
 	APNSDeviceToken string
 	Name            string
 	Picture         []byte
+	JWT             string
 }
