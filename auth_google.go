@@ -68,14 +68,14 @@ func googleAuth(ctx *neptulon.ReqCtx, db DB, pass string) error {
 
 	// create the JWT token
 	token := jwt.New(jwt.SigningMethodHS256)
-	token.Claims["id"] = user.ID
-	token.Claims["on"] = time.Now().Unix()
+	token.Claims["userid"] = user.ID
+	token.Claims["created"] = time.Now().Unix()
 	tokenString, err := token.SignedString(pass)
 	if err != nil {
 		return fmt.Errorf("auth: google: jwt signing error: %v", err)
 	}
 
-	ctx.Res = googleAuthRes{JWT: tokenString} // todo: generate proper JWT token
+	ctx.Res = googleAuthRes{JWT: tokenString}
 	return nil
 }
 
