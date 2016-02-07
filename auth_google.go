@@ -60,22 +60,22 @@ func googleAuth(ctx *neptulon.ReqCtx, db DB, pass string) error {
 			return fmt.Errorf("failed to persist user information: %v", err)
 		}
 
+		// create the JWT token
+		token := jwt.New(jwt.SigningMethodHS256)
+		token.Claims["userid"] = user.ID
+		token.Claims["created"] = time.Now().Unix()
+		user.JWT, err = token.SignedString(pass)
+		if err != nil {
+			return fmt.Errorf("auth: google: jwt signing error: %v", err)
+		}
+
 		// now save the full user info
 		if err := db.SaveUser(user); err != nil {
 			return fmt.Errorf("failed to persist user information: %v", err)
 		}
 	}
 
-	// create the JWT token
-	token := jwt.New(jwt.SigningMethodHS256)
-	token.Claims["userid"] = user.ID
-	token.Claims["created"] = time.Now().Unix()
-	tokenString, err := token.SignedString(pass)
-	if err != nil {
-		return fmt.Errorf("auth: google: jwt signing error: %v", err)
-	}
-
-	ctx.Res = googleAuthRes{JWT: tokenString}
+	ctx.Res = googleAuthRes{JWT: user.JWT}
 	return nil
 }
 
