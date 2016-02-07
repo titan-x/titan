@@ -12,7 +12,7 @@ func TestAuth(t *testing.T) {
 	// t.Fatal("Anonymous calls to method.auth and method.close should be allowed")
 }
 
-func TestValidClientCertAuth(t *testing.T) {
+func TestValidToken(t *testing.T) {
 	s := NewServerHelper(t).SeedDB().Start()
 	defer s.Stop()
 

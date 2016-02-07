@@ -27,7 +27,7 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 		t.Skip("Skipping integration test in short testing mode")
 	}
 
-	url := "ws://127.0.0.1:" + titan.Conf.App.Port
+	url := "127.0.0.1:" + titan.Conf.App.Port
 	s, err := titan.NewServer(url)
 	if err != nil {
 		t.Fatal("Failed to create server:", err)
@@ -86,7 +86,9 @@ func (sh *ServerHelper) Start() *ServerHelper {
 	sh.serverWG.Add(1)
 	go func() {
 		defer sh.serverWG.Done()
-		sh.server.Start()
+		if err := sh.server.Start(); err != nil {
+			sh.testing.Fatalf("server-helper: failed to start server: %v", err)
+		}
 	}()
 
 	time.Sleep(time.Millisecond) // give Start() enough time to initiate
@@ -95,7 +97,7 @@ func (sh *ServerHelper) Start() *ServerHelper {
 
 // GetClientHelper creates and returns a ClientHelper that is connected to this server instance.
 func (sh *ServerHelper) GetClientHelper() *ClientHelper {
-	return NewClientHelper(sh.testing, "127.0.0.1:"+titan.Conf.App.Port)
+	return NewClientHelper(sh.testing, "ws://127.0.0.1:"+titan.Conf.App.Port)
 }
 
 // Stop stops the server instance.
