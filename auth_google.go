@@ -45,8 +45,8 @@ func googleAuth(ctx *neptulon.ReqCtx, db DB, pass string) error {
 
 	p, i, err := getGProfile(r.accessToken)
 	if err != nil {
-		ctx.Err = &neptulon.ResError{Code: 666, Message: "failed to authenticated user with Google+ OAuth access token"}
-		return fmt.Errorf("errored during Google+ profile call using provided access token: %v with error: %v", r.accessToken, err)
+		ctx.Err = &neptulon.ResError{Code: 666, Message: "google-auth: failed to authenticated user with Google+ OAuth access token"}
+		return fmt.Errorf("google-auth: error during Google+ profile call using provided access token: %v with error: %v", r.accessToken, err)
 	}
 
 	// retrieve user information
@@ -66,12 +66,12 @@ func googleAuth(ctx *neptulon.ReqCtx, db DB, pass string) error {
 		token.Claims["created"] = time.Now().Unix()
 		user.JWT, err = token.SignedString(pass)
 		if err != nil {
-			return fmt.Errorf("auth: google: jwt signing error: %v", err)
+			return fmt.Errorf("google-auth: jwt signing error: %v", err)
 		}
 
 		// now save the full user info
 		if err := db.SaveUser(user); err != nil {
-			return fmt.Errorf("failed to persist user information: %v", err)
+			return fmt.Errorf("google-auth: failed to persist user information: %v", err)
 		}
 	}
 
