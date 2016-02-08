@@ -57,11 +57,11 @@ type SeedData struct {
 func (sh *ServerHelper) SeedDB() *ServerHelper {
 	now := time.Now().Unix()
 	t := jwt.New(jwt.SigningMethodHS256)
-	t.Claims["userid"] = 1
+	t.Claims["userid"] = "1"
 	t.Claims["created"] = now
 	ts1, err := t.SignedString([]byte(titan.Conf.App.JWTPass))
 	t2 := jwt.New(jwt.SigningMethodHS256)
-	t2.Claims["userid"] = 2
+	t2.Claims["userid"] = "2"
 	t2.Claims["created"] = now
 	ts2, err := t2.SignedString([]byte(titan.Conf.App.JWTPass))
 	if err != nil {
