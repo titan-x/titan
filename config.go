@@ -7,10 +7,11 @@ import (
 
 const (
 	// titan server envrinment variables
-	goEnv           = "GO_ENV"
-	titanEnv   = "TITAN_ENV"
-	titanDebug = "TITAN_DEBUG"
-	titanPort  = "TITAN_PORT"
+	goEnv    = "GO_ENV"
+	titanEnv = "ENV"
+	debug    = "DEBUG"
+	port     = "PORT"
+	jwtPass  = "PASS"
 
 	// possible TITAN_ENV values
 	envDev  = "development"
@@ -40,12 +41,10 @@ type Config struct {
 
 // App contains the global application variables.
 type App struct {
-	// One of the following: development, test, production
-	Env string
-	// Enables verbose logging to stdout
-	Debug bool
-	// Listener port
-	Port string
+	Env     string // One of the following: development, test, production.
+	Debug   bool   // Enables verbose logging to stdout.
+	Port    string // Listener port.
+	JWTPass string // JWT signing password.
 }
 
 // GCM describes the Google Cloud Messaging parameters as described here: https://developer.android.com/google/gcm/gs.html
@@ -70,8 +69,8 @@ func InitConf(env string) {
 			env = envDev
 		}
 	}
-	debug := os.Getenv(titanDebug) != "" || (env != envProd)
-	port := os.Getenv(titanPort)
+	debug := os.Getenv(debug) != "" || (env != envProd)
+	port := os.Getenv(port)
 	if port == "" {
 		switch env {
 		case envTest:
@@ -80,8 +79,12 @@ func InitConf(env string) {
 			port = portDefault
 		}
 	}
+	pass := os.Getenv(jwtPass)
+	if pass == "" {
+		pass = "pass"
+	}
 
-	app := App{Env: env, Debug: debug, Port: port}
+	app := App{Env: env, Debug: debug, Port: port, JWTPass: pass}
 	gcm := GCM{CCSHost: os.Getenv(gcmCcsHost), SenderID: os.Getenv(gcmSenderID)}
 	Conf = Config{App: app, GCM: gcm}
 	log.Printf("Server config initialized with values: %+v\n", Conf)

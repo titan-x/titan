@@ -9,6 +9,5 @@ type User struct {
 	APNSDeviceToken string
 	Name            string
 	Picture         []byte
-	Cert            []byte // PEM encoded X.509 client-certificate
-	Key             []byte // PEM encoded X.509 private key
+	JWT             string
 }

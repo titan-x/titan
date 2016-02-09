@@ -1,27 +1,18 @@
 package test
 
 import (
-	"crypto/x509/pkix"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/nb-titan/titan"
-	"github.com/neptulon/ca"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/titan-x/titan"
 )
 
 // ServerHelper is a titan.Server wrapper for testing.
 // All the functions are wrapped with proper test runner error logging.
 type ServerHelper struct {
 	SeedData SeedData // Populated only when SeedDB() method is called.
-
-	// PEM encoded X.509 certificate and private key pairs
-	RootCACert,
-	RootCAKey,
-	IntCACert,
-	IntCAKey,
-	ServerCert,
-	ServerKey []byte
 
 	testing  *testing.T
 	server   *titan.Server
@@ -30,20 +21,14 @@ type ServerHelper struct {
 }
 
 // NewServerHelper creates a new server helper object.
-// Titan server instance is initialized and ready to accept connection after this function returns.
+// Titan server instance is initialized and ready to accept connection after this function return.
 func NewServerHelper(t *testing.T) *ServerHelper {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
 	}
 
-	// generate TLS certs
-	certChain, err := ca.GenCertChain("FooBar", "127.0.0.1", "127.0.0.1", time.Hour, 512)
-	if err != nil {
-		t.Fatal("Failed to create TLS certificate chain:", err)
-	}
-
-	laddr := "127.0.0.1:" + titan.Conf.App.Port
-	s, err := titan.NewServer(certChain.ServerCert, certChain.ServerKey, certChain.IntCACert, certChain.IntCAKey, laddr, titan.Conf.App.Debug)
+	url := "127.0.0.1:" + titan.Conf.App.Port
+	s, err := titan.NewServer(url)
 	if err != nil {
 		t.Fatal("Failed to create server:", err)
 	}
@@ -57,22 +42,7 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 		db:      db,
 		server:  s,
 		testing: t,
-
-		RootCACert: certChain.RootCACert,
-		RootCAKey:  certChain.RootCAKey,
-		IntCACert:  certChain.IntCACert,
-		IntCAKey:   certChain.IntCAKey,
-		ServerCert: certChain.ServerCert,
-		ServerKey:  certChain.ServerKey,
 	}
-
-	h.serverWG.Add(1)
-	go func() {
-		defer h.serverWG.Done()
-		s.Start()
-	}()
-
-	time.Sleep(time.Millisecond) // give Start() enough time to initiate
 
 	return &h
 }
@@ -84,40 +54,56 @@ type SeedData struct {
 }
 
 // SeedDB populates the database with the seed data.
-func (s *ServerHelper) SeedDB() *ServerHelper {
-	cc1, ck1, err := ca.GenClientCert(pkix.Name{
-		Organization: []string{"FooBar"},
-		CommonName:   "1",
-	}, time.Hour, 512, s.IntCACert, s.IntCAKey)
+func (sh *ServerHelper) SeedDB() *ServerHelper {
+	now := time.Now().Unix()
+	t := jwt.New(jwt.SigningMethodHS256)
+	t.Claims["userid"] = "1"
+	t.Claims["created"] = now
+	ts1, err := t.SignedString([]byte(titan.Conf.App.JWTPass))
+	t2 := jwt.New(jwt.SigningMethodHS256)
+	t2.Claims["userid"] = "2"
+	t2.Claims["created"] = now
+	ts2, err := t2.SignedString([]byte(titan.Conf.App.JWTPass))
 	if err != nil {
-		s.testing.Fatal(err)
-	}
-
-	cc2, ck2, err := ca.GenClientCert(pkix.Name{
-		Organization: []string{"FooBar"},
-		CommonName:   "2",
-	}, time.Hour, 512, s.IntCACert, s.IntCAKey)
-	if err != nil {
-		s.testing.Fatal(err)
+		sh.testing.Fatalf("server-helper: failed to sign JWT token: %v", err)
 	}
 
 	sd := SeedData{
-		User1: titan.User{ID: "1", Cert: cc1, Key: ck1},
-		User2: titan.User{ID: "2", Cert: cc2, Key: ck2},
+		User1: titan.User{ID: "1", JWT: ts1},
+		User2: titan.User{ID: "2", JWT: ts2},
 	}
 
-	s.db.SaveUser(&sd.User1)
-	s.db.SaveUser(&sd.User2)
+	sh.db.SaveUser(&sd.User1)
+	sh.db.SaveUser(&sd.User2)
 
-	s.SeedData = sd
+	sh.SeedData = sd
 
-	return s
+	return sh
+}
+
+// Start starts the server.
+func (sh *ServerHelper) Start() *ServerHelper {
+	sh.serverWG.Add(1)
+	go func() {
+		defer sh.serverWG.Done()
+		if err := sh.server.Start(); err != nil {
+			sh.testing.Fatalf("server-helper: failed to start server: %v", err)
+		}
+	}()
+
+	time.Sleep(time.Millisecond) // give Start() enough time to initiate
+	return sh
+}
+
+// GetClientHelper creates and returns a ClientHelper that is connected to this server instance.
+func (sh *ServerHelper) GetClientHelper() *ClientHelper {
+	return NewClientHelper(sh.testing, "ws://127.0.0.1:"+titan.Conf.App.Port)
 }
 
 // Stop stops the server instance.
-func (s *ServerHelper) Stop() {
-	if err := s.server.Stop(); err != nil {
-		s.testing.Fatal("Failed to stop the server:", err)
+func (sh *ServerHelper) Stop() {
+	if err := sh.server.Stop(); err != nil {
+		sh.testing.Fatal("Failed to stop the server:", err)
 	}
-	s.serverWG.Wait()
+	sh.serverWG.Wait()
 }
