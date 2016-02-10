@@ -81,12 +81,12 @@ func (sh *ServerHelper) SeedDB() *ServerHelper {
 	return sh
 }
 
-// Start starts the server.
-func (sh *ServerHelper) Start() *ServerHelper {
+// ListenAndServe starts the server.
+func (sh *ServerHelper) ListenAndServe() *ServerHelper {
 	sh.serverWG.Add(1)
 	go func() {
 		defer sh.serverWG.Done()
-		if err := sh.server.Start(); err != nil {
+		if err := sh.server.ListenAndServe(); err != nil {
 			sh.testing.Fatalf("server-helper: failed to start server: %v", err)
 		}
 	}()
@@ -100,9 +100,9 @@ func (sh *ServerHelper) GetClientHelper() *ClientHelper {
 	return NewClientHelper(sh.testing, "ws://127.0.0.1:"+titan.Conf.App.Port)
 }
 
-// Stop stops the server instance.
-func (sh *ServerHelper) Stop() {
-	if err := sh.server.Stop(); err != nil {
+// Close the server instance.
+func (sh *ServerHelper) Close() {
+	if err := sh.server.Close(); err != nil {
 		sh.testing.Fatal("Failed to stop the server:", err)
 	}
 	sh.serverWG.Wait()

@@ -64,9 +64,9 @@ func (s *Server) SetDB(db DB) error {
 	return nil
 }
 
-// Start the Titan server. This function blocks until server is closed.
-func (s *Server) Start() error {
-	err := s.server.Start()
+// ListenAndServe starts the Titan server. This function blocks until server is closed.
+func (s *Server) ListenAndServe() error {
+	err := s.server.ListenAndServe()
 	if err != nil && s.debug {
 		log.Fatalln("Listener returned an error while closing:", err)
 	}
@@ -78,9 +78,9 @@ func (s *Server) Start() error {
 	return err
 }
 
-// Stop stops the server and closes all of the active connections discarding any read/writes that is going on currently.
+// Close the server and all of the active connections, discarding any read/writes that is going on currently.
 // This is not a problem as we always require an ACK but it will also mean that message deliveries will be at-least-once; to-and-from the server.
-func (s *Server) Stop() error {
+func (s *Server) Close() error {
 	err := s.server.Close()
 
 	s.errMutex.Lock()

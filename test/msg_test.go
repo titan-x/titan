@@ -1,6 +1,5 @@
 package test
 
-//
 // import "testing"
 //
 // func TestSendEcho(t *testing.T) {
@@ -24,6 +23,7 @@ package test
 // 	// t.Fatal("Failed to receive a response from echo user")
 // 	// t.Fatal("Could not send an ACK for an incoming message")
 // }
+
 //
 // type sendMsgReq struct {
 // 	To      string `json:"to"`

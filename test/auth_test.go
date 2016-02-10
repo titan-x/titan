@@ -13,8 +13,8 @@ func TestAuth(t *testing.T) {
 }
 
 func TestValidToken(t *testing.T) {
-	sh := NewServerHelper(t).SeedDB().Start()
-	defer sh.Stop()
+	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	defer sh.Close()
 
 	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect()
 	defer ch.Client.Close()
