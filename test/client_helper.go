@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/neptulon/neptulon/test"
 	"github.com/titan-x/titan"
 )
 
@@ -15,7 +14,6 @@ type ClientHelper struct {
 	Client *titan.Client
 	User   *titan.User
 
-	ch         *test.ConnHelper // inner Neptulon Conn helper
 	testing    *testing.T
 	serverAddr string
 }
@@ -68,4 +66,13 @@ func (ch *ClientHelper) Connect() *ClientHelper {
 func (ch *ClientHelper) AsUser(u *titan.User) *ClientHelper {
 	ch.User = u
 	return ch
+}
+
+// CloseWait closes a connection.
+// Waits till all the goroutines handling messages quit.
+func (ch *ClientHelper) CloseWait() {
+	if err := ch.Client.Close(); err != nil {
+		ch.testing.Fatal("Failed to close the client connection:", err)
+	}
+	time.Sleep(time.Millisecond * 5)
 }

@@ -100,10 +100,11 @@ func (sh *ServerHelper) GetClientHelper() *ClientHelper {
 	return NewClientHelper(sh.testing, "ws://127.0.0.1:"+titan.Conf.App.Port)
 }
 
-// Close the server instance.
-func (sh *ServerHelper) Close() {
+// CloseWait closes the server and wait for all request/conn goroutines to exit.
+func (sh *ServerHelper) CloseWait() {
 	if err := sh.server.Close(); err != nil {
 		sh.testing.Fatal("Failed to stop the server:", err)
 	}
 	sh.serverWG.Wait()
+	time.Sleep(time.Millisecond * 5)
 }

@@ -13,11 +13,11 @@ func TestAuth(t *testing.T) {
 }
 
 func TestValidToken(t *testing.T) {
-	sh := NewServerHelper(t).SeedDB().ListenAndServe()
-	defer sh.Close()
+	sh := NewServerHelper(t).SeedDB()
+	defer sh.ListenAndServe().CloseWait()
 
-	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect()
-	defer ch.Client.Close()
+	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
+	defer ch.Connect().CloseWait()
 
 	var wg sync.WaitGroup
 
