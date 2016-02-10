@@ -68,7 +68,7 @@ func (s *Server) SetDB(db DB) error {
 func (s *Server) ListenAndServe() error {
 	err := s.server.ListenAndServe()
 	if err != nil && s.debug {
-		log.Fatalln("Listener returned an error while closing:", err)
+		log.Fatalln("server: listener returned an error while closing:", err)
 	}
 
 	s.errMutex.Lock()
@@ -85,7 +85,7 @@ func (s *Server) Close() error {
 
 	s.errMutex.Lock()
 	if s.err != nil {
-		return fmt.Errorf("Past internal error: %v", s.err)
+		return fmt.Errorf("server: previous internal error: %v", s.err)
 	}
 	s.errMutex.Unlock()
 	return err

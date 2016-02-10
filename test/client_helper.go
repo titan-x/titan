@@ -2,6 +2,7 @@ package test
 
 import (
 	"net"
+	"os"
 	"testing"
 	"time"
 
@@ -75,4 +76,7 @@ func (ch *ClientHelper) CloseWait() {
 		ch.testing.Fatal("Failed to close the client connection:", err)
 	}
 	time.Sleep(time.Millisecond * 5)
+	if os.Getenv("TRAVIS") != "" || os.Getenv("CI") == "" {
+		time.Sleep(time.Millisecond * 50)
+	}
 }

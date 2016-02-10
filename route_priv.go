@@ -57,7 +57,7 @@ func initSendMsgHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
 		})
 
 		if err != nil {
-			return fmt.Errorf("Failed to add request to queue with error: %v", err)
+			return fmt.Errorf("route: msg.recv: failed to add request to queue with error: %v", err)
 		}
 
 		ctx.Res = "ACK"
