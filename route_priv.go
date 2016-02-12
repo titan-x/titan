@@ -9,6 +9,7 @@ import (
 
 func initPrivRoutes(r *middleware.Router, q *Queue) {
 	// r.Middleware(Logger()) - request-response logger (the pointer fields in request/response objects will have to change for this to work)
+	r.Request("auth.jwt", nil /*initJWTAuthHandler(pass)*/)
 	r.Request("msg.echo", initEchoMsgHandler())
 	r.Request("msg.send", initSendMsgHandler(q))
 	r.Request("msg.recv", initRecvMsgHandler(q))

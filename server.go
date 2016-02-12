@@ -2,8 +2,6 @@ package titan
 
 import (
 	"fmt"
-	"log"
-	"sync"
 
 	"github.com/neptulon/neptulon"
 	"github.com/neptulon/neptulon/middleware"
@@ -20,10 +18,6 @@ type Server struct {
 	// titan server components
 	db    DB
 	queue Queue
-
-	debug    bool  // dump raw TCP message to stderr using log.Println()
-	err      error // last error returned by neptulon framework before closing listener
-	errMutex sync.Mutex
 }
 
 // NewServer creates a new server.
@@ -34,6 +28,7 @@ func NewServer(addr string) (*Server, error) {
 		queue:  NewQueue(),
 	}
 
+	s.server.MiddlewareFunc(middleware.Logger)
 	s.pubRoute = middleware.NewRouter()
 	s.server.Middleware(s.pubRoute)
 	initPubRoutes(s.pubRoute, s.db, Conf.App.JWTPass)
@@ -66,16 +61,7 @@ func (s *Server) SetDB(db DB) error {
 
 // ListenAndServe starts the Titan server. This function blocks until server is closed.
 func (s *Server) ListenAndServe() error {
-	err := s.server.ListenAndServe()
-	if err != nil && s.debug {
-		log.Fatalln("server: listener returned an error while closing:", err)
-	}
-
-	s.errMutex.Lock()
-	s.err = err
-	s.errMutex.Unlock()
-
-	return err
+	return s.server.ListenAndServe()
 }
 
 // Close the server and all of the active connections, discarding any read/writes that is going on currently.
