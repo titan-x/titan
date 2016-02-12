@@ -28,6 +28,10 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 		t.Skip("Skipping integration test in short testing mode")
 	}
 
+	if (titan.Conf == titan.Config{}) {
+		titan.InitConf("test")
+	}
+
 	url := "127.0.0.1:" + titan.Conf.App.Port
 	s, err := titan.NewServer(url)
 	if err != nil {

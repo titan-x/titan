@@ -20,6 +20,10 @@ type Server struct {
 
 // NewServer creates a new server.
 func NewServer(addr string) (*Server, error) {
+	if (Conf == Config{}) {
+		InitConf("")
+	}
+
 	s := Server{
 		server: neptulon.NewServer(addr),
 		db:     NewInMemDB(),
