@@ -1,8 +1,6 @@
 package titan
 
 import (
-	"fmt"
-
 	"github.com/neptulon/neptulon"
 	"github.com/neptulon/neptulon/middleware"
 	"github.com/neptulon/neptulon/middleware/jwt"
@@ -67,12 +65,5 @@ func (s *Server) ListenAndServe() error {
 // Close the server and all of the active connections, discarding any read/writes that is going on currently.
 // This is not a problem as we always require an ACK but it will also mean that message deliveries will be at-least-once; to-and-from the server.
 func (s *Server) Close() error {
-	err := s.server.Close()
-
-	s.errMutex.Lock()
-	if s.err != nil {
-		return fmt.Errorf("server: previous internal error: %v", s.err)
-	}
-	s.errMutex.Unlock()
-	return err
+	return s.server.Close()
 }
