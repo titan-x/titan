@@ -38,21 +38,20 @@ func TestValidToken(t *testing.T) {
 	wg.Wait()
 }
 
-//
-// func TestInvalidClientCertAuth(t *testing.T) {
-// 	s := NewServerHelper(t)
-// 	defer s.Stop()
-// 	c := NewConnHelper(t, s).Dial()
-// 	defer c.Close()
-//
-// 	_ = c.WriteRequest("msg.echo", nil)
-//
-// 	if !c.VerifyConnClosed() {
-// 		t.Fatal("Authenticated successfully with invalid client certificate.")
-// 	}
-//
-// 	// todo: no cert, no signature cert, invalid CA signed cert, expired cert...
-// }
+func TestInvalidToken(t *testing.T) {
+	sh := NewServerHelper(t).SeedDB()
+	defer sh.ListenAndServe().CloseWait()
+
+	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
+	defer ch.Connect().CloseWait()
+
+	// if !c.VerifyConnClosed() {
+	// 	t.Fatal("Authenticated successfully with invalid client certificate.")
+	// }
+
+	// todo: no token, un-signed token, invalid token signature, expired token...
+}
+
 //
 // type googleAuthRes struct {
 // 	Cert, Key []byte
