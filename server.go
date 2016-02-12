@@ -29,11 +29,11 @@ func NewServer(addr string) (*Server, error) {
 	s.server.MiddlewareFunc(middleware.Logger)
 	s.pubRoute = middleware.NewRouter()
 	s.server.Middleware(s.pubRoute)
-	initPubRoutes(s.pubRoute, s.db, Conf.App.JWTPass)
+	initPubRoutes(s.pubRoute, s.db, Conf.App.JWTPass())
 
 	// --- all communication below this point is authenticated --- //
 
-	s.server.MiddlewareFunc(jwt.HMAC(Conf.App.JWTPass))
+	s.server.MiddlewareFunc(jwt.HMAC(Conf.App.JWTPass()))
 	s.server.Middleware(&s.queue)
 	s.privRoute = middleware.NewRouter()
 	s.server.Middleware(s.privRoute)

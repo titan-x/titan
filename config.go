@@ -41,10 +41,18 @@ type Config struct {
 
 // App contains the global application variables.
 type App struct {
-	Env     string // One of the following: development, test, production.
-	Debug   bool   // Enables verbose logging to stdout.
-	Port    string // Listener port.
-	JWTPass string // JWT signing password.
+	Env   string // One of the following: development, test, production.
+	Debug bool   // Enables verbose logging to stdout.
+	Port  string // Listener port.
+}
+
+// JWTPass retrieves the JWT signing password.
+func (app *App) JWTPass() string {
+	pass := os.Getenv(jwtPass)
+	if pass == "" {
+		pass = "pass"
+	}
+	return pass
 }
 
 // GCM describes the Google Cloud Messaging parameters as described here: https://developer.android.com/google/gcm/gs.html
@@ -79,12 +87,8 @@ func InitConf(env string) {
 			port = portDefault
 		}
 	}
-	pass := os.Getenv(jwtPass)
-	if pass == "" {
-		pass = "pass"
-	}
 
-	app := App{Env: env, Debug: debug, Port: port, JWTPass: pass}
+	app := App{Env: env, Debug: debug, Port: port}
 	gcm := GCM{CCSHost: os.Getenv(gcmCcsHost), SenderID: os.Getenv(gcmSenderID)}
 	Conf = Config{App: app, GCM: gcm}
 	log.Printf("conf: initialized: %+v\n", Conf)
