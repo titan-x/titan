@@ -8,20 +8,9 @@ import (
 )
 
 func initPrivRoutes(r *middleware.Router, q *Queue) {
-	r.Request("msg.echo", initEchoMsgHandler())
+	r.Request("msg.echo", middleware.Echo)
 	r.Request("msg.send", initSendMsgHandler(q))
 	r.Request("msg.recv", initRecvMsgHandler(q))
-}
-
-// Echoes message sent by the client back to the client.
-func initEchoMsgHandler() func(ctx *neptulon.ReqCtx) error {
-	return func(ctx *neptulon.ReqCtx) error {
-		ctx.Params(&ctx.Res)
-		if ctx.Res == nil {
-			ctx.Res = ""
-		}
-		return ctx.Next()
-	}
 }
 
 // Allows clients to send messages to each other, online or offline.
