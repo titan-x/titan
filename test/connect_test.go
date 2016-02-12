@@ -8,16 +8,20 @@ func TestClientDisconnect(t *testing.T) {
 
 	ch.CloseWait()
 	sh.CloseWait()
+
+	// todo: validate log output order
 }
 
-//
-// func TestServerDisconnect(t *testing.T) {
-// 	s := NewServerHelper(t).SeedDB()
-// 	c := NewConnHelper(t, s).AsUser(&s.SeedData.User1).Dial()
-//
-// 	s.Stop()
-// 	c.Close()
-// }
+func TestServerDisconnect(t *testing.T) {
+	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect()
+
+	sh.CloseWait()
+	ch.CloseWait()
+
+	// todo: validate log output order
+}
+
 //
 // func TestClientClose(t *testing.T) {
 // 	s := NewServerHelper(t).SeedDB()
