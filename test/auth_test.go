@@ -20,36 +20,22 @@ func TestValidToken(t *testing.T) {
 	defer ch.Connect().CloseWait()
 
 	var wg sync.WaitGroup
-
-	// todo: waitgroup handling is client helper's business as in jsonrpc client helper (see jsonrpc/test.ClientHelper.SendRequest)
-
 	wg.Add(1)
 
 	type M struct {
 		Message, Token string
 	}
-
 	msg := &M{Message: "wow", Token: ch.User.JWT}
 
 	ch.Client.Echo(msg, func(m *titan.Message) error {
-
 		defer wg.Done()
-
 		if m.Message != "wow" {
 			t.Fatalf("expected: %v, got: %v", "wow", m.Message)
 		}
-
 		return nil
 	})
 
 	wg.Wait()
-
-	// id := c.WriteRequest("msg.echo", nil)
-	// res := c.ReadRes(nil)
-	//
-	// if res.ID != id {
-	// 	t.Fatal("Authentication failed with a valid client certificate. Got server response:", res)
-	// }
 }
 
 //
