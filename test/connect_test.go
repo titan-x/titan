@@ -1,15 +1,15 @@
 package test
 
-//
-// import "testing"
-//
-// func TestClientDisconnect(t *testing.T) {
-// 	s := NewServerHelper(t).SeedDB()
-// 	c := NewConnHelper(t, s).AsUser(&s.SeedData.User1).Dial()
-//
-// 	c.Close()
-// 	s.Stop()
-// }
+import "testing"
+
+func TestClientDisconnect(t *testing.T) {
+	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect()
+
+	ch.CloseWait()
+	sh.CloseWait()
+}
+
 //
 // func TestServerDisconnect(t *testing.T) {
 // 	s := NewServerHelper(t).SeedDB()
