@@ -3,15 +3,14 @@ package test
 import "testing"
 
 func TestSendEcho(t *testing.T) {
-	// sh := NewServerHelper(t).SeedDB()
-	// defer sh.ListenAndServe().CloseWait()
-	//
-	// ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
-	// defer ch.Connect().CloseWait()
-	//
-	// id := c.WriteRequest("msg.echo", map[string]string{"echo": "echo"})
-	// res := c.ReadRes(nil)
-	//
+	sh := NewServerHelper(t).SeedDB()
+	defer sh.ListenAndServe().CloseWait()
+
+	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
+	defer ch.Connect().CloseWait()
+
+	ch.Client.Echo(map[string]string{"echo": "echo", "token": "wow"}, nil)
+
 	// resMap := res.Result.(map[string]interface{})
 	// if res.ID != id || resMap["echo"] != "echo" {
 	// 	t.Fatal("Failed to receive echo message in proper format:", res)
