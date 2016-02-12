@@ -50,7 +50,7 @@ type App struct {
 func (app *App) JWTPass() string {
 	pass := os.Getenv(jwtPass)
 	if pass == "" {
-		pass = "pass"
+		return "pass"
 	}
 	return pass
 }
