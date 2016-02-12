@@ -8,11 +8,9 @@ import (
 )
 
 func initPrivRoutes(r *middleware.Router, q *Queue) {
-	r.Request("auth.jwt", nil /*initJWTAuthHandler(pass)*/)
 	r.Request("msg.echo", initEchoMsgHandler())
 	r.Request("msg.send", initSendMsgHandler(q))
 	r.Request("msg.recv", initRecvMsgHandler(q))
-	// r.Middleware(NotFoundHandler()) - 404-like handler
 }
 
 // Echoes message sent by the client back to the client.

@@ -35,15 +35,18 @@ func NewServer(addr string) (*Server, error) {
 	s.server.Middleware(s.pubRoute)
 	initPubRoutes(s.pubRoute, s.db, Conf.App.JWTPass())
 
-	// --- all communication below this point is authenticated --- //
-
+	//all communication below this point is authenticated
 	s.server.MiddlewareFunc(jwt.HMAC(Conf.App.JWTPass()))
 	s.server.Middleware(&s.queue)
 	s.privRoute = middleware.NewRouter()
 	s.server.Middleware(s.privRoute)
 	initPrivRoutes(s.privRoute, &s.queue)
+	// r.Middleware(NotFoundHandler()) - 404-like handler
 
-	s.queue.SetServer(s.server) // todo: research a better way to handle inner-circular dependencies so remove these lines back into Server contructor (maybe via dereferencing: http://openmymind.net/Things-I-Wish-Someone-Had-Told-Me-About-Go/, but then initializers actually using the pointer values would have to be lazy!)
+	// todo: research a better way to handle inner-circular dependencies so remove these lines back into Server contructor
+	// (maybe via dereferencing: http://openmymind.net/Things-I-Wish-Someone-Had-Told-Me-About-Go/, but then initializers
+	// actually using the pointer values would have to be lazy!)
+	s.queue.SetServer(s.server)
 
 	s.server.DisconnHandler(func(c *neptulon.Conn) {
 		// only handle this event for previously authenticated

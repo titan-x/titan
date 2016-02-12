@@ -1,10 +1,15 @@
 package test
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestClientDisconnect(t *testing.T) {
 	sh := NewServerHelper(t).SeedDB().ListenAndServe()
 	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect()
+
+	time.Sleep(time.Millisecond * 10)
 
 	ch.CloseWait()
 	sh.CloseWait()
@@ -15,6 +20,8 @@ func TestClientDisconnect(t *testing.T) {
 func TestServerDisconnect(t *testing.T) {
 	sh := NewServerHelper(t).SeedDB().ListenAndServe()
 	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect()
+
+	time.Sleep(time.Millisecond * 10)
 
 	sh.CloseWait()
 	ch.CloseWait()

@@ -7,9 +7,6 @@ import (
 
 func initPubRoutes(r *middleware.Router, db DB, pass string) {
 	r.Request("auth.google", initGoogleAuthHandler(db, pass))
-	// pubRoute.NotFound(...)
-	// todo: if the first incoming message in public route is not one of close/google.auth,
-	// close the connection right away (and maybe wait for client to return ACK then close?)
 }
 
 func initGoogleAuthHandler(db DB, pass string) func(ctx *neptulon.ReqCtx) error {
