@@ -11,31 +11,33 @@ import (
 func initPrivRoutes(r *middleware.Router, q *Queue) {
 	r.Request("msg.echo", middleware.Echo)
 	r.Request("msg.send", initSendMsgHandler(q))
-	r.Request("msg.recv", initRecvMsgHandler(q))
+	r.Request("client.info", initRecvMsgHandler(q))
 }
 
 // Allows clients to send messages to each other, online or offline.
 func initSendMsgHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
 	return func(ctx *neptulon.ReqCtx) error {
-		var s client.Message
-		ctx.Params(&s)
+		var sMsgs []client.Message
+		ctx.Params(&sMsgs)
 
-		uid := ctx.Conn.Session.Get("userid").(string)
-		r := client.Message{From: uid, Message: s.Message}
-		err := q.AddRequest(s.To, "msg.recv", r, func(ctx *neptulon.ResCtx) error {
-			var res string
-			ctx.Result(&res)
-			if res == "ACK" {
-				// todo: send 'delivered' message to sender (as a request?) about this message (or failed, depending on output)
-				// todo: q.AddRequest(uid, "msg.delivered", ... // requeue if failed or handle resends automatically in the queue type, which is prefered)
-			} else {
-				// todo: auto retry or "msg.failed" ?
+		for _, sMsg := range sMsgs {
+			uid := ctx.Conn.Session.Get("userid").(string)
+			rMsgs := []client.Message{client.Message{From: uid, Message: sMsg.Message}}
+			err := q.AddRequest(sMsg.To, "msg.recv", rMsgs, func(ctx *neptulon.ResCtx) error {
+				var res string
+				ctx.Result(&res)
+				if res == "ACK" {
+					// todo: send 'delivered' message to sender (as a request?) about this message (or failed, depending on output)
+					// todo: q.AddRequest(uid, "msg.delivered", ... // requeue if failed or handle resends automatically in the queue type, which is prefered)
+				} else {
+					// todo: auto retry or "msg.failed" ?
+				}
+				return nil
+			})
+
+			if err != nil {
+				return fmt.Errorf("route: msg.recv: failed to add request to queue with error: %v", err)
 			}
-			return nil
-		})
-
-		if err != nil {
-			return fmt.Errorf("route: msg.recv: failed to add request to queue with error: %v", err)
 		}
 
 		ctx.Res = "ACK"
