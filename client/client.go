@@ -53,5 +53,6 @@ func (c *Client) inMsgRoute(ctx *neptulon.ReqCtx) error {
 		return err
 	}
 
+	ctx.Res = "ACK"
 	return ctx.Next()
 }
