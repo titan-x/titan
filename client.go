@@ -10,9 +10,11 @@ import (
 
 // Client is a Titan client.
 type Client struct {
-	ID      string     // Randomly generated unique client connection ID.
-	Session *cmap.CMap // Thread-safe data store for storing arbitrary data for this connection session.
-	conn    *neptulon.Conn
+	ID           string     // Randomly generated unique client connection ID.
+	Session      *cmap.CMap // Thread-safe data store for storing arbitrary data for this connection session.
+	conn         *neptulon.Conn
+	router       *middleware.Router
+	inMsgHandler func(m []Message) error
 }
 
 // NewClient creates a new Client object.
@@ -21,7 +23,11 @@ func NewClient() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Client{ID: c.ID, Session: c.Session, conn: c}, nil
+	r := middleware.NewRouter()
+	c.Middleware(r)
+	s := &Client{ID: c.ID, Session: c.Session, conn: c, router: r, inMsgHandler: func(m []Message) error { return nil }}
+	r.Request("msg.recv", s.inMsgRoute)
+	return s, nil
 }
 
 // SetDeadline set the read/write deadlines for the connection, in seconds.
@@ -39,6 +45,19 @@ func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
+func (c *Client) inMsgRoute(ctx *neptulon.ReqCtx) error {
+	var msg []Message
+	if err := ctx.Params(msg); err != nil {
+		return err
+	}
+
+	if err := c.inMsgHandler(msg); err != nil {
+		return err
+	}
+
+	return ctx.Next()
+}
+
 // ---- In/Out Request Objects ------ //
 
 // Message is a chat message.
@@ -50,22 +69,9 @@ type Message struct {
 
 // ------ Incoming Requests ---------- //
 
-// HandleIncomingMessages registers a handler to accept incoming messages from the server.
-func (c *Client) HandleIncomingMessages(msgHandler func(m []Message) error) {
-	r := middleware.NewRouter()
-	c.conn.Middleware(r)
-	r.Request("msg.recv", func(ctx *neptulon.ReqCtx) error {
-		var msg []Message
-		if err := ctx.Params(msg); err != nil {
-			return err
-		}
-
-		if err := msgHandler(msg); err != nil {
-			return err
-		}
-
-		return ctx.Next()
-	})
+// InMsgHandler registers a handler to accept incoming messages from the server.
+func (c *Client) InMsgHandler(handler func(m []Message) error) {
+	c.inMsgHandler = handler
 }
 
 // ------ Outgoing Requests ---------- //
