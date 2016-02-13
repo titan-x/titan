@@ -11,7 +11,7 @@ import (
 func initPrivRoutes(r *middleware.Router, q *Queue) {
 	r.Request("msg.echo", middleware.Echo)
 	r.Request("msg.send", initSendMsgHandler(q))
-	r.Request("client.info", initRecvMsgHandler(q))
+	r.Request("client.info", initClientInfoHandler(q))
 }
 
 // Allows clients to send messages to each other, online or offline.
@@ -46,8 +46,8 @@ func initSendMsgHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
 }
 
 // Used only for a client to announce its presence.
-// If there are any messages meant for this user, they are started to be sent with this call (via the cert-auth middleware).
-func initRecvMsgHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
+// If there are any messages meant for this user, they are started to be sent with this call.
+func initClientInfoHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
 	return func(ctx *neptulon.ReqCtx) error {
 		q.SetConn(ctx.Conn.Session.Get("userid").(string), ctx.Conn.ID)
 		ctx.Res = "ACK" // todo: this could rather send the remaining queue size for the client
