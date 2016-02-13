@@ -62,7 +62,8 @@ func (c *Client) inMsgRoute(ctx *neptulon.ReqCtx) error {
 
 // Message is a chat message.
 type Message struct {
-	From    string    `json:"from"`
+	From    string    `json:"from,omitempty"`
+	To      string    `json:"to,omitempty"`
 	Time    time.Time `json:"time"`
 	Message string    `json:"message"`
 }
