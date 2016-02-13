@@ -5,6 +5,7 @@ import (
 
 	"github.com/neptulon/neptulon"
 	"github.com/neptulon/neptulon/middleware"
+	"github.com/titan-x/titan/client"
 )
 
 func initPrivRoutes(r *middleware.Router, q *Queue) {
@@ -15,22 +16,12 @@ func initPrivRoutes(r *middleware.Router, q *Queue) {
 
 // Allows clients to send messages to each other, online or offline.
 func initSendMsgHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
-	type sendMsgReq struct {
-		To      string `json:"to"`
-		Message string `json:"message"`
-	}
-
-	type recvMsgReq struct {
-		From    string `json:"from"`
-		Message string `json:"message"`
-	}
-
 	return func(ctx *neptulon.ReqCtx) error {
-		var s sendMsgReq
+		var s client.Message
 		ctx.Params(&s)
 
 		uid := ctx.Conn.Session.Get("userid").(string)
-		r := recvMsgReq{From: uid, Message: s.Message}
+		r := client.Message{From: uid, Message: s.Message}
 		err := q.AddRequest(s.To, "msg.recv", r, func(ctx *neptulon.ResCtx) error {
 			var res string
 			ctx.Result(&res)
