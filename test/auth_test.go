@@ -4,7 +4,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/titan-x/titan"
+	"github.com/titan-x/titan/client"
 )
 
 func TestAuth(t *testing.T) {
@@ -27,7 +27,7 @@ func TestValidToken(t *testing.T) {
 	}
 	msg := &M{Message: "wow", Token: ch.User.JWT}
 
-	ch.Client.Echo(msg, func(m *titan.Message) error {
+	ch.Client.Echo(msg, func(m *client.Message) error {
 		defer wg.Done()
 		if m.Message != "wow" {
 			t.Fatalf("expected: %v, got: %v", "wow", m.Message)

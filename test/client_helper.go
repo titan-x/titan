@@ -7,12 +7,13 @@ import (
 	"time"
 
 	"github.com/titan-x/titan"
+	"github.com/titan-x/titan/client"
 )
 
 // ClientHelper is a Titan Client wrapper for testing.
 // All the functions are wrapped with proper test runner error logging.
 type ClientHelper struct {
-	Client *titan.Client
+	Client *client.Client
 	User   *titan.User
 
 	testing    *testing.T
@@ -25,7 +26,7 @@ func NewClientHelper(t *testing.T, addr string) *ClientHelper {
 		t.Skip("Skipping integration test in short testing mode.")
 	}
 
-	c, err := titan.NewClient()
+	c, err := client.NewClient()
 	if err != nil {
 		t.Fatal("Failed to create client:", err)
 	}
