@@ -1,6 +1,9 @@
 package client
 
 import (
+	"fmt"
+	"sync"
+
 	"github.com/neptulon/cmap"
 	"github.com/neptulon/neptulon"
 	"github.com/neptulon/neptulon/middleware"
@@ -49,7 +52,25 @@ func (c *Client) DisconnHandler(handler func(c *Client)) {
 
 // Connect connectes to the server at given network address and starts receiving messages.
 func (c *Client) Connect(addr string) error {
-	return c.conn.Connect(addr)
+	if err := c.conn.Connect(addr); err != nil {
+		return err
+	}
+
+	if c.jwtToken != "" {
+		var wg sync.WaitGroup
+		wg.Add(1)
+		if err := c.jwtAuth(c.jwtToken, func(ack string) error {
+			defer wg.Done()
+			if ack != "ACK" {
+				return fmt.Errorf("server did not ACK our auth.jwt request: %v", ack)
+			}
+			return nil
+		}); err != nil {
+			return fmt.Errorf("authentication failed: %v", err)
+		}
+	}
+
+	return nil
 }
 
 // Close closes a client connection.
