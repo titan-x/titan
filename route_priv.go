@@ -9,14 +9,14 @@ import (
 )
 
 func initPrivRoutes(r *middleware.Router, q *Queue) {
-	r.Request("client.info", initClientInfoHandler(q))
+	r.Request("auth.jwt", initJWTAuthHandler(q))
 	r.Request("msg.echo", middleware.Echo)
 	r.Request("msg.send", initSendMsgHandler(q))
 }
 
-// Used only for a client to announce its presence.
-// If there are any messages meant for this user, they are started to be sent with this call.
-func initClientInfoHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
+// Used for a client to authenticate and announce its presence.
+// If there are any messages meant for this user, they are started to be sent after this call.
+func initJWTAuthHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
 	return func(ctx *neptulon.ReqCtx) error {
 		q.SetConn(ctx.Conn.Session.Get("userid").(string), ctx.Conn.ID)
 		ctx.Res = "ACK" // todo: this could rather send the remaining queue size for the client

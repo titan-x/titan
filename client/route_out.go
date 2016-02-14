@@ -4,26 +4,10 @@ import "github.com/neptulon/neptulon"
 
 // ------ Outgoing Requests ---------- //
 
-// // GetPendingMessages sends a request to server to receive any pending messages.
-// func (c *Client) GetPendingMessages(msgHandler func(m []Message) error) error {
-// 	_, err := c.conn.SendRequest("msg.recv", nil, func(ctx *neptulon.ResCtx) error {
-// 		var msg []Message
-// 		if err := ctx.Result(msg); err != nil {
-// 			return err
-// 		}
-// 		if err := msgHandler(msg); err != nil {
-// 			return err
-// 		}
-// 		return nil
-// 	})
-//
-// 	return err
-// }
-
-// GetClientInfo retrieves client authentication and message queue status,
-// as well as announcing availability to the server.
-func (c *Client) GetClientInfo(jwtToken string, handler func(m string) error) error {
-	_, err := c.conn.SendRequest("client.info", map[string]string{"token": jwtToken}, func(ctx *neptulon.ResCtx) error {
+// JWTAuth authenticates using the given JWT token.
+// This also announces availability to the server, so server can start sending us pending messages.
+func (c *Client) JWTAuth(jwtToken string, handler func(m string) error) error {
+	_, err := c.conn.SendRequest("auth.jwt", map[string]string{"token": jwtToken}, func(ctx *neptulon.ResCtx) error {
 		var ack string
 		if err := ctx.Result(&ack); err != nil {
 			return err
