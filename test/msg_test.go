@@ -64,7 +64,7 @@ func TestSendMsgOnline(t *testing.T) {
 		return nil
 	})
 
-	wg.Wait() // todo: authomate authentication with Client.UseJWT & Client.AuthHandler & Client.Authenticated = true ? also GetClientInfo -> auth.jwt
+	wg.Wait() // todo: authomate authentication with Client.UseJWT & Client.AuthHandler & Client.Authenticated = true ?
 
 	// send a hello message from user 1 to user 2
 	wg.Add(1)

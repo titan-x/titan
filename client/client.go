@@ -8,11 +8,13 @@ import (
 
 // Client is a Titan client.
 type Client struct {
-	ID           string     // Randomly generated unique client connection ID.
-	Session      *cmap.CMap // Thread-safe data store for storing arbitrary data for this connection session.
-	conn         *neptulon.Conn
-	router       *middleware.Router
-	inMsgHandler func(m []Message) error
+	ID            string     // Randomly generated unique client connection ID.
+	Session       *cmap.CMap // Thread-safe data store for storing arbitrary data for this connection session.
+	conn          *neptulon.Conn
+	router        *middleware.Router
+	inMsgHandler  func(m []Message) error
+	jwtToken      string
+	authenticated bool
 }
 
 // NewClient creates a new Client object.
@@ -31,6 +33,11 @@ func NewClient() (*Client, error) {
 // SetDeadline set the read/write deadlines for the connection, in seconds.
 func (c *Client) SetDeadline(seconds int) {
 	c.conn.SetDeadline(seconds)
+}
+
+// UseJWT enables JWT authentication.
+func (c *Client) UseJWT(token string) {
+	c.jwtToken = token
 }
 
 // DisconnHandler registers a function to handle disconnection event.

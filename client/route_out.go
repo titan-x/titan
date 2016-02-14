@@ -6,7 +6,7 @@ import "github.com/neptulon/neptulon"
 
 // JWTAuth authenticates using the given JWT token.
 // This also announces availability to the server, so server can start sending us pending messages.
-func (c *Client) JWTAuth(jwtToken string, handler func(m string) error) error {
+func (c *Client) jwtAuth(jwtToken string, handler func(m string) error) error {
 	_, err := c.conn.SendRequest("auth.jwt", map[string]string{"token": jwtToken}, func(ctx *neptulon.ResCtx) error {
 		var ack string
 		if err := ctx.Result(&ack); err != nil {
