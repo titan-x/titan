@@ -57,12 +57,16 @@ func TestSendMsgOnline(t *testing.T) {
 		return nil
 	})
 
-	// // send message to user 2 with a basic hello message
-	// c1.WriteRequest("msg.send", sendMsgReq{To: "2", Message: "Hello, how are you?"})
-	// res = c1.ReadRes(nil)
-	// if res.Result != "ACK" {
-	// 	t.Fatal("Failed to send message to user 2:", res)
-	// }
+	// send a hello message from user 1 to user 2
+	wg.Add(1)
+	ch1.Client.SendMessages([]client.Message{client.Message{To: "2", Message: "Hello, how are you?"}}, func(ack string) error {
+		defer wg.Done()
+		if ack != "ACK" {
+			t.Fatal("failed to send hello message to user 2:", ack)
+		}
+		return nil
+	})
+
 	//
 	// // receive the hello message from user 1 (online) as user 2 (online)
 	// var c2r recvMsgReq
