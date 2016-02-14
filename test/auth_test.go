@@ -36,20 +36,20 @@ func TestValidToken(t *testing.T) {
 
 func TestInvalidToken(t *testing.T) {
 	sh := NewServerHelper(t).SeedDB()
-	defer sh.ListenAndServe().CloseWait()
-
 	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
-	defer ch.Connect().CloseWait()
 
 	var wg sync.WaitGroup
 	wg.Add(1)
 	msg := "Lorem ip sum"
 
-	ch.Client.Echo(map[string]string{"message": msg, "token": "invalid token!"}, func(m *client.Message) error {
-		defer wg.Done()
-		if m.Message != msg {
-			t.Fatalf("expected: %v, got: %v", "wow", m.Message)
-		}
+	ch.Client.DisconnHandler(func(c *client.Client) {
+		wg.Done()
+	})
+
+	defer sh.ListenAndServe().CloseWait()
+	defer ch.Connect().CloseWait()
+	ch.Client.Echo(map[string]string{"message": msg, "token": "abc-invalid-token-!"}, func(m *client.Message) error {
+		t.Fatal("authenticated with invalid token")
 		return nil
 	})
 

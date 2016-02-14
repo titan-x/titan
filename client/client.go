@@ -33,6 +33,13 @@ func (c *Client) SetDeadline(seconds int) {
 	c.conn.SetDeadline(seconds)
 }
 
+// DisconnHandler registers a function to handle disconnection event.
+func (c *Client) DisconnHandler(handler func(c *Client)) {
+	c.conn.DisconnHandler(func(nepc *neptulon.Conn) {
+		handler(c)
+	})
+}
+
 // Connect connectes to the server at given network address and starts receiving messages.
 func (c *Client) Connect(addr string) error {
 	return c.conn.Connect(addr)
