@@ -74,8 +74,8 @@ func (sh *ServerHelper) SeedDB() *ServerHelper {
 	}
 
 	sd := SeedData{
-		User1: titan.User{ID: "1", JWT: ts1},
-		User2: titan.User{ID: "2", JWT: ts2},
+		User1: titan.User{ID: "1", JWTToken: ts1},
+		User2: titan.User{ID: "2", JWTToken: ts2},
 	}
 
 	sh.db.SaveUser(&sd.User1)

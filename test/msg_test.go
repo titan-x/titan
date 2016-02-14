@@ -1,6 +1,11 @@
 package test
 
-import "testing"
+import (
+	"sync"
+	"testing"
+
+	"github.com/titan-x/titan/client"
+)
 
 func TestSendEcho(t *testing.T) {
 	sh := NewServerHelper(t).SeedDB()
@@ -9,12 +14,18 @@ func TestSendEcho(t *testing.T) {
 	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
 	defer ch.Connect().CloseWait()
 
-	ch.Client.Echo(map[string]string{"echo": "echo", "token": "wow"}, nil)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	m := "Ola!"
+	ch.Client.Echo(map[string]string{"message": m, "token": sh.SeedData.User1.JWTToken}, func(msg *client.Message) error {
+		defer wg.Done()
+		if msg.Message != m {
+			t.Fatalf("expected: %v, got: %v", m, msg.Message)
+		}
+		return nil
+	})
 
-	// resMap := res.Result.(map[string]interface{})
-	// if res.ID != id || resMap["echo"] != "echo" {
-	// 	t.Fatal("Failed to receive echo message in proper format:", res)
-	// }
+	wg.Wait()
 
 	// t.Fatal("Failed to send a message to the echo user")
 	// t.Fatal("Failed to send batch message to the echo user")

@@ -29,7 +29,7 @@ type gImage struct {
 
 // googleAuthRes is the success response returned after a successful Google authentication.
 type googleAuthRes struct {
-	JWT string `json:"jwt"`
+	Token string `json:"token"`
 }
 
 // googleAuthRequest is the incoming request object.
@@ -64,7 +64,7 @@ func googleAuth(ctx *neptulon.ReqCtx, db DB, pass string) error {
 		token := jwt.New(jwt.SigningMethodHS256)
 		token.Claims["userid"] = user.ID
 		token.Claims["created"] = time.Now().Unix()
-		user.JWT, err = token.SignedString([]byte(pass))
+		user.JWTToken, err = token.SignedString([]byte(pass))
 		if err != nil {
 			return fmt.Errorf("middleware: auth: google: jwt signing error: %v", err)
 		}
@@ -75,7 +75,7 @@ func googleAuth(ctx *neptulon.ReqCtx, db DB, pass string) error {
 		}
 	}
 
-	ctx.Res = googleAuthRes{JWT: user.JWT}
+	ctx.Res = googleAuthRes{Token: user.JWTToken}
 	return nil
 }
 

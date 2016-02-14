@@ -25,7 +25,7 @@ func TestValidToken(t *testing.T) {
 	type M struct {
 		Message, Token string
 	}
-	msg := &M{Message: "wow", Token: ch.User.JWT}
+	msg := &M{Message: "wow", Token: ch.User.JWTToken}
 
 	ch.Client.Echo(msg, func(m *client.Message) error {
 		defer wg.Done()
