@@ -47,8 +47,15 @@ func TestSendMsgOnline(t *testing.T) {
 
 	var wg sync.WaitGroup
 
-	// send client.info request from user 2 to server, to announce availability and get authenticated
-	wg.Add(1)
+	// send client.info request from user 1 & 2 to server, to announce availability and get authenticated
+	wg.Add(2)
+	ch1.Client.GetClientInfo(sh.SeedData.User2.JWTToken, func(m string) error {
+		defer wg.Done()
+		if m != "ACK" {
+			t.Fatal("failed to send client.info request from client 1 to server:", m)
+		}
+		return nil
+	})
 	ch2.Client.GetClientInfo(sh.SeedData.User2.JWTToken, func(m string) error {
 		defer wg.Done()
 		if m != "ACK" {
@@ -56,6 +63,8 @@ func TestSendMsgOnline(t *testing.T) {
 		}
 		return nil
 	})
+
+	wg.Wait()
 
 	// send a hello message from user 1 to user 2
 	wg.Add(1)
