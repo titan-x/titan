@@ -21,15 +21,11 @@ func TestValidToken(t *testing.T) {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
+	msg := "Lorem ip sum"
 
-	type M struct {
-		Message, Token string
-	}
-	msg := &M{Message: "wow", Token: ch.User.JWTToken}
-
-	ch.Client.Echo(msg, func(m *client.Message) error {
+	ch.Client.Echo(map[string]string{"message": msg, "token": sh.SeedData.User1.JWTToken}, func(m *client.Message) error {
 		defer wg.Done()
-		if m.Message != "wow" {
+		if m.Message != msg {
 			t.Fatalf("expected: %v, got: %v", "wow", m.Message)
 		}
 		return nil
@@ -45,9 +41,19 @@ func TestInvalidToken(t *testing.T) {
 	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
 	defer ch.Connect().CloseWait()
 
-	// if !c.VerifyConnClosed() {
-	// 	t.Fatal("Authenticated successfully with invalid client certificate.")
-	// }
+	var wg sync.WaitGroup
+	wg.Add(1)
+	msg := "Lorem ip sum"
+
+	ch.Client.Echo(map[string]string{"message": msg, "token": "invalid token!"}, func(m *client.Message) error {
+		defer wg.Done()
+		if m.Message != msg {
+			t.Fatalf("expected: %v, got: %v", "wow", m.Message)
+		}
+		return nil
+	})
+
+	wg.Wait()
 
 	// todo: no token, un-signed token, invalid token signature, expired token...
 }
