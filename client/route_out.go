@@ -22,8 +22,8 @@ import "github.com/neptulon/neptulon"
 
 // GetClientInfo retrieves client authentication and message queue status,
 // as well as announcing availability to the server.
-func (c *Client) GetClientInfo(handler func(m string) error) error {
-	_, err := c.conn.SendRequest("client.info", nil, func(ctx *neptulon.ResCtx) error {
+func (c *Client) GetClientInfo(jwtToken string, handler func(m string) error) error {
+	_, err := c.conn.SendRequest("client.info", map[string]string{"token": jwtToken}, func(ctx *neptulon.ResCtx) error {
 		var ack string
 		ctx.Result(&ack)
 		return handler(ack)

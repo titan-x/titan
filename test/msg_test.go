@@ -49,7 +49,8 @@ func TestSendMsgOnline(t *testing.T) {
 
 	// send client.info request from user 2 to server, to announce availability and get authenticated
 	wg.Add(1)
-	ch2.Client.GetClientInfo(func(m string) error {
+	ch2.Client.GetClientInfo(sh.SeedData.User2.JWTToken, func(m string) error {
+		defer wg.Done()
 		if m != "ACK" {
 			t.Fatal("failed to send client.info request from client 2 to server:", m)
 		}
