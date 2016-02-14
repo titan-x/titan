@@ -66,6 +66,8 @@ func TestSendMsgOnline(t *testing.T) {
 
 	wg.Wait() // todo: authomate authentication with Client.UseJWT & Client.AuthHandler & Client.Authenticated = true ?
 
+	// todo: if auth fails, Client.Connect() should close the conn and reuturn error to us (returning error in ctx should close the conn itself?)
+
 	// send a hello message from user 1 to user 2
 	wg.Add(1)
 	ch1.Client.SendMessages([]client.Message{client.Message{To: "2", Message: "Hello, how are you?"}}, func(ack string) error {
