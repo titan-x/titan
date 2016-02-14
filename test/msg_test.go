@@ -45,11 +45,16 @@ func TestSendMsgOnline(t *testing.T) {
 	ch2 := sh.GetClientHelper().AsUser(&sh.SeedData.User2)
 	defer ch2.Connect().CloseWait()
 
+	var wg sync.WaitGroup
+
 	// send client.info request from user 2 to server, to announce availability and get authenticated
-	c2.Client.GetClientInfo()
-	if res.Result != "ACK" {
-		t.Fatal("Failed to send msg.recv request from client 2 to server:", res)
-	}
+	wg.Add(1)
+	ch2.Client.GetClientInfo(func(m string) error {
+		if m != "ACK" {
+			t.Fatal("failed to send client.info request from client 2 to server:", m)
+		}
+		return nil
+	})
 
 	// // send message to user 2 with a basic hello message
 	// c1.WriteRequest("msg.send", sendMsgReq{To: "2", Message: "Hello, how are you?"})
@@ -94,6 +99,8 @@ func TestSendMsgOnline(t *testing.T) {
 	// if resfin != "echo" {
 	// 	t.Fatal("Last echo did return an invalid response:", resfin)
 	// }
+
+	wg.Wait()
 }
 
 //
