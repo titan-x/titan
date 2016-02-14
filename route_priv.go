@@ -28,7 +28,9 @@ func initClientInfoHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
 func initSendMsgHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
 	return func(ctx *neptulon.ReqCtx) error {
 		var sMsgs []client.Message
-		ctx.Params(&sMsgs)
+		if err := ctx.Params(&sMsgs); err != nil {
+			return err
+		}
 
 		for _, sMsg := range sMsgs {
 			uid := ctx.Conn.Session.Get("userid").(string)

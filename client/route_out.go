@@ -25,7 +25,9 @@ import "github.com/neptulon/neptulon"
 func (c *Client) GetClientInfo(jwtToken string, handler func(m string) error) error {
 	_, err := c.conn.SendRequest("client.info", map[string]string{"token": jwtToken}, func(ctx *neptulon.ResCtx) error {
 		var ack string
-		ctx.Result(&ack)
+		if err := ctx.Result(&ack); err != nil {
+			return err
+		}
 		return handler(ack)
 	})
 
@@ -36,7 +38,9 @@ func (c *Client) GetClientInfo(jwtToken string, handler func(m string) error) er
 func (c *Client) SendMessages(m []Message, handler func(ack string) error) error {
 	_, err := c.conn.SendRequest("msg.send", m, func(ctx *neptulon.ResCtx) error {
 		var ack string
-		ctx.Result(&ack)
+		if err := ctx.Result(&ack); err != nil {
+			return err
+		}
 		return handler(ack)
 	})
 
