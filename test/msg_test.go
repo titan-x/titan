@@ -70,13 +70,17 @@ func TestSendMsgOnline(t *testing.T) {
 
 	// send a hello message from user 1 to user 2
 	wg.Add(1)
-	ch1.Client.SendMessages([]client.Message{client.Message{To: "2", Message: "Hello, how are you?"}}, func(ack string) error {
+	if err := ch1.Client.SendMessages([]client.Message{client.Message{To: "2", Message: "Hello, how are you?"}}, func(ack string) error {
 		defer wg.Done()
 		if ack != "ACK" {
 			t.Fatal("failed to send hello message to user 2:", ack)
 		}
 		return nil
-	})
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// todo: all of SendMessages etc. now return error so handle them as above
 
 	//
 	// // receive the hello message from user 1 (online) as user 2 (online)
