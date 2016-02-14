@@ -9,9 +9,19 @@ import (
 )
 
 func initPrivRoutes(r *middleware.Router, q *Queue) {
+	r.Request("client.info", initClientInfoHandler(q))
 	r.Request("msg.echo", middleware.Echo)
 	r.Request("msg.send", initSendMsgHandler(q))
-	r.Request("client.info", initClientInfoHandler(q))
+}
+
+// Used only for a client to announce its presence.
+// If there are any messages meant for this user, they are started to be sent with this call.
+func initClientInfoHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
+	return func(ctx *neptulon.ReqCtx) error {
+		q.SetConn(ctx.Conn.Session.Get("userid").(string), ctx.Conn.ID)
+		ctx.Res = "ACK" // todo: this could rather send the remaining queue size for the client
+		return ctx.Next()
+	}
 }
 
 // Allows clients to send messages to each other, online or offline.
@@ -41,16 +51,6 @@ func initSendMsgHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
 		}
 
 		ctx.Res = "ACK"
-		return ctx.Next()
-	}
-}
-
-// Used only for a client to announce its presence.
-// If there are any messages meant for this user, they are started to be sent with this call.
-func initClientInfoHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
-	return func(ctx *neptulon.ReqCtx) error {
-		q.SetConn(ctx.Conn.Session.Get("userid").(string), ctx.Conn.ID)
-		ctx.Res = "ACK" // todo: this could rather send the remaining queue size for the client
 		return ctx.Next()
 	}
 }
