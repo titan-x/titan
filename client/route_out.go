@@ -4,26 +4,40 @@ import "github.com/neptulon/neptulon"
 
 // ------ Outgoing Requests ---------- //
 
-// GetPendingMessages sends a request to server to receive any pending messages.
-func (c *Client) GetPendingMessages(msgHandler func(m []Message) error) error {
-	_, err := c.conn.SendRequest("msg.recv", nil, func(ctx *neptulon.ResCtx) error {
-		var msg []Message
-		if err := ctx.Result(msg); err != nil {
-			return err
-		}
-		if err := msgHandler(msg); err != nil {
-			return err
-		}
-		return nil
+// // GetPendingMessages sends a request to server to receive any pending messages.
+// func (c *Client) GetPendingMessages(msgHandler func(m []Message) error) error {
+// 	_, err := c.conn.SendRequest("msg.recv", nil, func(ctx *neptulon.ResCtx) error {
+// 		var msg []Message
+// 		if err := ctx.Result(msg); err != nil {
+// 			return err
+// 		}
+// 		if err := msgHandler(msg); err != nil {
+// 			return err
+// 		}
+// 		return nil
+// 	})
+//
+// 	return err
+// }
+
+// GetClientInfo retrieves client authentication and message queue status,
+// as well as announcing availability to the server.
+func (c *Client) GetClientInfo(handler func(m string) error) error {
+	_, err := c.conn.SendRequest("client.info", nil, func(ctx *neptulon.ResCtx) error {
+		var ack string
+		ctx.Result(&ack)
+		return handler(ack)
 	})
 
 	return err
 }
 
 // SendMessages sends a batch of messages to the server.
-func (c *Client) SendMessages(m []Message) error {
+func (c *Client) SendMessages(m []Message, handler func(ack string) error) error {
 	_, err := c.conn.SendRequest("msg.send", m, func(ctx *neptulon.ResCtx) error {
-		return nil
+		var ack string
+		ctx.Result(&ack)
+		return handler(ack)
 	})
 
 	return err
