@@ -16,7 +16,7 @@ func TestValidToken(t *testing.T) {
 	sh := NewServerHelper(t).SeedDB()
 	defer sh.ListenAndServe().CloseWait()
 
-	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
+	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).UseJWT()
 	defer ch.Connect().CloseWait()
 
 	var wg sync.WaitGroup

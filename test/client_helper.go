@@ -70,6 +70,12 @@ func (ch *ClientHelper) AsUser(u *titan.User) *ClientHelper {
 	return ch
 }
 
+// UseJWT enables authentication with JWT token belonging the the user assigned with AsUser method.
+func (ch *ClientHelper) UseJWT() *ClientHelper {
+	ch.Client.UseJWT(ch.User.JWTToken)
+	return ch
+}
+
 // CloseWait closes a connection.
 // Waits till all the goroutines handling messages quit.
 func (ch *ClientHelper) CloseWait() {
