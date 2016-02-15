@@ -67,6 +67,7 @@ func (c *Client) Connect(addr string) error {
 		}); err != nil {
 			return fmt.Errorf("authentication failed: %v", err)
 		}
+		wg.Wait()
 	}
 
 	return nil

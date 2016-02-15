@@ -23,7 +23,7 @@ func TestValidToken(t *testing.T) {
 	wg.Add(1)
 	msg := "Lorem ip sum"
 
-	ch.Client.Echo(map[string]string{"message": msg, "token": sh.SeedData.User1.JWTToken}, func(m *client.Message) error {
+	ch.Client.Echo(map[string]string{"message": msg}, func(m *client.Message) error {
 		defer wg.Done()
 		if m.Message != msg {
 			t.Fatalf("expected: %v, got: %v", "wow", m.Message)
