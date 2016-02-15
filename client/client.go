@@ -11,13 +11,12 @@ import (
 
 // Client is a Titan client.
 type Client struct {
-	ID            string     // Randomly generated unique client connection ID.
-	Session       *cmap.CMap // Thread-safe data store for storing arbitrary data for this connection session.
-	conn          *neptulon.Conn
-	router        *middleware.Router
-	inMsgHandler  func(m []Message) error
-	jwtToken      string
-	authenticated bool
+	ID           string     // Randomly generated unique client connection ID.
+	Session      *cmap.CMap // Thread-safe data store for storing arbitrary data for this connection session.
+	conn         *neptulon.Conn
+	router       *middleware.Router
+	inMsgHandler func(m []Message) error
+	jwtToken     string
 }
 
 // NewClient creates a new Client object.
