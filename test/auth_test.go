@@ -38,8 +38,8 @@ func TestInvalidToken(t *testing.T) {
 	sh := NewServerHelper(t).SeedDB()
 	defer sh.ListenAndServe().CloseWait()
 
-	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
-	defer ch.Connect().CloseWait()
+	sh.SeedData.User1.JWTToken = "abc-invalid-token-!"
+	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).UseJWT()
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -49,7 +49,9 @@ func TestInvalidToken(t *testing.T) {
 		wg.Done()
 	})
 
-	ch.Client.Echo(map[string]string{"message": msg, "token": "abc-invalid-token-!"}, func(m *client.Message) error {
+	defer ch.Connect().CloseWait()
+
+	ch.Client.Echo(map[string]string{"message": msg}, func(m *client.Message) error {
 		t.Fatal("authenticated with invalid token")
 		return nil
 	})

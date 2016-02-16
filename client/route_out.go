@@ -1,6 +1,12 @@
 package client
 
-import "github.com/neptulon/neptulon"
+import (
+	"errors"
+	"fmt"
+	"sync"
+
+	"github.com/neptulon/neptulon"
+)
 
 // ------ Outgoing Requests ---------- //
 
@@ -16,6 +22,27 @@ func (c *Client) jwtAuth(jwtToken string, handler func(ack string) error) error 
 	})
 
 	return err
+}
+
+// SyncAuth does the authentication synchronously.
+func (c *Client) SyncAuth() error {
+	if c.jwtToken != "" {
+		var wg sync.WaitGroup
+		wg.Add(1)
+		if err := c.jwtAuth(c.jwtToken, func(ack string) error {
+			defer wg.Done()
+			if ack != "ACK" {
+				return fmt.Errorf("server did not ACK our auth.jwt request: %v", ack)
+			}
+			return nil
+		}); err != nil {
+			defer wg.Done()
+			return fmt.Errorf("authentication failed: %v", err)
+		}
+		wg.Wait()
+	}
+
+	return errors.New("no credentials set")
 }
 
 // SendMessages sends a batch of messages to the server.
