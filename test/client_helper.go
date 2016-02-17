@@ -19,6 +19,7 @@ type ClientHelper struct {
 
 	testing    *testing.T
 	serverAddr string
+	inMsgsChan chan []client.Message
 }
 
 // NewClientHelper creates a new client helper object.
@@ -33,12 +34,14 @@ func NewClientHelper(t *testing.T, addr string) *ClientHelper {
 	}
 
 	c.SetDeadline(10)
-
-	return &ClientHelper{
+	ch := &ClientHelper{
 		Client:     c,
 		testing:    t,
 		serverAddr: addr,
+		inMsgsChan: make(chan []client.Message),
 	}
+	c.InMsgHandler(ch.inMsgHandler)
+	return ch
 }
 
 // Connect connects to a server.
@@ -133,6 +136,18 @@ func (ch *ClientHelper) SendMessagesSafeSync(messages []client.Message) *ClientH
 	return ch
 }
 
+// GetMessagesWait waits for and returns incoming messages.
+// If no message arrives within the timeout, test fails.
+func (ch *ClientHelper) GetMessagesWait() []client.Message {
+	select {
+	case m := <-ch.inMsgsChan:
+		return m
+	case <-time.After(time.Second * 5):
+		ch.testing.Fatal("GetMessagesWait timeout")
+	}
+	return nil
+}
+
 // CloseWait closes a connection.
 // Waits till all the goroutines handling messages quit.
 func (ch *ClientHelper) CloseWait() {
@@ -143,4 +158,9 @@ func (ch *ClientHelper) CloseWait() {
 	if os.Getenv("TRAVIS") != "" || os.Getenv("CI") == "" {
 		time.Sleep(time.Millisecond * 50)
 	}
+}
+
+func (ch *ClientHelper) inMsgHandler(m []client.Message) error {
+	ch.inMsgsChan <- m
+	return nil
 }

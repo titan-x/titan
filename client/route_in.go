@@ -13,7 +13,7 @@ func (c *Client) InMsgHandler(handler func(m []Message) error) {
 	c.conn.Middleware(r)
 	r.Request("msg.recv", func(ctx *neptulon.ReqCtx) error {
 		var msg []Message
-		if err := ctx.Params(msg); err != nil {
+		if err := ctx.Params(&msg); err != nil {
 			return err
 		}
 
