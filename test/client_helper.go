@@ -70,9 +70,13 @@ func (ch *ClientHelper) AsUser(u *titan.User) *ClientHelper {
 	return ch
 }
 
-// UseJWT enables authentication with JWT token belonging the the user assigned with AsUser method.
-func (ch *ClientHelper) UseJWT() *ClientHelper {
-	ch.Client.UseJWT(ch.User.JWTToken)
+// JWTAuth does JWT authentication with the token belonging the the user assigned with AsUser method.
+// This method runs synchronously and blocks until authentication response is received (or connection is closed by server).
+func (ch *ClientHelper) JWTAuth() *ClientHelper {
+	if err := ch.Client.SyncJWTAuthAuth(ch.User.JWTToken); err != nil {
+		ch.testing.Fatal(err)
+	}
+
 	return ch
 }
 

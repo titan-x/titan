@@ -40,6 +40,7 @@ func (c *Client) SyncJWTAuthAuth(jwtToken string) error {
 			return fmt.Errorf("authentication failed: %v", err)
 		}
 		wg.Wait()
+		return nil
 	}
 
 	return errors.New("no credentials set")

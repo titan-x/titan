@@ -16,8 +16,8 @@ func TestValidToken(t *testing.T) {
 	sh := NewServerHelper(t).SeedDB()
 	defer sh.ListenAndServe().CloseWait()
 
-	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).UseJWT()
-	defer ch.Connect().CloseWait()
+	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
+	defer ch.Connect().JWTAuth().CloseWait()
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -39,7 +39,7 @@ func TestInvalidToken(t *testing.T) {
 	defer sh.ListenAndServe().CloseWait()
 
 	sh.SeedData.User1.JWTToken = "abc-invalid-token-!"
-	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).UseJWT()
+	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
 
 	var wg sync.WaitGroup
 	wg.Add(1)
