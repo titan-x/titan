@@ -14,16 +14,19 @@ func TestSendEcho(t *testing.T) {
 	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
 	defer ch.Connect().CloseWait()
 
+	// not using ClientHelper.EchoSafeSync to differentiate this test from auth_test.TestValidToken
 	var wg sync.WaitGroup
 	wg.Add(1)
 	m := "Ola!"
-	ch.Client.Echo(map[string]string{"message": m, "token": sh.SeedData.User1.JWTToken}, func(msg *client.Message) error {
+	if err := ch.Client.Echo(map[string]string{"message": m, "token": sh.SeedData.User1.JWTToken}, func(msg *client.Message) error {
 		defer wg.Done()
 		if msg.Message != m {
 			t.Fatalf("expected: %v, got: %v", m, msg.Message)
 		}
 		return nil
-	})
+	}); err != nil {
+		t.Fatal(err)
+	}
 
 	wg.Wait()
 

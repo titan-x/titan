@@ -20,19 +20,7 @@ func TestValidToken(t *testing.T) {
 	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
 	defer ch.Connect().JWTAuth().CloseWait()
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	msg := "Lorem ip sum"
-
-	ch.Client.Echo(map[string]string{"message": msg}, func(m *client.Message) error {
-		defer wg.Done()
-		if m.Message != msg {
-			t.Fatalf("expected: %v, got: %v", "wow", m.Message)
-		}
-		return nil
-	})
-
-	wg.Wait()
+	ch.EchoSafeSync("Ola!")
 }
 
 func TestInvalidToken(t *testing.T) {

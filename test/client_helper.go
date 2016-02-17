@@ -97,6 +97,24 @@ func (ch *ClientHelper) JWTAuth() *ClientHelper {
 	return ch
 }
 
+// EchoSafeSync is the error safe and synchronous version of Client.Echo method.
+func (ch *ClientHelper) EchoSafeSync(message string) *ClientHelper {
+	var wg sync.WaitGroup
+	wg.Add(1)
+	if err := ch.Client.Echo(map[string]string{"message": message}, func(msg *client.Message) error {
+		defer wg.Done()
+		if msg.Message != message {
+			ch.testing.Fatalf("expected: %v, got: %v", message, msg.Message)
+		}
+		return nil
+	}); err != nil {
+		ch.testing.Fatal(err)
+	}
+
+	wg.Wait()
+	return ch
+}
+
 // CloseWait closes a connection.
 // Waits till all the goroutines handling messages quit.
 func (ch *ClientHelper) CloseWait() {
