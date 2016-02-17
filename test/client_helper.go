@@ -115,6 +115,24 @@ func (ch *ClientHelper) EchoSafeSync(message string) *ClientHelper {
 	return ch
 }
 
+// SendMessagesSafeSync is the error safe and synchronous version of Client.SendMessages method.
+func (ch *ClientHelper) SendMessagesSafeSync(messages []client.Message) *ClientHelper {
+	var wg sync.WaitGroup
+	wg.Add(1)
+	if err := ch.Client.SendMessages(messages, func(ack string) error {
+		defer wg.Done()
+		if ack != "ACK" {
+			ch.testing.Fatalf("failed to send hello message to user %v: %v", messages[0].To, ack)
+		}
+		return nil
+	}); err != nil {
+		ch.testing.Fatal(err)
+	}
+
+	wg.Wait()
+	return ch
+}
+
 // CloseWait closes a connection.
 // Waits till all the goroutines handling messages quit.
 func (ch *ClientHelper) CloseWait() {

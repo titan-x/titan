@@ -51,16 +51,7 @@ func TestSendMsgOnline(t *testing.T) {
 	var wg sync.WaitGroup
 
 	// send a hello message from user 1 to user 2
-	wg.Add(1)
-	if err := ch1.Client.SendMessages([]client.Message{client.Message{To: "2", Message: "Hello, how are you?"}}, func(ack string) error {
-		defer wg.Done()
-		if ack != "ACK" {
-			t.Fatal("failed to send hello message to user 2:", ack)
-		}
-		return nil
-	}); err != nil {
-		t.Fatal(err)
-	}
+	ch1.SendMessagesSafeSync([]client.Message{client.Message{To: "2", Message: "Hello, how are you?"}})
 
 	// todo: all of SendMessages etc. now return error so handle them as above
 
