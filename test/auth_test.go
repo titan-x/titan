@@ -1,7 +1,6 @@
 package test
 
 import (
-	"sync"
 	"testing"
 	"time"
 
@@ -31,20 +30,17 @@ func TestInvalidToken(t *testing.T) {
 	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
 	defer ch.Connect().JWTAuth().CloseWait()
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	timer := time.AfterFunc(time.Millisecond*100, func() {
-		wg.Done()
-	})
-
-	ch.Client.Echo(map[string]string{"message": "Lorem ip sum"}, func(m *client.Message) error {
-		timer.Stop()
-		defer wg.Done()
-		t.Fatal("authenticated with invalid token")
+	gotMsg := make(chan bool)
+	ch.Client.Echo(client.Message{Message: "Lorem ip sum"}, func(m *client.Message) error {
+		gotMsg <- true
 		return nil
 	})
 
-	wg.Wait()
+	select {
+	case <-gotMsg:
+		t.Fatal("authenticated with invalid token")
+	case <-time.After(time.Millisecond * 100):
+	}
 
 	// todo: no token, un-signed token, invalid token signature, expired token...
 }

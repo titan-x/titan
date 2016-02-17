@@ -48,8 +48,6 @@ func TestSendMsgOnline(t *testing.T) {
 	ch2 := sh.GetClientHelper().AsUser(&sh.SeedData.User2)
 	defer ch2.Connect().JWTAuth().CloseWait()
 
-	var wg sync.WaitGroup
-
 	// send a hello message from user 1 to user 2
 	m := "Hello, how are you?"
 	ch1.SendMessagesSafeSync([]client.Message{client.Message{To: "2", Message: m}})
@@ -97,8 +95,6 @@ func TestSendMsgOnline(t *testing.T) {
 	// if resfin != "echo" {
 	// 	t.Fatal("Last echo did return an invalid response:", resfin)
 	// }
-
-	wg.Wait()
 }
 
 //

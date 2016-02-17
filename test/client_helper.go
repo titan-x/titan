@@ -104,7 +104,7 @@ func (ch *ClientHelper) JWTAuth() *ClientHelper {
 func (ch *ClientHelper) EchoSafeSync(message string) *ClientHelper {
 	var wg sync.WaitGroup
 	wg.Add(1)
-	if err := ch.Client.Echo(map[string]string{"message": message}, func(msg *client.Message) error {
+	if err := ch.Client.Echo(client.Message{Message: message}, func(msg *client.Message) error {
 		defer wg.Done()
 		if msg.Message != message {
 			ch.testing.Fatalf("expected: %v, got: %v", message, msg.Message)
