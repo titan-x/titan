@@ -3,6 +3,7 @@ package test
 import (
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/titan-x/titan/client"
 )
@@ -40,18 +41,17 @@ func TestInvalidToken(t *testing.T) {
 
 	sh.SeedData.User1.JWTToken = "abc-invalid-token-!"
 	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
+	defer ch.Connect().JWTAuth().CloseWait()
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-	msg := "Lorem ip sum"
-
-	ch.Client.DisconnHandler(func(c *client.Client) {
+	timer := time.AfterFunc(time.Millisecond*100, func() {
 		wg.Done()
 	})
 
-	defer ch.Connect().CloseWait()
-
-	ch.Client.Echo(map[string]string{"message": msg}, func(m *client.Message) error {
+	ch.Client.Echo(map[string]string{"message": "Lorem ip sum"}, func(m *client.Message) error {
+		timer.Stop()
+		defer wg.Done()
 		t.Fatal("authenticated with invalid token")
 		return nil
 	})

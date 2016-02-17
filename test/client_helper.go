@@ -1,8 +1,10 @@
 package test
 
 import (
+	"fmt"
 	"net"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -73,10 +75,26 @@ func (ch *ClientHelper) AsUser(u *titan.User) *ClientHelper {
 // JWTAuth does JWT authentication with the token belonging the the user assigned with AsUser method.
 // This method runs synchronously and blocks until authentication response is received (or connection is closed by server).
 func (ch *ClientHelper) JWTAuth() *ClientHelper {
-	if err := ch.Client.SyncJWTAuthAuth(ch.User.JWTToken); err != nil {
-		ch.testing.Fatal(err)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	timer := time.AfterFunc(time.Millisecond*100, func() {
+		wg.Done()
+	})
+
+	if err := ch.Client.JWTAuth(ch.User.JWTToken, func(ack string) error {
+		timer.Stop()
+		defer wg.Done()
+		if ack != "ACK" {
+			return fmt.Errorf("server did not ACK our auth.jwt request: %v", ack)
+		}
+		return nil
+	}); err != nil {
+		timer.Stop()
+		defer wg.Done()
+		ch.testing.Fatalf("authentication failed: %v", err)
 	}
 
+	wg.Wait()
 	return ch
 }
 
