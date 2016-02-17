@@ -40,33 +40,12 @@ func TestSendMsgOnline(t *testing.T) {
 	defer sh.ListenAndServe().CloseWait()
 
 	ch1 := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
-	defer ch1.Connect().CloseWait()
+	defer ch1.Connect().JWTAuth().CloseWait()
 
 	ch2 := sh.GetClientHelper().AsUser(&sh.SeedData.User2)
-	defer ch2.Connect().CloseWait()
+	defer ch2.Connect().JWTAuth().CloseWait()
 
 	var wg sync.WaitGroup
-
-	// send client.info request from user 1 & 2 to server, to announce availability and get authenticated
-	wg.Add(2)
-	// ch1.Client.JWTAuth(sh.SeedData.User1.JWTToken, func(m string) error {
-	// 	defer wg.Done()
-	// 	if m != "ACK" {
-	// 		t.Fatal("failed to send client.info request from client 1 to server:", m)
-	// 	}
-	// 	return nil
-	// })
-	// ch2.Client.JWTAuth(sh.SeedData.User2.JWTToken, func(m string) error {
-	// 	defer wg.Done()
-	// 	if m != "ACK" {
-	// 		t.Fatal("failed to send client.info request from client 2 to server:", m)
-	// 	}
-	// 	return nil
-	// })
-
-	wg.Wait() // todo: authomate authentication with Client.UseJWT & Client.AuthHandler & Client.Authenticated = true ?
-
-	// todo: if auth fails, Client.Connect() should close the conn and reuturn error to us (returning error in ctx should close the conn itself?)
 
 	// send a hello message from user 1 to user 2
 	wg.Add(1)
