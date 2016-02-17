@@ -1,7 +1,6 @@
 package test
 
 import (
-	"fmt"
 	"net"
 	"os"
 	"sync"
@@ -85,7 +84,7 @@ func (ch *ClientHelper) JWTAuth() *ClientHelper {
 		timer.Stop()
 		defer wg.Done()
 		if ack != "ACK" {
-			return fmt.Errorf("server did not ACK our auth.jwt request: %v", ack)
+			ch.testing.Fatalf("server did not ACK our auth.jwt request: %v", ack)
 		}
 		return nil
 	}); err != nil {
