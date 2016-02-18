@@ -77,26 +77,23 @@ func (ch *ClientHelper) AsUser(u *titan.User) *ClientHelper {
 // JWTAuth does JWT authentication with the token belonging the the user assigned with AsUser method.
 // This method runs synchronously and blocks until authentication response is received (or connection is closed by server).
 func (ch *ClientHelper) JWTAuth() *ClientHelper {
-	var wg sync.WaitGroup
-	wg.Add(1)
-	timer := time.AfterFunc(time.Millisecond*100, func() {
-		wg.Done()
-	})
+	gotRes := make(chan bool)
 
 	if err := ch.Client.JWTAuth(ch.User.JWTToken, func(ack string) error {
-		timer.Stop()
-		defer wg.Done()
 		if ack != "ACK" {
 			ch.testing.Fatalf("server did not ACK our auth.jwt request: %v", ack)
 		}
+		gotRes <- true
 		return nil
 	}); err != nil {
-		timer.Stop()
-		defer wg.Done()
-		ch.testing.Fatalf("authentication failed: %v", err)
+		ch.testing.Fatalf("authentication request failed: %v", err)
 	}
 
-	wg.Wait()
+	select {
+	case <-gotRes:
+	case <-time.After(time.Millisecond * 100):
+		ch.testing.Fatal("did not get an authentication response")
+	}
 	return ch
 }
 
