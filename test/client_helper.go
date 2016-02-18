@@ -3,7 +3,6 @@ package test
 import (
 	"net"
 	"os"
-	"sync"
 	"testing"
 	"time"
 
@@ -92,44 +91,52 @@ func (ch *ClientHelper) JWTAuth() *ClientHelper {
 	select {
 	case <-gotRes:
 	case <-time.After(time.Millisecond * 300):
-		ch.testing.Fatal("did not get an authentication response")
+		ch.testing.Fatal("did not get an auth.jwt response in time")
 	}
 	return ch
 }
 
 // EchoSafeSync is the error safe and synchronous version of Client.Echo method.
 func (ch *ClientHelper) EchoSafeSync(message string) *ClientHelper {
-	var wg sync.WaitGroup
-	wg.Add(1)
+	gotRes := make(chan bool)
+
 	if err := ch.Client.Echo(client.Message{Message: message}, func(msg *client.Message) error {
-		defer wg.Done()
 		if msg.Message != message {
 			ch.testing.Fatalf("expected: %v, got: %v", message, msg.Message)
 		}
+		gotRes <- true
 		return nil
 	}); err != nil {
 		ch.testing.Fatal(err)
 	}
 
-	wg.Wait()
+	select {
+	case <-gotRes:
+	case <-time.After(time.Millisecond * 300):
+		ch.testing.Fatal("did not get an msg.echo response in time")
+	}
 	return ch
 }
 
 // SendMessagesSafeSync is the error safe and synchronous version of Client.SendMessages method.
 func (ch *ClientHelper) SendMessagesSafeSync(messages []client.Message) *ClientHelper {
-	var wg sync.WaitGroup
-	wg.Add(1)
+	gotRes := make(chan bool)
+
 	if err := ch.Client.SendMessages(messages, func(ack string) error {
-		defer wg.Done()
 		if ack != "ACK" {
 			ch.testing.Fatalf("failed to send hello message to user %v: %v", messages[0].To, ack)
 		}
+		gotRes <- true
 		return nil
 	}); err != nil {
 		ch.testing.Fatal(err)
 	}
 
-	wg.Wait()
+	select {
+	case <-gotRes:
+	case <-time.After(time.Millisecond * 300):
+		ch.testing.Fatal("did not get an msg.send response in time")
+	}
 	return ch
 }
 
