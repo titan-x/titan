@@ -91,7 +91,7 @@ func (ch *ClientHelper) JWTAuth() *ClientHelper {
 
 	select {
 	case <-gotRes:
-	case <-time.After(time.Millisecond * 100):
+	case <-time.After(time.Millisecond * 300):
 		ch.testing.Fatal("did not get an authentication response")
 	}
 	return ch
@@ -139,7 +139,7 @@ func (ch *ClientHelper) GetMessagesWait() []client.Message {
 	select {
 	case m := <-ch.inMsgsChan:
 		return m
-	case <-time.After(time.Second * 5):
+	case <-time.After(time.Second * 300):
 		ch.testing.Fatal("GetMessagesWait timeout")
 	}
 	return nil

@@ -44,7 +44,7 @@ func TestInvalidToken(t *testing.T) {
 		t.Fatal("authenticated with invalid token")
 	case <-closed:
 		log.Println("test: server closed connection as expected")
-	case <-time.After(time.Millisecond * 100):
+	case <-time.After(time.Millisecond * 300):
 	}
 
 	// todo: no token, un-signed token, invalid token signature, expired token...
