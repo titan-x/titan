@@ -1,6 +1,7 @@
 package test
 
 import (
+	"log"
 	"testing"
 	"time"
 
@@ -26,12 +27,14 @@ func TestInvalidToken(t *testing.T) {
 	sh := NewServerHelper(t).SeedDB()
 	defer sh.ListenAndServe().CloseWait()
 
-	sh.SeedData.User1.JWTToken = "abc-invalid-token-!"
-	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
-	defer ch.Connect().JWTAuth().CloseWait()
+	ch := sh.GetClientHelper()
+	defer ch.Connect().CloseWait()
 
-	gotMsg := make(chan bool)
-	ch.Client.Echo(client.Message{Message: "Lorem ip sum"}, func(m *client.Message) error {
+	gotMsg, closed := make(chan bool), make(chan bool)
+	ch.Client.DisconnHandler(func(c *client.Client) {
+		closed <- true
+	})
+	ch.Client.Echo(map[string]string{"message": "Lorem ip sum", "token": "abc-invalid-token-!"}, func(m *client.Message) error {
 		gotMsg <- true
 		return nil
 	})
@@ -39,6 +42,8 @@ func TestInvalidToken(t *testing.T) {
 	select {
 	case <-gotMsg:
 		t.Fatal("authenticated with invalid token")
+	case <-closed:
+		log.Println("test: server closed connection as expected")
 	case <-time.After(time.Millisecond * 100):
 	}
 
