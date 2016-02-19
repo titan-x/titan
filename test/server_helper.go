@@ -111,7 +111,7 @@ func (sh *ServerHelper) CloseWait() {
 	}
 	select {
 	case <-sh.serverClosed:
-	case <-time.After(time.Second * 5):
+	case <-time.After(time.Second):
 		sh.testing.Fatal("server didn't close in time")
 	}
 	time.Sleep(time.Millisecond * 5)

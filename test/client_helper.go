@@ -90,7 +90,7 @@ func (ch *ClientHelper) JWTAuth() *ClientHelper {
 
 	select {
 	case <-gotRes:
-	case <-time.After(time.Millisecond * 300):
+	case <-time.After(time.Second):
 		ch.testing.Fatal("did not get an auth.jwt response in time")
 	}
 	return ch
@@ -112,7 +112,7 @@ func (ch *ClientHelper) EchoSafeSync(message string) *ClientHelper {
 
 	select {
 	case <-gotRes:
-	case <-time.After(time.Millisecond * 300):
+	case <-time.After(time.Second):
 		ch.testing.Fatal("did not get an msg.echo response in time")
 	}
 	return ch
@@ -134,7 +134,7 @@ func (ch *ClientHelper) SendMessagesSafeSync(messages []client.Message) *ClientH
 
 	select {
 	case <-gotRes:
-	case <-time.After(time.Millisecond * 300):
+	case <-time.After(time.Second):
 		ch.testing.Fatal("did not get an msg.send response in time")
 	}
 	return ch
@@ -146,7 +146,7 @@ func (ch *ClientHelper) GetMessagesWait() []client.Message {
 	select {
 	case m := <-ch.inMsgsChan:
 		return m
-	case <-time.After(time.Second * 300):
+	case <-time.After(time.Second):
 		ch.testing.Fatal("GetMessagesWait timeout")
 	}
 	return nil
