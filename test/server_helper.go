@@ -2,7 +2,6 @@ package test
 
 import (
 	"os"
-	"sync"
 	"testing"
 	"time"
 
@@ -15,10 +14,10 @@ import (
 type ServerHelper struct {
 	SeedData SeedData // Populated only when SeedDB() method is called.
 
-	testing  *testing.T
-	server   *titan.Server
-	serverWG sync.WaitGroup // server instance goroutine wait group
-	db       titan.InMemDB
+	testing      *testing.T
+	server       *titan.Server
+	serverClosed chan bool
+	db           titan.InMemDB
 }
 
 // NewServerHelper creates a new server helper object.
@@ -44,9 +43,10 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 	}
 
 	h := ServerHelper{
-		db:      db,
-		server:  s,
-		testing: t,
+		db:           db,
+		server:       s,
+		testing:      t,
+		serverClosed: make(chan bool),
 	}
 
 	return &h
@@ -88,12 +88,11 @@ func (sh *ServerHelper) SeedDB() *ServerHelper {
 
 // ListenAndServe starts the server.
 func (sh *ServerHelper) ListenAndServe() *ServerHelper {
-	sh.serverWG.Add(1)
 	go func() {
-		defer sh.serverWG.Done()
 		if err := sh.server.ListenAndServe(); err != nil {
 			sh.testing.Fatalf("server-helper: failed to start server: %v", err)
 		}
+		sh.serverClosed <- true
 	}()
 
 	time.Sleep(time.Millisecond) // give Start() enough time to initiate
@@ -110,7 +109,11 @@ func (sh *ServerHelper) CloseWait() {
 	if err := sh.server.Close(); err != nil {
 		sh.testing.Fatal("Failed to stop the server:", err)
 	}
-	sh.serverWG.Wait()
+	select {
+	case <-sh.serverClosed:
+	case <-time.After(time.Second * 5):
+		sh.testing.Fatal("server didn't close in time")
+	}
 	time.Sleep(time.Millisecond * 5)
 	if os.Getenv("TRAVIS") != "" || os.Getenv("CI") == "" {
 		time.Sleep(time.Millisecond * 50)
