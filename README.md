@@ -1,7 +1,7 @@
 # Titan
 
-[![Build Status](https://travis-ci.org/nb-titan/titan.svg?branch=master)](https://travis-ci.org/nb-titan/titan)
-[![GoDoc](https://godoc.org/github.com/nb-titan/titan?status.svg)](https://godoc.org/github.com/nb-titan/titan)
+[![Build Status](https://travis-ci.org/titan-x/titan.svg?branch=master)](https://travis-ci.org/titan-x/titan)
+[![GoDoc](https://godoc.org/github.com/titan-x/titan?status.svg)](https://godoc.org/github.com/titan-x/titan)
 
 Titan is a messaging server for delivering chat messages to mobile devices and browsers. For each delivery target, the server uses different protocol. i.e. GCM for Android apps, WebSockets for browsers, etc. The server is completely written in Go and makes huge use of goroutines and channels. Client server communication is full-duplex bidirectional.
 
