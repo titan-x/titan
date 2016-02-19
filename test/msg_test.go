@@ -1,8 +1,8 @@
 package test
 
 import (
-	"sync"
 	"testing"
+	"time"
 
 	"github.com/titan-x/titan/client"
 )
@@ -15,20 +15,23 @@ func TestSendEcho(t *testing.T) {
 	defer ch.Connect().CloseWait()
 
 	// not using ClientHelper.EchoSafeSync to differentiate this test from auth_test.TestValidToken
-	var wg sync.WaitGroup
-	wg.Add(1)
+	gotRes := make(chan bool)
 	m := "Ola!"
 	if err := ch.Client.Echo(map[string]string{"message": m, "token": sh.SeedData.User1.JWTToken}, func(msg *client.Message) error {
-		defer wg.Done()
 		if msg.Message != m {
 			t.Fatalf("expected: %v, got: %v", m, msg.Message)
 		}
+		gotRes <- true
 		return nil
 	}); err != nil {
 		t.Fatal(err)
 	}
 
-	wg.Wait()
+	select {
+	case <-gotRes:
+	case <-time.After(time.Second):
+		t.Fatal("didn't get msg.echo response in time")
+	}
 
 	// t.Fatal("Failed to send a message to the echo user")
 	// t.Fatal("Failed to send batch message to the echo user")
