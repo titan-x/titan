@@ -2,22 +2,23 @@ package test
 
 import (
 	"net"
+	"os"
 	"testing"
 	"time"
 
-	"github.com/neptulon/neptulon/test"
 	"github.com/titan-x/titan"
+	"github.com/titan-x/titan/client"
 )
 
 // ClientHelper is a Titan Client wrapper for testing.
 // All the functions are wrapped with proper test runner error logging.
 type ClientHelper struct {
-	Client *titan.Client
+	Client *client.Client
 	User   *titan.User
 
-	ch         *test.ConnHelper // inner Neptulon Conn helper
 	testing    *testing.T
 	serverAddr string
+	inMsgsChan chan []client.Message
 }
 
 // NewClientHelper creates a new client helper object.
@@ -26,18 +27,20 @@ func NewClientHelper(t *testing.T, addr string) *ClientHelper {
 		t.Skip("Skipping integration test in short testing mode.")
 	}
 
-	c, err := titan.NewClient()
+	c, err := client.NewClient()
 	if err != nil {
 		t.Fatal("Failed to create client:", err)
 	}
 
 	c.SetDeadline(10)
-
-	return &ClientHelper{
+	ch := &ClientHelper{
 		Client:     c,
 		testing:    t,
 		serverAddr: addr,
+		inMsgsChan: make(chan []client.Message),
 	}
+	c.InMsgHandler(ch.inMsgHandler)
+	return ch
 }
 
 // Connect connects to a server.
@@ -68,4 +71,100 @@ func (ch *ClientHelper) Connect() *ClientHelper {
 func (ch *ClientHelper) AsUser(u *titan.User) *ClientHelper {
 	ch.User = u
 	return ch
+}
+
+// JWTAuth does JWT authentication with the token belonging the the user assigned with AsUser method.
+// This method runs synchronously and blocks until authentication response is received (or connection is closed by server).
+func (ch *ClientHelper) JWTAuth() *ClientHelper {
+	gotRes := make(chan bool)
+
+	if err := ch.Client.JWTAuth(ch.User.JWTToken, func(ack string) error {
+		if ack != "ACK" {
+			ch.testing.Fatalf("server did not ACK our auth.jwt request: %v", ack)
+		}
+		gotRes <- true
+		return nil
+	}); err != nil {
+		ch.testing.Fatalf("authentication request failed: %v", err)
+	}
+
+	select {
+	case <-gotRes:
+	case <-time.After(time.Second):
+		ch.testing.Fatal("did not get an auth.jwt response in time")
+	}
+	return ch
+}
+
+// EchoSafeSync is the error safe and synchronous version of Client.Echo method.
+func (ch *ClientHelper) EchoSafeSync(message string) *ClientHelper {
+	gotRes := make(chan bool)
+
+	if err := ch.Client.Echo(client.Message{Message: message}, func(msg *client.Message) error {
+		if msg.Message != message {
+			ch.testing.Fatalf("expected: %v, got: %v", message, msg.Message)
+		}
+		gotRes <- true
+		return nil
+	}); err != nil {
+		ch.testing.Fatal(err)
+	}
+
+	select {
+	case <-gotRes:
+	case <-time.After(time.Second):
+		ch.testing.Fatal("did not get an msg.echo response in time")
+	}
+	return ch
+}
+
+// SendMessagesSafeSync is the error safe and synchronous version of Client.SendMessages method.
+func (ch *ClientHelper) SendMessagesSafeSync(messages []client.Message) *ClientHelper {
+	gotRes := make(chan bool)
+
+	if err := ch.Client.SendMessages(messages, func(ack string) error {
+		if ack != "ACK" {
+			ch.testing.Fatalf("failed to send hello message to user %v: %v", messages[0].To, ack)
+		}
+		gotRes <- true
+		return nil
+	}); err != nil {
+		ch.testing.Fatal(err)
+	}
+
+	select {
+	case <-gotRes:
+	case <-time.After(time.Second):
+		ch.testing.Fatal("did not get an msg.send response in time")
+	}
+	return ch
+}
+
+// GetMessagesWait waits for and returns incoming messages.
+// If no message arrives within the timeout, test fails.
+func (ch *ClientHelper) GetMessagesWait() []client.Message {
+	select {
+	case m := <-ch.inMsgsChan:
+		return m
+	case <-time.After(time.Second):
+		ch.testing.Fatal("GetMessagesWait timeout")
+	}
+	return nil
+}
+
+// CloseWait closes a connection.
+// Waits till all the goroutines handling messages quit.
+func (ch *ClientHelper) CloseWait() {
+	if err := ch.Client.Close(); err != nil {
+		ch.testing.Fatal("Failed to close the client connection:", err)
+	}
+	time.Sleep(time.Millisecond * 5)
+	if os.Getenv("TRAVIS") != "" || os.Getenv("CI") == "" {
+		time.Sleep(time.Millisecond * 50)
+	}
+}
+
+func (ch *ClientHelper) inMsgHandler(m []client.Message) error {
+	ch.inMsgsChan <- m
+	return nil
 }

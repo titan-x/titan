@@ -1,7 +1,7 @@
 package test
 
 import (
-	"sync"
+	"os"
 	"testing"
 	"time"
 
@@ -14,10 +14,10 @@ import (
 type ServerHelper struct {
 	SeedData SeedData // Populated only when SeedDB() method is called.
 
-	testing  *testing.T
-	server   *titan.Server
-	serverWG sync.WaitGroup // server instance goroutine wait group
-	db       titan.InMemDB
+	testing      *testing.T
+	server       *titan.Server
+	serverClosed chan bool
+	db           titan.InMemDB
 }
 
 // NewServerHelper creates a new server helper object.
@@ -25,6 +25,10 @@ type ServerHelper struct {
 func NewServerHelper(t *testing.T) *ServerHelper {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short testing mode")
+	}
+
+	if (titan.Conf == titan.Config{}) {
+		titan.InitConf("test")
 	}
 
 	url := "127.0.0.1:" + titan.Conf.App.Port
@@ -39,9 +43,10 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 	}
 
 	h := ServerHelper{
-		db:      db,
-		server:  s,
-		testing: t,
+		db:           db,
+		server:       s,
+		testing:      t,
+		serverClosed: make(chan bool),
 	}
 
 	return &h
@@ -59,18 +64,18 @@ func (sh *ServerHelper) SeedDB() *ServerHelper {
 	t := jwt.New(jwt.SigningMethodHS256)
 	t.Claims["userid"] = "1"
 	t.Claims["created"] = now
-	ts1, err := t.SignedString([]byte(titan.Conf.App.JWTPass))
+	ts1, err := t.SignedString([]byte(titan.Conf.App.JWTPass()))
 	t2 := jwt.New(jwt.SigningMethodHS256)
 	t2.Claims["userid"] = "2"
 	t2.Claims["created"] = now
-	ts2, err := t2.SignedString([]byte(titan.Conf.App.JWTPass))
+	ts2, err := t2.SignedString([]byte(titan.Conf.App.JWTPass()))
 	if err != nil {
 		sh.testing.Fatalf("server-helper: failed to sign JWT token: %v", err)
 	}
 
 	sd := SeedData{
-		User1: titan.User{ID: "1", JWT: ts1},
-		User2: titan.User{ID: "2", JWT: ts2},
+		User1: titan.User{ID: "1", JWTToken: ts1},
+		User2: titan.User{ID: "2", JWTToken: ts2},
 	}
 
 	sh.db.SaveUser(&sd.User1)
@@ -81,14 +86,13 @@ func (sh *ServerHelper) SeedDB() *ServerHelper {
 	return sh
 }
 
-// Start starts the server.
-func (sh *ServerHelper) Start() *ServerHelper {
-	sh.serverWG.Add(1)
+// ListenAndServe starts the server.
+func (sh *ServerHelper) ListenAndServe() *ServerHelper {
 	go func() {
-		defer sh.serverWG.Done()
-		if err := sh.server.Start(); err != nil {
+		if err := sh.server.ListenAndServe(); err != nil {
 			sh.testing.Fatalf("server-helper: failed to start server: %v", err)
 		}
+		sh.serverClosed <- true
 	}()
 
 	time.Sleep(time.Millisecond) // give Start() enough time to initiate
@@ -100,10 +104,18 @@ func (sh *ServerHelper) GetClientHelper() *ClientHelper {
 	return NewClientHelper(sh.testing, "ws://127.0.0.1:"+titan.Conf.App.Port)
 }
 
-// Stop stops the server instance.
-func (sh *ServerHelper) Stop() {
-	if err := sh.server.Stop(); err != nil {
+// CloseWait closes the server and wait for all request/conn goroutines to exit.
+func (sh *ServerHelper) CloseWait() {
+	if err := sh.server.Close(); err != nil {
 		sh.testing.Fatal("Failed to stop the server:", err)
 	}
-	sh.serverWG.Wait()
+	select {
+	case <-sh.serverClosed:
+	case <-time.After(time.Second):
+		sh.testing.Fatal("server didn't close in time")
+	}
+	time.Sleep(time.Millisecond * 5)
+	if os.Getenv("TRAVIS") != "" || os.Getenv("CI") == "" {
+		time.Sleep(time.Millisecond * 50)
+	}
 }

@@ -1,10 +1,6 @@
 package titan
 
 import (
-	"fmt"
-	"log"
-	"sync"
-
 	"github.com/neptulon/neptulon"
 	"github.com/neptulon/neptulon/middleware"
 	"github.com/neptulon/neptulon/middleware/jwt"
@@ -20,33 +16,37 @@ type Server struct {
 	// titan server components
 	db    DB
 	queue Queue
-
-	debug    bool  // dump raw TCP message to stderr using log.Println()
-	err      error // last error returned by neptulon framework before closing listener
-	errMutex sync.Mutex
 }
 
 // NewServer creates a new server.
 func NewServer(addr string) (*Server, error) {
+	if (Conf == Config{}) {
+		InitConf("")
+	}
+
 	s := Server{
 		server: neptulon.NewServer(addr),
 		db:     NewInMemDB(),
 		queue:  NewQueue(),
 	}
 
+	s.server.MiddlewareFunc(middleware.Logger)
 	s.pubRoute = middleware.NewRouter()
 	s.server.Middleware(s.pubRoute)
-	initPubRoutes(s.pubRoute, s.db, Conf.App.JWTPass)
+	initPubRoutes(s.pubRoute, s.db, Conf.App.JWTPass())
 
-	// --- all communication below this point is authenticated --- //
-
-	s.server.MiddlewareFunc(jwt.HMAC(Conf.App.JWTPass))
+	//all communication below this point is authenticated
+	s.server.MiddlewareFunc(jwt.HMAC(Conf.App.JWTPass()))
 	s.server.Middleware(&s.queue)
 	s.privRoute = middleware.NewRouter()
 	s.server.Middleware(s.privRoute)
 	initPrivRoutes(s.privRoute, &s.queue)
+	// r.Middleware(NotFoundHandler()) - 404-like handler
 
-	s.queue.SetServer(s.server) // todo: research a better way to handle inner-circular dependencies so remove these lines back into Server contructor (maybe via dereferencing: http://openmymind.net/Things-I-Wish-Someone-Had-Told-Me-About-Go/, but then initializers actually using the pointer values would have to be lazy!)
+	// todo: research a better way to handle inner-circular dependencies so remove these lines back into Server contructor
+	// (maybe via dereferencing: http://openmymind.net/Things-I-Wish-Someone-Had-Told-Me-About-Go/, but then initializers
+	// actually using the pointer values would have to be lazy!)
+	s.queue.SetServer(s.server)
 
 	s.server.DisconnHandler(func(c *neptulon.Conn) {
 		// only handle this event for previously authenticated
@@ -64,29 +64,13 @@ func (s *Server) SetDB(db DB) error {
 	return nil
 }
 
-// Start the Titan server. This function blocks until server is closed.
-func (s *Server) Start() error {
-	err := s.server.Start()
-	if err != nil && s.debug {
-		log.Fatalln("Listener returned an error while closing:", err)
-	}
-
-	s.errMutex.Lock()
-	s.err = err
-	s.errMutex.Unlock()
-
-	return err
+// ListenAndServe starts the Titan server. This function blocks until server is closed.
+func (s *Server) ListenAndServe() error {
+	return s.server.ListenAndServe()
 }
 
-// Stop stops the server and closes all of the active connections discarding any read/writes that is going on currently.
+// Close the server and all of the active connections, discarding any read/writes that is going on currently.
 // This is not a problem as we always require an ACK but it will also mean that message deliveries will be at-least-once; to-and-from the server.
-func (s *Server) Stop() error {
-	err := s.server.Close()
-
-	s.errMutex.Lock()
-	if s.err != nil {
-		return fmt.Errorf("Past internal error: %v", s.err)
-	}
-	s.errMutex.Unlock()
-	return err
+func (s *Server) Close() error {
+	return s.server.Close()
 }

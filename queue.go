@@ -72,6 +72,12 @@ func (q *Queue) AddRequest(userID string, method string, params interface{}, res
 	return nil
 }
 
+// AddBatchRequest add a request that is suitable for batching.
+// Request with the same method name will be batched.
+func (q *Queue) AddBatchRequest() {
+
+}
+
 type queuedRequest struct {
 	Method     string
 	Params     interface{}

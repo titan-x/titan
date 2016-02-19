@@ -1,10 +1,11 @@
 package test
 
 import (
-	"sync"
+	"log"
 	"testing"
+	"time"
 
-	"github.com/titan-x/titan"
+	"github.com/titan-x/titan/client"
 )
 
 func TestAuth(t *testing.T) {
@@ -13,60 +14,42 @@ func TestAuth(t *testing.T) {
 }
 
 func TestValidToken(t *testing.T) {
-	sh := NewServerHelper(t).SeedDB().Start()
-	defer sh.Stop()
+	sh := NewServerHelper(t).SeedDB()
+	defer sh.ListenAndServe().CloseWait()
 
-	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect()
-	defer ch.Client.Close()
+	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
+	defer ch.Connect().JWTAuth().CloseWait()
 
-	var wg sync.WaitGroup
+	ch.EchoSafeSync("Ola!")
+}
 
-	// todo: waitgroup handling is client helper's business as in jsonrpc client helper (see jsonrpc/test.ClientHelper.SendRequest)
+func TestInvalidToken(t *testing.T) {
+	sh := NewServerHelper(t).SeedDB()
+	defer sh.ListenAndServe().CloseWait()
 
-	wg.Add(1)
+	ch := sh.GetClientHelper()
+	defer ch.Connect().CloseWait()
 
-	type M struct {
-		Message, Token string
-	}
-
-	msg := &M{Message: "wow", Token: ch.User.JWT}
-
-	ch.Client.Echo(msg, func(m *titan.Message) error {
-
-		defer wg.Done()
-
-		if m.Message != "wow" {
-			t.Fatalf("expected: %v, got: %v", "wow", m.Message)
-		}
-
+	gotMsg, closed := make(chan bool), make(chan bool)
+	ch.Client.DisconnHandler(func(c *client.Client) {
+		closed <- true
+	})
+	ch.Client.Echo(map[string]string{"message": "Lorem ip sum", "token": "abc-invalid-token-!"}, func(m *client.Message) error {
+		gotMsg <- true
 		return nil
 	})
 
-	wg.Wait()
+	select {
+	case <-gotMsg:
+		t.Fatal("authenticated with invalid token")
+	case <-closed:
+		log.Println("test: server closed connection as expected")
+	case <-time.After(time.Second):
+	}
 
-	// id := c.WriteRequest("msg.echo", nil)
-	// res := c.ReadRes(nil)
-	//
-	// if res.ID != id {
-	// 	t.Fatal("Authentication failed with a valid client certificate. Got server response:", res)
-	// }
+	// todo: no token, un-signed token, invalid token signature, expired token...
 }
 
-//
-// func TestInvalidClientCertAuth(t *testing.T) {
-// 	s := NewServerHelper(t)
-// 	defer s.Stop()
-// 	c := NewConnHelper(t, s).Dial()
-// 	defer c.Close()
-//
-// 	_ = c.WriteRequest("msg.echo", nil)
-//
-// 	if !c.VerifyConnClosed() {
-// 		t.Fatal("Authenticated successfully with invalid client certificate.")
-// 	}
-//
-// 	// todo: no cert, no signature cert, invalid CA signed cert, expired cert...
-// }
 //
 // type googleAuthRes struct {
 // 	Cert, Key []byte

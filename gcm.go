@@ -10,15 +10,15 @@ import (
 func listenGCM() {
 	c, err := ccs.Connect(Conf.GCM.CCSHost, Conf.GCM.SenderID, Conf.GCM.APIKey(), Conf.App.Debug)
 	if err != nil {
-		log.Fatalln("Failed to connect to GCM CCS with error:", err)
+		log.Fatalln("gcm: failed to connect to GCM CCS with error:", err)
 	}
 
-	log.Println("titan message server started.")
+	log.Println("gcm: started")
 
 	for {
 		m, err := c.Receive()
 		if err != nil {
-			log.Println("Error receiving message:", err)
+			log.Println("gcm: error receiving message:", err)
 		}
 
 		go readHandler(m)
@@ -28,7 +28,7 @@ func listenGCM() {
 func readHandler(m *ccs.InMsg) {
 	t := m.Data["n.message_type"]
 	if t == "" {
-		log.Printf("Malformed message from device: %+v\n", m)
+		log.Printf("gcm: malformed message from device: %+v\n", m)
 		return
 	}
 
@@ -36,13 +36,13 @@ func readHandler(m *ccs.InMsg) {
 	case "message":
 		ids := m.Data["n.to"]
 		if ids == "" {
-			log.Printf("Malformed message from device: %+v\n", m)
+			log.Printf("gcm: malformed message from device: %+v\n", m)
 			return
 		}
 
 		id64, err := strconv.ParseUint(ids, 10, 32)
 		if err != nil || id64 == 0 {
-			log.Printf("Invalid user ID specific in 'n.to' data field in message from device: %+v\n", m)
+			log.Printf("gcm: invalid user ID specific in 'n.to' data field in message from device: %+v\n", m)
 			return
 		}
 
