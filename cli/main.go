@@ -18,7 +18,11 @@ func main() {
 
 	s, err := titan.NewServer(addr)
 	if err != nil {
-		log.Fatalf("Errored while creating a new server instance: %v", err)
+		log.Fatalf("error creating server: %v", err)
 	}
 	defer s.Close()
+
+	if err := s.ListenAndServe(); err != nil {
+		log.Fatalf("error closing server: %v", err)
+	}
 }

@@ -13,7 +13,7 @@ const debug = false
 func Example() {
 	s, err := titan.NewServer("127.0.0.1:3000")
 	if err != nil {
-		log.Fatalf("errored creating server: %v", err)
+		log.Fatalf("error creating server: %v", err)
 	}
 	defer s.Close()
 	// if err := s.ListenAndServe(); err != nil {
