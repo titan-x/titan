@@ -107,6 +107,15 @@ Only actionable events are logged (i.e. server started, client connected on IP .
 
 The messaging server is designed to make max usage of available CPU resources. However exceeding 100% CPU usage will cause a memory usage spike as marshalled/unmarshalled messages and other allocated byte buffers will have to reside in memory much longer. Ideally, 95% CPU usage should trigger the clustering mechanism which should spawn more server instance. Currently there is no clustering support built-in, but it is a top priority.
 
+## Command Line Tool
+
+You can install `titan` command to `$GOPATH/bin` directory to be universally available from your shell using following:
+
+```bash
+go install ./...
+titan
+```
+
 ## License
 
 [MIT](LICENSE)
