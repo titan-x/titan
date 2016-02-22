@@ -17,4 +17,5 @@ func TestExternalClient(t *testing.T) {
 	sh := NewServerHelper(t).SeedDB()
 	defer sh.ListenAndServe().CloseWait()
 	// m := "Hello from Neptulon server!"
+
 }

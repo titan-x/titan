@@ -1,6 +1,7 @@
 package titan_test
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/titan-x/titan"
@@ -12,13 +13,14 @@ const debug = false
 func Example() {
 	s, err := titan.NewServer("127.0.0.1:3000")
 	if err != nil {
-		log.Fatalln("Errored while creating a new server instance:", err)
+		log.Fatalf("errored creating server: %v", err)
 	}
+	defer s.Close()
+	// if err := s.ListenAndServe(); err != nil {
+	// 	log.Fatalf("error closing server: %v", err)
+	// }
 
-	if s != nil {
-		log.Println("Connected")
+	fmt.Println("Server started.")
 
-	}
-
-	// ** Output: Server started
+	// Output: Server started.
 }
