@@ -1,7 +1,7 @@
 # Titan
 
-[![Build Status](https://travis-ci.org/nb-titan/titan.svg?branch=master)](https://travis-ci.org/nb-titan/titan)
-[![GoDoc](https://godoc.org/github.com/nb-titan/titan?status.svg)](https://godoc.org/github.com/nb-titan/titan)
+[![Build Status](https://travis-ci.org/titan-x/titan.svg?branch=master)](https://travis-ci.org/titan-x/titan)
+[![GoDoc](https://godoc.org/github.com/titan-x/titan?status.svg)](https://godoc.org/github.com/titan-x/titan)
 
 Titan is a messaging server for delivering chat messages to mobile devices and browsers. For each delivery target, the server uses different protocol. i.e. GCM for Android apps, WebSockets for browsers, etc. The server is completely written in Go and makes huge use of goroutines and channels. Client server communication is full-duplex bidirectional.
 
@@ -106,6 +106,15 @@ Only actionable events are logged (i.e. server started, client connected on IP .
 ## Performance Notes
 
 The messaging server is designed to make max usage of available CPU resources. However exceeding 100% CPU usage will cause a memory usage spike as marshalled/unmarshalled messages and other allocated byte buffers will have to reside in memory much longer. Ideally, 95% CPU usage should trigger the clustering mechanism which should spawn more server instance. Currently there is no clustering support built-in, but it is a top priority.
+
+## Command Line Tool
+
+You can install `titan` command to `$GOPATH/bin` directory to be universally available from your shell using following:
+
+```bash
+go install ./...
+titan
+```
 
 ## License
 
