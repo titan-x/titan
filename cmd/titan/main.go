@@ -15,14 +15,14 @@ const (
 )
 
 var (
-	start = flag.Bool("start", false, "Start a Titan server at address: "+addr)
-	ext   = flag.Bool("ext", false, "Run external client test case. Titan server will run at address: "+testAddr)
+	run = flag.Bool("run", false, "Start a Titan server at address: "+addr)
+	ext = flag.Bool("ext", false, "Run external client test case. Titan server will run at address: "+testAddr)
 )
 
 func main() {
 	flag.Parse()
 	switch {
-	case *start:
+	case *run:
 		startServer(addr)
 	case *ext:
 		startExtTest(testAddr)
