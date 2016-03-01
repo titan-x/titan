@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/titan-x/titan.svg?branch=master)](https://travis-ci.org/titan-x/titan)
 [![GoDoc](https://godoc.org/github.com/titan-x/titan?status.svg)](https://godoc.org/github.com/titan-x/titan)
 
-Titan is a messaging server for delivering chat messages to mobile devices and browsers. For each delivery target, the server uses different protocol. i.e. GCM for Android apps, WebSockets for browsers, etc. The server is completely written in Go and makes huge use of goroutines and channels. Client server communication is full-duplex bidirectional.
+Titan is a messaging server for delivering chat messages to mobile devices and browsers. For each delivery target, the server uses different protocol. i.e. GCM for Android apps, WebSocket for browsers, etc. The server is completely written in Go and makes huge use of goroutines and channels. Client server communication is full-duplex bidirectional.
 
 ## Example
 
@@ -11,76 +11,57 @@ See [example_test.go](example_test.go) file.
 
 ## Architecture
 
-Messaging server utilizes device specific delivery infrastructure for notifications and messages; GCM + TLS for Android, APNS + TLS for iOS, and WebSockets for the Web browsers.
+Messaging server utilizes device specific delivery infrastructure for notifications and messages; GCM for Android, APNS for iOS, and WebSocket for the Web browsers. Any message too big for GCM/APNS size limit will be notified but will be delivered over WebSocket.
+
+Following is the simplified server architecture:
 
 ```
-+-----------+------------+-------------+
-| GCM + TLS | APNS + TLS | WebSockets  |
-+-----------+------------+-------------+
-|           Messaging Server           |
-+--------------------------------------+
-```
-
-Following is the overview of the server application's components:
-
-```
-+---------------------------------------+
-|              main + config            |
-+---------------------------------------+
-|                 server                |
-+---------------------------------------+
-|   router  |   listener  |  msg queue  |
-+---------------------------------------+
++--------------------------------------------------------+
+|  GCM  |  APNS  |  JSON-RPC over WebSockets (Neptulon)  |
++--------------------------------------------------------+
+|                      RPC Methods                       |
++--------------------------------------------------------+
+|        User Database      |       Message Queue        |
++--------------------------------------------------------+
 ```
 
 ## Client-Server Protocol
 
 (Titan server is entirely built on top of [Neptulon](https://github.com/neptulon/neptulon) framework. You can browse Neptulon repository to get more in-depth info.)
 
-Client server communication protocol is based on [JSON RPC](http://www.jsonrpc.org/specification) 2.0 specs. Mobile devices connect with the TLS endpoint and the Web browsers utilizes the WebSocket endpoint. The message framing on the TLS endpoint is quite simple:
-
-```
-[uint32] 4 Bytes Content Length Header + [JSON] Message Body
-```
-
-Following is a valid TLS message frame for connecting mobile devices (except the header, which should be a 4 byte binary encoded uint32):
-
-```
-xxxx{method: "ping"}
-```
+Client server communication protocol is based on [JSON RPC](http://www.jsonrpc.org/specification) 2.0 specs. Both mobile devices and the Web browsers utilizes the WebSocket endpoint. All connections are secured with TLS.
 
 ## Client Authentication
 
-First-time registration is done through Google+ OAuth 2.0 flow. After a successful registration, the connecting device receives a client-side TLS certificate (for mobile devices) or a JSON Web Token (for browsers), to be used for successive connections.
+First-time registration is done through Google+ OAuth 2.0 flow. After a successful registration, the connecting device receives a JSON Web Token to be used for successive connections.
 
 ## Typical Client-Server Communication
 
 Client-server communication sequence is pretty similar to that of XMPP, except we are using JSON RPC packaging for messages.
 
 ```
-[Server]                    [Client]
+[Client]                    [Server]
 +                                  +
-|---------GCM Notification-------->| [offline]
+|<<<------GCM Notification---------|
 |                                  |
 |                                  |
-|<-----------auth.cert-------------| [online]
+|------------[auth.jwt]--------->>>|
 |                                  |
-|----------ACK/batch[msg]--------->|
-|                                  |
-|<-----------batch[ACK]------------|
+|<<<-----------[ACK]---------------|
 |                                  |
 |                                  |
-|<------------msg.echo-------------|
+|<<<---------[msg.recv]------------|
 |                                  |
-|---------------ACK--------------->|
+|--------------[ACK]------------>>>|
 |                                  |
-|-------------msg.echo------------>|
 |                                  |
-|<--------------ACK----------------|
+|------------[msg.send]--------->>>|
+|                                  |
+|<<<-----------[ACK]---------------|
 +                                  +
 ```
 
-Any message that was not acknowledged by the client will be delivered again (hence at-least-once delivery princinple), unless TTL of the message was reached. Client implementations should be ready to handle occasional duplicate deliveries of messages by the server. Message IDs will remain the same for duplicates.
+Any message that was not acknowledged by the client will be delivered again (hence at-least-once delivery principle). Client implementations will be ready to handle occasional duplicate deliveries of messages by the server. Message IDs will remain the same for duplicates.
 
 ## Users
 
@@ -105,7 +86,7 @@ Only actionable events are logged (i.e. server started, client connected on IP .
 
 ## Performance Notes
 
-The messaging server is designed to make max usage of available CPU resources. However exceeding 100% CPU usage will cause a memory usage spike as marshalled/unmarshalled messages and other allocated byte buffers will have to reside in memory much longer. Ideally, 95% CPU usage should trigger the clustering mechanism which should spawn more server instance. Currently there is no clustering support built-in, but it is a top priority.
+The messaging server is designed to make max usage of available CPU resources. However exceeding 100% CPU usage will cause a memory usage spike as marshalled/unmarshalled messages and other allocated byte buffers will have to reside in memory much longer. Ideally, 95% CPU usage should trigger the clustering mechanism which should spawn more server instances. Currently there is no clustering support built-in, but it is a priority.
 
 ## Command Line Tool
 
