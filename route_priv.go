@@ -10,7 +10,7 @@ import (
 
 func initPrivRoutes(r *middleware.Router, q *Queue) {
 	r.Request("auth.jwt", initJWTAuthHandler(q))
-	r.Request("msg.echo", middleware.Echo)
+	r.Request("echo", middleware.Echo)
 	r.Request("msg.send", initSendMsgHandler(q))
 }
 

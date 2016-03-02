@@ -79,7 +79,7 @@ func TestInvalidToken(t *testing.T) {
 // 	s = NewServerHelper(t)
 // 	c = NewConnHelper(t, s).WithCert(resData.Cert, resData.Key).Dial()
 //
-// 	_ = c.WriteRequest("msg.echo", nil)
+// 	_ = c.WriteRequest("echo", nil)
 // 	res = c.ReadRes(nil)
 //
 // 	if res.Error != nil {

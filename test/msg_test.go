@@ -30,7 +30,7 @@ func TestSendEcho(t *testing.T) {
 	select {
 	case <-gotRes:
 	case <-time.After(time.Second * 3):
-		t.Fatal("did not get msg.echo response in time")
+		t.Fatal("did not get echo response in time")
 	}
 
 	// t.Fatal("Failed to send a message to the echo user")

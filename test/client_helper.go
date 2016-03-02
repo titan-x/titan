@@ -113,7 +113,7 @@ func (ch *ClientHelper) EchoSafeSync(message string) *ClientHelper {
 	select {
 	case <-gotRes:
 	case <-time.After(time.Second * 3):
-		ch.testing.Fatal("did not get an msg.echo response in time")
+		ch.testing.Fatal("did not get an echo response in time")
 	}
 	return ch
 }

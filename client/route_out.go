@@ -34,7 +34,7 @@ func (c *Client) SendMessages(m []Message, handler func(ack string) error) error
 // Echo sends a message to server echo endpoint.
 // This is meant to be used for testing connectivity.
 func (c *Client) Echo(m interface{}, msgHandler func(msg *Message) error) error {
-	_, err := c.conn.SendRequest("msg.echo", m, func(ctx *neptulon.ResCtx) error {
+	_, err := c.conn.SendRequest("echo", m, func(ctx *neptulon.ResCtx) error {
 		var msg Message
 		if err := ctx.Result(&msg); err != nil {
 			return err
