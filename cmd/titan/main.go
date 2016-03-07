@@ -21,6 +21,7 @@ var (
 
 func main() {
 	flag.Parse()
+
 	switch {
 	case *run:
 		startServer(addr)
