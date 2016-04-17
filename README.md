@@ -97,6 +97,20 @@ go install ./...
 titan
 ```
 
+## Dependencies
+
+All dependencies outside of Go standard library are kept inside the /vendor directory.
+
+* (neptulon/middleware/jwt - cmd/titan) github.com/dgrijalva/jwt-go : v2.6.0
+* (neptulon/test) github.com/neptulon/ca : v1.0
+* (neptulon/test) github.com/neptulon/randstr : v1.0
+* (neptulon) github.com/neptulon/cmap : v1.0
+* (neptulon) github.com/neptulon/shortid : v1.0
+* (neptulon) golang.org/x/net/websocket : 318395d8b12f5dd0f1b7cd0fbb95195f49acb0f9
+* (titan) github.com/neptulon/neptulon : v0.4
+* (titan) github.com/titan-x/gcm : f21535d101ea9a07387f63ff3952fb7df0625442
+* (gcm) github.com/titan-x/go-xmpp :
+
 ## License
 
 [MIT](LICENSE)
