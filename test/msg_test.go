@@ -47,13 +47,13 @@ func TestSendMsgOnline(t *testing.T) {
 
 	// get both user 1 and user 2 online
 	ch1 := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
-	defer ch1.Connect().JWTAuth().CloseWait()
+	defer ch1.Connect().JWTAuthSync().CloseWait()
 	ch2 := sh.GetClientHelper().AsUser(&sh.SeedData.User2)
-	defer ch2.Connect().JWTAuth().CloseWait()
+	defer ch2.Connect().JWTAuthSync().CloseWait()
 
 	// send a hello message from user 1
 	m := "Hello, how are you?"
-	ch1.SendMessagesSafeSync([]client.Message{client.Message{To: "2", Message: m}})
+	ch1.SendMessagesSync([]client.Message{client.Message{To: "2", Message: m}})
 
 	// receive the hello message as user 2
 	msgs := ch2.GetMessagesWait()
@@ -70,7 +70,7 @@ func TestSendMsgOnline(t *testing.T) {
 
 	// send back a hello response from user 2
 	m = "I'm fine, thank you."
-	ch2.SendMessagesSafeSync([]client.Message{client.Message{To: "1", Message: m}})
+	ch2.SendMessagesSync([]client.Message{client.Message{To: "1", Message: m}})
 
 	// receive the hello response as user 1
 	msgs = ch1.GetMessagesWait()
@@ -94,15 +94,15 @@ func TestSendMsgOffline(t *testing.T) {
 
 	// get only user 1 online
 	ch1 := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
-	defer ch1.Connect().JWTAuth().CloseWait()
+	defer ch1.Connect().JWTAuthSync().CloseWait()
 	ch2 := sh.GetClientHelper().AsUser(&sh.SeedData.User2)
 
 	// send a hello message from user 1
 	m := "Hello, how are you?"
-	ch1.SendMessagesSafeSync([]client.Message{client.Message{To: "2", Message: m}})
+	ch1.SendMessagesSync([]client.Message{client.Message{To: "2", Message: m}})
 
 	// get user 2 online receive the pending hello message
-	defer ch2.Connect().JWTAuth().CloseWait()
+	defer ch2.Connect().JWTAuthSync().CloseWait()
 	msgs := ch2.GetMessagesWait()
 	if len(msgs) != 1 {
 		t.Fatalf("expected message count: 1, got: %v", len(msgs))

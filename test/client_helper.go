@@ -73,9 +73,9 @@ func (ch *ClientHelper) AsUser(u *titan.User) *ClientHelper {
 	return ch
 }
 
-// JWTAuth does JWT authentication with the token belonging the the user assigned with AsUser method.
+// JWTAuthSync does JWT authentication with the token belonging the the user assigned with AsUser method.
 // This method runs synchronously and blocks until authentication response is received (or connection is closed by server).
-func (ch *ClientHelper) JWTAuth() *ClientHelper {
+func (ch *ClientHelper) JWTAuthSync() *ClientHelper {
 	gotRes := make(chan bool)
 
 	if err := ch.Client.JWTAuth(ch.User.JWTToken, func(ack string) error {
@@ -96,8 +96,8 @@ func (ch *ClientHelper) JWTAuth() *ClientHelper {
 	return ch
 }
 
-// EchoSafeSync is the error safe and synchronous version of Client.Echo method.
-func (ch *ClientHelper) EchoSafeSync(message string) *ClientHelper {
+// EchoSync is synchronous version of Client.Echo method.
+func (ch *ClientHelper) EchoSync(message string) *ClientHelper {
 	gotRes := make(chan bool)
 
 	if err := ch.Client.Echo(client.Message{Message: message}, func(msg *client.Message) error {
@@ -118,8 +118,8 @@ func (ch *ClientHelper) EchoSafeSync(message string) *ClientHelper {
 	return ch
 }
 
-// SendMessagesSafeSync is the error safe and synchronous version of Client.SendMessages method.
-func (ch *ClientHelper) SendMessagesSafeSync(messages []client.Message) *ClientHelper {
+// SendMessagesSync is synchronous version of Client.SendMessages method.
+func (ch *ClientHelper) SendMessagesSync(messages []client.Message) *ClientHelper {
 	gotRes := make(chan bool)
 
 	if err := ch.Client.SendMessages(messages, func(ack string) error {
