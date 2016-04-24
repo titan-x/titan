@@ -73,19 +73,43 @@ func (ch *ClientHelper) AsUser(u *titan.User) *ClientHelper {
 	return ch
 }
 
+// GoogleAuthSync is synchronous version of Client.GoogleAuth method.
+// Google OAuth token is exchanged for a JWT token. If any user was assigned with AsUser, JWT token is store in the user's profile.
+func (ch *ClientHelper) GoogleAuthSync(oauthToken string) *ClientHelper {
+	gotRes := make(chan bool)
+
+	if err := ch.Client.GoogleAuth(oauthToken, func(jwtToken string) error {
+		if jwtToken == "" {
+			ch.testing.Fatalf("auth.google request failed with error: %v", "") // todo: retrieve error
+		}
+		ch.User.JWTToken = jwtToken
+		gotRes <- true
+		return nil
+	}); err != nil {
+		ch.testing.Fatalf("google authentication request failed: %v", err)
+	}
+
+	select {
+	case <-gotRes:
+	case <-time.After(time.Second * 3):
+		ch.testing.Fatal("did not get an auth.jwt response in time")
+	}
+	return ch
+}
+
 // JWTAuthSync does JWT authentication with the token belonging the the user assigned with AsUser method.
 // This method runs synchronously and blocks until authentication response is received (or connection is closed by server).
 func (ch *ClientHelper) JWTAuthSync() *ClientHelper {
 	gotRes := make(chan bool)
 
 	if err := ch.Client.JWTAuth(ch.User.JWTToken, func(ack string) error {
-		if ack != "ACK" {
+		if ack != client.ACK {
 			ch.testing.Fatalf("server did not ACK our auth.jwt request: %v", ack)
 		}
 		gotRes <- true
 		return nil
 	}); err != nil {
-		ch.testing.Fatalf("authentication request failed: %v", err)
+		ch.testing.Fatalf("jwt authentication request failed: %v", err)
 	}
 
 	select {

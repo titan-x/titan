@@ -5,6 +5,11 @@ import (
 	"github.com/neptulon/neptulon"
 )
 
+const (
+	ACK  = "ACK"
+	NACK = "NACK"
+)
+
 // Client is a Titan client.
 type Client struct {
 	ID      string     // Randomly generated unique client connection ID.

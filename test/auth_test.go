@@ -61,7 +61,7 @@ func TestInvalidToken(t *testing.T) {
 // 	}
 //
 // 	sh := NewServerHelper(t).SeedDB()
-// 	ch := sh.GetClientHelper()
+// 	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
 //
 // 	c.WriteRequest("auth.google", map[string]string{"accessToken": token})
 // 	var resData googleAuthRes

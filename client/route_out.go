@@ -4,6 +4,20 @@ import "github.com/neptulon/neptulon"
 
 // ------ Outgoing Requests ---------- //
 
+// GoogleAuth authenticates using the given Google OAuth token and retrieves a JWT token.
+// This also announces availability to the server, so server can start sending us pending messages.
+func (c *Client) GoogleAuth(oauthToken string, handler func(jwtToken string) error) error {
+	_, err := c.conn.SendRequest("auth.google", map[string]string{"token": oauthToken}, func(ctx *neptulon.ResCtx) error {
+		var jwtToken string
+		if err := ctx.Result(&jwtToken); err != nil {
+			return err
+		}
+		return handler(jwtToken)
+	})
+
+	return err
+}
+
 // JWTAuth authenticates using the given JWT token.
 // This also announces availability to the server, so server can start sending us pending messages.
 func (c *Client) JWTAuth(jwtToken string, handler func(ack string) error) error {
