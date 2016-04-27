@@ -31,19 +31,19 @@ func HMAC(password string) func(ctx *neptulon.ReqCtx) error {
 
 		jt, err := jwt.Parse(t.Token, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("middleware: jwt: unexpected signing method: %v", token.Header["alg"])
+				return nil, fmt.Errorf("mw: jwt: unexpected signing method: %v", token.Header["alg"])
 			}
 			return pass, nil
 		})
 
 		if err != nil || !jt.Valid {
 			ctx.Conn.Close()
-			return fmt.Errorf("middleware: jwt: invalid JWT authentication attempt: %v: %v: %v", err, ctx.Conn.RemoteAddr(), t.Token)
+			return fmt.Errorf("mw: jwt: invalid JWT authentication attempt: %v: %v: %v", err, ctx.Conn.RemoteAddr(), t.Token)
 		}
 
 		userID := jt.Claims["userid"].(string)
 		ctx.Conn.Session.Set("userid", userID)
-		log.Printf("middleware: jwt: client authenticated. user: %v, conn: %v, ip: %v", userID, ctx.Conn.ID, ctx.Conn.RemoteAddr())
+		log.Printf("mw: jwt: client authenticated. user: %v, conn: %v, ip: %v", userID, ctx.Conn.ID, ctx.Conn.RemoteAddr())
 		return ctx.Next()
 	}
 }

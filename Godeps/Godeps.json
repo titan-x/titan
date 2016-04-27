@@ -18,15 +18,18 @@
 		},
 		{
 			"ImportPath": "github.com/neptulon/neptulon",
-			"Rev": "cc50f9da4b3bec34b6bd7dd3dcce278d6217f4b9"
+			"Comment": "v0.6-1-g9fcb9c2",
+			"Rev": "9fcb9c267a4a2fc1ebe9429ac22f4f083ea02cb4"
 		},
 		{
 			"ImportPath": "github.com/neptulon/neptulon/middleware",
-			"Rev": "cc50f9da4b3bec34b6bd7dd3dcce278d6217f4b9"
+			"Comment": "v0.6-1-g9fcb9c2",
+			"Rev": "9fcb9c267a4a2fc1ebe9429ac22f4f083ea02cb4"
 		},
 		{
 			"ImportPath": "github.com/neptulon/neptulon/middleware/jwt",
-			"Rev": "cc50f9da4b3bec34b6bd7dd3dcce278d6217f4b9"
+			"Comment": "v0.6-1-g9fcb9c2",
+			"Rev": "9fcb9c267a4a2fc1ebe9429ac22f4f083ea02cb4"
 		},
 		{
 			"ImportPath": "github.com/neptulon/shortid",
@@ -43,7 +46,7 @@
 		},
 		{
 			"ImportPath": "golang.org/x/net/websocket",
-			"Rev": "fb93926129b8ec0056f2f458b1f519654814edf0"
+			"Rev": "b797637b7aeeed133049c7281bfa31dcc9ca42d6"
 		}
 	]
 }

@@ -239,6 +239,7 @@ func (c *Conn) startReceive() {
 func recoverAndLog(c *Conn, wg *sync.WaitGroup) {
 	defer wg.Done()
 	if err := recover(); err != nil {
+		c.Close()
 		const size = 64 << 10
 		buf := make([]byte, size)
 		buf = buf[:runtime.Stack(buf, false)]

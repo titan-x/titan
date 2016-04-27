@@ -58,17 +58,6 @@ You can connect to your Neptulon server using any programming language that has 
 
 All the tests can be executed with `GORACE="halt_on_error=1" go test -race -cover ./...` command. Optionally you can add `-v` flag to observe all connection logs.
 
-## Dependencies
-
-All dependencies outside of Go standard library are kept inside the /vendor directory.
-
-* (middleware/jwt) github.com/dgrijalva/jwt-go : v2.6.0
-* (test) github.com/neptulon/ca : v1.0
-* (test) github.com/neptulon/randstr : v1.0
-* (neptulon) github.com/neptulon/cmap : v1.0
-* (neptulon) github.com/neptulon/shortid : v1.0
-* (neptulon) golang.org/x/net/websocket : 318395d8b12f5dd0f1b7cd0fbb95195f49acb0f9
-
 ## License
 
 [MIT](LICENSE)
