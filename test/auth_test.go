@@ -14,21 +14,21 @@ func TestAuth(t *testing.T) {
 }
 
 func TestValidToken(t *testing.T) {
-	sh := NewServerHelper(t).SeedDB()
-	defer sh.ListenAndServe().CloseWait()
+	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	defer sh.CloseWait()
 
-	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
-	defer ch.Connect().JWTAuthSync().CloseWait()
+	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect().JWTAuthSync()
+	defer ch.CloseWait()
 
 	ch.EchoSync("Ola!")
 }
 
 func TestInvalidToken(t *testing.T) {
-	sh := NewServerHelper(t).SeedDB()
-	defer sh.ListenAndServe().CloseWait()
+	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	defer sh.CloseWait()
 
-	ch := sh.GetClientHelper()
-	defer ch.Connect().CloseWait()
+	ch := sh.GetClientHelper().Connect()
+	defer ch.CloseWait()
 
 	gotMsg, closed := make(chan bool), make(chan bool)
 	ch.Client.DisconnHandler(func(c *client.Client) {
@@ -50,29 +50,23 @@ func TestInvalidToken(t *testing.T) {
 	// todo: no token, un-signed token, invalid token signature, expired token...
 }
 
-// type googleAuthRes struct {
-// 	Cert, Key []byte
-// }
-//
+type googleAuthRes struct {
+	Cert, Key []byte
+}
+
 // func TestGoogleAuth(t *testing.T) {
 // 	token := os.Getenv("GOOGLE_ACCESS_TOKEN")
 // 	if token == "" {
 // 		t.Skip("Missing 'GOOGLE_ACCESS_TOKEN' environment variable. Skipping Google sign-in testing.")
 // 	}
 //
-// 	sh := NewServerHelper(t).SeedDB()
+// 	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+// defer sh.CloseWait()
 // 	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
 //
-// 	c.WriteRequest("auth.google", map[string]string{"accessToken": token})
-// 	var resData googleAuthRes
-// 	res := c.ReadRes(&resData)
+// 	ch.GoogleAuthSync(token).CloseWait()
 //
-// 	if res.Error != nil {
-// 		t.Fatal("Google+ first sign-in/registration failed with valid credentials:", res.Error)
-// 	}
-//
-// 	ch.Connect().JWTAuth().CloseWait()
-// 	sh.ListenAndServe().CloseWait()
+// 	ch.Connect().JWTAuth()
 //
 // 	// now connect to server with our new client certificate
 // 	s = NewServerHelper(t)
@@ -85,8 +79,7 @@ func TestInvalidToken(t *testing.T) {
 // 		t.Fatal("Failed to connect to the server with certificates created after Google+ sign-in:", res.Error)
 // 	}
 //
-// 	c.Close()
-// 	s.Stop()
+// 	ch.CloseWait()
 // }
 
 // func TestInvalidGoogleAuth(t *testing.T) {

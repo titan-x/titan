@@ -8,11 +8,11 @@ import (
 )
 
 func TestSendEcho(t *testing.T) {
-	sh := NewServerHelper(t).SeedDB()
-	defer sh.ListenAndServe().CloseWait()
+	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	defer sh.CloseWait()
 
-	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
-	defer ch.Connect().CloseWait()
+	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect()
+	defer ch.CloseWait()
 
 	// not using ClientHelper.EchoSafeSync to differentiate this test from auth_test.TestValidToken
 	gotRes := make(chan bool)
@@ -42,14 +42,14 @@ func TestSendEcho(t *testing.T) {
 }
 
 func TestSendMsgOnline(t *testing.T) {
-	sh := NewServerHelper(t).SeedDB()
-	defer sh.ListenAndServe().CloseWait()
+	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	defer sh.CloseWait()
 
 	// get both user 1 and user 2 online
-	ch1 := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
-	defer ch1.Connect().JWTAuthSync().CloseWait()
-	ch2 := sh.GetClientHelper().AsUser(&sh.SeedData.User2)
-	defer ch2.Connect().JWTAuthSync().CloseWait()
+	ch1 := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect().JWTAuthSync()
+	defer ch1.CloseWait()
+	ch2 := sh.GetClientHelper().AsUser(&sh.SeedData.User2).Connect().JWTAuthSync()
+	defer ch2.CloseWait()
 
 	// send a hello message from user 1
 	m := "Hello, how are you?"
@@ -89,12 +89,12 @@ func TestSendMsgOnline(t *testing.T) {
 }
 
 func TestSendMsgOffline(t *testing.T) {
-	sh := NewServerHelper(t).SeedDB()
-	defer sh.ListenAndServe().CloseWait()
+	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	defer sh.CloseWait()
 
 	// get only user 1 online
-	ch1 := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
-	defer ch1.Connect().JWTAuthSync().CloseWait()
+	ch1 := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect().JWTAuthSync()
+	defer ch1.CloseWait()
 	ch2 := sh.GetClientHelper().AsUser(&sh.SeedData.User2)
 
 	// send a hello message from user 1
@@ -102,7 +102,8 @@ func TestSendMsgOffline(t *testing.T) {
 	ch1.SendMessagesSync([]client.Message{client.Message{To: "2", Message: m}})
 
 	// get user 2 online receive the pending hello message
-	defer ch2.Connect().JWTAuthSync().CloseWait()
+	ch2.Connect().JWTAuthSync()
+	defer ch2.CloseWait()
 	msgs := ch2.GetMessagesWait()
 	if len(msgs) != 1 {
 		t.Fatalf("expected message count: 1, got: %v", len(msgs))
