@@ -2,6 +2,7 @@ package test
 
 import (
 	"log"
+	"os"
 	"testing"
 	"time"
 
@@ -54,33 +55,26 @@ type googleAuthRes struct {
 	Cert, Key []byte
 }
 
-// func TestGoogleAuth(t *testing.T) {
-// 	token := os.Getenv("GOOGLE_ACCESS_TOKEN")
-// 	if token == "" {
-// 		t.Skip("Missing 'GOOGLE_ACCESS_TOKEN' environment variable. Skipping Google sign-in testing.")
-// 	}
-//
-// 	sh := NewServerHelper(t).SeedDB().ListenAndServe()
-// defer sh.CloseWait()
-// 	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
-//
-// 	ch.GoogleAuthSync(token).CloseWait()
-//
-// 	ch.Connect().JWTAuth()
-//
-// 	// now connect to server with our new client certificate
-// 	s = NewServerHelper(t)
-// 	c = NewConnHelper(t, s).WithCert(resData.Cert, resData.Key).Dial()
-//
-// 	_ = c.WriteRequest("echo", nil)
-// 	res = c.ReadRes(nil)
-//
-// 	if res.Error != nil {
-// 		t.Fatal("Failed to connect to the server with certificates created after Google+ sign-in:", res.Error)
-// 	}
-//
-// 	ch.CloseWait()
-// }
+func TestGoogleAuth(t *testing.T) {
+	token := os.Getenv("GOOGLE_ACCESS_TOKEN")
+	if token == "" {
+		t.Skip("Missing 'GOOGLE_ACCESS_TOKEN' environment variable. Skipping Google sign-in testing.")
+	}
+
+	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	defer sh.CloseWait()
+
+	// authenticate with Google OAuth token and get JWT token
+	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
+	sh.SeedData.User1.JWTToken = ch.GoogleAuthSync(token)
+	ch.CloseWait()
+
+	// now connect to server with our new JWT token auto assigned by Google auth helper function
+	ch.Connect().JWTAuthSync()
+	ch.SendMessagesSync([]client.Message{client.Message{To: "2", Message: "Hi!"}})
+
+	ch.CloseWait()
+}
 
 // func TestInvalidGoogleAuth(t *testing.T) {
 // 	s := NewServerHelper(t)
