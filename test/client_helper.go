@@ -147,7 +147,7 @@ func (ch *ClientHelper) SendMessagesSync(messages []client.Message) *ClientHelpe
 	gotRes := make(chan bool)
 
 	if err := ch.Client.SendMessages(messages, func(ack string) error {
-		if ack != "ACK" {
+		if ack != client.ACK {
 			ch.testing.Fatalf("failed to send hello message to user %v: %v", messages[0].To, ack)
 		}
 		gotRes <- true

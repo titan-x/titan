@@ -20,6 +20,7 @@ type InMemDB struct {
 	InMemUserDB
 }
 
+// InMemMsgQ is a DB impelementation for development and testing.
 type InMemMsgQ struct{}
 
 // NewInMemDB creates a new in-memory database.

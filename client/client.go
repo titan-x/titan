@@ -6,7 +6,10 @@ import (
 )
 
 const (
-	ACK  = "ACK"
+	// ACK is the short acknowledgement response for a request.
+	ACK = "ACK"
+
+	// NACK is the short rejection response for a request.
 	NACK = "NACK"
 )
 

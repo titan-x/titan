@@ -21,7 +21,7 @@ func (c *Client) InMsgHandler(handler func(m []Message) error) {
 			return err
 		}
 
-		ctx.Res = "ACK"
+		ctx.Res = ACK
 		return ctx.Next()
 	})
 }
