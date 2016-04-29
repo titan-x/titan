@@ -38,13 +38,15 @@ func NewConn() (*Conn, error) {
 		return nil, err
 	}
 
-	return &Conn{
+	c := &Conn{
 		ID:             id,
 		Session:        cmap.New(),
 		resRoutes:      cmap.New(),
 		deadline:       time.Second * time.Duration(300),
 		disconnHandler: func(c *Conn) {},
-	}, nil
+	}
+	c.connected.Store(false)
+	return c, nil
 }
 
 // SetDeadline set the read/write deadlines for the connection, in seconds.
