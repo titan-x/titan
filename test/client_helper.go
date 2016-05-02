@@ -75,27 +75,26 @@ func (ch *ClientHelper) AsUser(u *titan.User) *ClientHelper {
 
 // GoogleAuthSync is synchronous version of Client.GoogleAuth method.
 // Google OAuth token is exchanged for a JWT token. If any user was assigned with AsUser, the new JWT token is stored in the user's profile.
-func (ch *ClientHelper) GoogleAuthSync(oauthToken string) string {
-	gotRes := make(chan string)
+func (ch *ClientHelper) GoogleAuthSync(oauthToken string) *ClientHelper {
+	gotRes := make(chan bool)
 
 	if err := ch.Client.GoogleAuth(oauthToken, func(jwtToken string) error {
 		if jwtToken == "" {
 			ch.testing.Fatalf("auth.google request failed with error: %v", "") // todo: retrieve error
 		}
 		ch.User.JWTToken = jwtToken
-		gotRes <- jwtToken
+		gotRes <- true
 		return nil
 	}); err != nil {
 		ch.testing.Fatalf("google authentication request failed: %v", err)
 	}
 
 	select {
-	case t := <-gotRes:
-		return t
+	case <-gotRes:
 	case <-time.After(time.Second * 3):
 		ch.testing.Fatal("did not get an auth.jwt response in time")
-		return ""
 	}
+	return ch
 }
 
 // JWTAuthSync does JWT authentication with the token belonging the the user assigned with AsUser method.

@@ -76,6 +76,8 @@ func googleAuth(ctx *neptulon.ReqCtx, db DB, pass string) error {
 	return nil
 }
 
+// todo: use google api sdk
+
 // getGProfile retrieves user info (display name, e-mail, profile pic) using an access token that has 'profile' and 'email' scopes.
 // Also retrieves user profile image via profile image URL provided the response.
 func getGProfile(token string) (profile *gProfile, profilePic []byte, err error) {
