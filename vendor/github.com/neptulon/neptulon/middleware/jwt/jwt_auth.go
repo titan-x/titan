@@ -23,6 +23,10 @@ func HMAC(password string) func(ctx *neptulon.ReqCtx) error {
 			return ctx.Next()
 		}
 
+		if ctx.Res != nil {
+			return ctx.Next()
+		}
+
 		var t token
 		if err := ctx.Params(&t); err != nil {
 			ctx.Conn.Close()
