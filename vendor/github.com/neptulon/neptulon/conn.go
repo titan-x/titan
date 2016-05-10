@@ -22,12 +22,12 @@ type Conn struct {
 	ID             string     // Randomly generated unique client connection ID.
 	Session        *cmap.CMap // Thread-safe data store for storing arbitrary data for this connection session.
 	middleware     []func(ctx *ReqCtx) error
-	resRoutes      *cmap.CMap // message ID (string) -> handler func(ctx *ResCtx) error : expected responses for requests that we've sent
-	ws             *websocket.Conn
-	wg             sync.WaitGroup
+	resRoutes      *cmap.CMap     // message ID (string) -> handler func(ctx *ResCtx) error : expected responses for requests that we've sent
+	ws             atomic.Value   // -> *websocket.Conn
+	wg             sync.WaitGroup // incremented by one per goroutine created by conn
 	deadline       time.Duration
 	isClientConn   bool
-	connected      atomic.Value
+	connected      atomic.Value // -> bool
 	disconnHandler func(c *Conn)
 }
 
@@ -95,11 +95,12 @@ func (c *Conn) Connect(addr string) error {
 
 // RemoteAddr returns the remote network address.
 func (c *Conn) RemoteAddr() net.Addr {
-	if c.ws == nil {
+	ws := c.ws.Load().(*websocket.Conn)
+	if ws == nil {
 		return nil
 	}
 
-	return c.ws.RemoteAddr()
+	return ws.RemoteAddr()
 }
 
 // SendRequest sends a JSON-RPC request through the connection with an auto generated request ID.
@@ -128,8 +129,9 @@ func (c *Conn) SendRequestArr(method string, resHandler func(res *ResCtx) error,
 // Close closes the connection.
 func (c *Conn) Close() error {
 	c.connected.Store(false)
-	if c.ws != nil {
-		c.ws.Close()
+	ws := c.ws.Load().(*websocket.Conn)
+	if ws != nil {
+		ws.Close()
 	}
 	return nil
 }
@@ -160,7 +162,7 @@ func (c *Conn) send(msg interface{}) error {
 		return errors.New("use of closed connection")
 	}
 
-	return websocket.JSON.Send(c.ws, msg)
+	return websocket.JSON.Send(c.ws.Load().(*websocket.Conn), msg)
 }
 
 // Receive receives message from the connection.
@@ -169,12 +171,12 @@ func (c *Conn) receive(msg *message) error {
 		return errors.New("use of closed connection")
 	}
 
-	return websocket.JSON.Receive(c.ws, &msg)
+	return websocket.JSON.Receive(c.ws.Load().(*websocket.Conn), &msg)
 }
 
 // Reuse an established websocket.Conn.
 func (c *Conn) setConn(ws *websocket.Conn) error {
-	c.ws = ws
+	c.ws.Store(ws)
 	c.connected.Store(true)
 	if err := ws.SetDeadline(time.Now().Add(c.deadline)); err != nil {
 		return fmt.Errorf("conn: error while setting websocket connection deadline: %v", err)
