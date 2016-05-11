@@ -1,5 +1,7 @@
 package titan
 
+import "strconv"
+
 // DB wraps all database related functions.
 type DB interface {
 	UserDB
@@ -54,7 +56,7 @@ func (db InMemUserDB) GetByMail(email string) (u *User, ok bool) {
 // SaveUser save or updates a user object in the database.
 func (db InMemUserDB) SaveUser(u *User) error {
 	if u.ID == "" {
-		u.ID = string(len(db.ids) + 1)
+		u.ID = strconv.Itoa(len(db.ids) + 1)
 	}
 
 	db.ids[u.ID] = u
