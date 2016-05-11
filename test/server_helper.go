@@ -114,8 +114,10 @@ func (sh *ServerHelper) CloseWait() {
 	case <-time.After(time.Second):
 		sh.testing.Fatal("server didn't close in time")
 	}
-	time.Sleep(time.Millisecond * 5)
-	if os.Getenv("TRAVIS") != "" || os.Getenv("CI") == "" {
+
+	if os.Getenv("TRAVIS") != "" || os.Getenv("CI") != "" {
 		time.Sleep(time.Millisecond * 50)
+	} else {
+		time.Sleep(time.Millisecond * 5)
 	}
 }

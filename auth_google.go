@@ -27,26 +27,23 @@ type gImage struct {
 	URL string
 }
 
-// googleAuthRes is the success response returned after a successful Google authentication.
-type googleAuthRes struct {
+type tokenContainer struct {
 	Token string `json:"token"`
-}
-
-// googleAuthRequest is the incoming request object.
-type googleAuthReq struct {
-	accessToken string
 }
 
 // googleAuth authenticates a user with Google+ using provided OAuth 2.0 access token.
 // If authenticated successfully, user profile is retrieved from Google+ and user is given a JWT token in return.
 func googleAuth(ctx *neptulon.ReqCtx, db DB, pass string) error {
-	var r googleAuthReq
-	ctx.Params(&r)
+	var r tokenContainer
+	if err := ctx.Params(&r); err != nil || r.Token == "" {
+		ctx.Err = &neptulon.ResError{Code: 666, Message: "Malformed or null Google oauth access token was provided."}
+		return fmt.Errorf("middleware: auth: google: malformed or null Google oauth token '%v' was provided: %v", r.Token, err)
+	}
 
-	p, i, err := getGProfile(r.accessToken)
+	p, i, err := getGProfile(r.Token)
 	if err != nil {
-		ctx.Err = &neptulon.ResError{Code: 666, Message: "Failed to authenticated with the given Google+ OAuth access token."}
-		return fmt.Errorf("middleware: auth: google: error during Google+ profile call using provided access token: %v with error: %v", r.accessToken, err)
+		ctx.Err = &neptulon.ResError{Code: 666, Message: "Failed to authenticated with the given Google oauth access token."}
+		return fmt.Errorf("middleware: auth: google: error during Google+ profile call using provided access token: %v with error: %v", r.Token, err)
 	}
 
 	// retrieve user information
@@ -75,9 +72,11 @@ func googleAuth(ctx *neptulon.ReqCtx, db DB, pass string) error {
 		}
 	}
 
-	ctx.Res = googleAuthRes{Token: user.JWTToken}
+	ctx.Res = tokenContainer{Token: user.JWTToken}
 	return nil
 }
+
+// todo: use google api sdk
 
 // getGProfile retrieves user info (display name, e-mail, profile pic) using an access token that has 'profile' and 'email' scopes.
 // Also retrieves user profile image via profile image URL provided the response.

@@ -1,7 +1,7 @@
 {
 	"ImportPath": "github.com/titan-x/titan",
 	"GoVersion": "go1.6",
-	"GodepVersion": "v61",
+	"GodepVersion": "v63",
 	"Packages": [
 		"./..."
 	],
@@ -18,15 +18,18 @@
 		},
 		{
 			"ImportPath": "github.com/neptulon/neptulon",
-			"Rev": "cc50f9da4b3bec34b6bd7dd3dcce278d6217f4b9"
+			"Comment": "v0.9",
+			"Rev": "2498fb5164fe7b05d49caa25f4bfa4c586eed084"
 		},
 		{
 			"ImportPath": "github.com/neptulon/neptulon/middleware",
-			"Rev": "cc50f9da4b3bec34b6bd7dd3dcce278d6217f4b9"
+			"Comment": "v0.9",
+			"Rev": "2498fb5164fe7b05d49caa25f4bfa4c586eed084"
 		},
 		{
 			"ImportPath": "github.com/neptulon/neptulon/middleware/jwt",
-			"Rev": "cc50f9da4b3bec34b6bd7dd3dcce278d6217f4b9"
+			"Comment": "v0.9",
+			"Rev": "2498fb5164fe7b05d49caa25f4bfa4c586eed084"
 		},
 		{
 			"ImportPath": "github.com/neptulon/shortid",
@@ -43,7 +46,7 @@
 		},
 		{
 			"ImportPath": "golang.org/x/net/websocket",
-			"Rev": "fb93926129b8ec0056f2f458b1f519654814edf0"
+			"Rev": "b797637b7aeeed133049c7281bfa31dcc9ca42d6"
 		}
 	]
 }

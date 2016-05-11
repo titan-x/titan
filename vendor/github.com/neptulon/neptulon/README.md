@@ -7,18 +7,13 @@ Neptulon is a bidirectional RPC framework with middleware support. Communication
 
 Neptulon framework is only about 400 lines of code, which makes it easy to fork, specialize, and maintain for specific purposes, if you need to.
 
-## Example
+## Getting Started
 
-Following is server for echoing all incoming messages.
+Following is a server for echoing all incoming messages as is:
 
 ```go
 s := neptulon.NewServer("127.0.0.1:3000")
-
-s.Middleware(func(ctx *neptulon.ReqCtx) error {
-	ctx.Params(&ctx.Res)
-	return ctx.Next()
-})
-
+s.MiddlewareFunc(middleware.Echo)
 s.ListenAndServe()
 ```
 
@@ -29,9 +24,9 @@ c, _ := neptulon.NewConn()
 c.Connect("ws://127.0.0.1:3000")
 c.SendRequest("echo", map[string]string{"message": "Hello!"}, func(ctx *neptulon.ResCtx) error {
 	var msg interface{}
-	ctx.Result(&msg)
+	err := ctx.Result(&msg)
 	fmt.Println("Server sent:", msg)
-	return nil
+	return err
 })
 ```
 
@@ -57,17 +52,6 @@ You can connect to your Neptulon server using any programming language that has 
 ## Testing
 
 All the tests can be executed with `GORACE="halt_on_error=1" go test -race -cover ./...` command. Optionally you can add `-v` flag to observe all connection logs.
-
-## Dependencies
-
-All dependencies outside of Go standard library are kept inside the /vendor directory.
-
-* (middleware/jwt) github.com/dgrijalva/jwt-go : v2.6.0
-* (test) github.com/neptulon/ca : v1.0
-* (test) github.com/neptulon/randstr : v1.0
-* (neptulon) github.com/neptulon/cmap : v1.0
-* (neptulon) github.com/neptulon/shortid : v1.0
-* (neptulon) golang.org/x/net/websocket : 318395d8b12f5dd0f1b7cd0fbb95195f49acb0f9
 
 ## License
 

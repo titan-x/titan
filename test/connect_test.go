@@ -30,11 +30,11 @@ func TestServerDisconnect(t *testing.T) {
 }
 
 func TestClientClose(t *testing.T) {
-	sh := NewServerHelper(t).SeedDB()
-	defer sh.ListenAndServe().CloseWait()
+	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	defer sh.CloseWait()
 
-	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1)
-	defer ch.Connect().CloseWait()
+	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect()
+	defer ch.CloseWait()
 
 	// c.WriteNotification("conn.close", nil)
 	// todo: verify that connection is closed by listner before client does

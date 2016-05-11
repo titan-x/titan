@@ -73,19 +73,20 @@ func (ch *ClientHelper) AsUser(u *titan.User) *ClientHelper {
 	return ch
 }
 
-// JWTAuth does JWT authentication with the token belonging the the user assigned with AsUser method.
-// This method runs synchronously and blocks until authentication response is received (or connection is closed by server).
-func (ch *ClientHelper) JWTAuth() *ClientHelper {
+// GoogleAuthSync is synchronous version of Client.GoogleAuth method.
+// Google OAuth token is exchanged for a JWT token. If any user was assigned with AsUser, the new JWT token is stored in the user's profile.
+func (ch *ClientHelper) GoogleAuthSync(oauthToken string) *ClientHelper {
 	gotRes := make(chan bool)
 
-	if err := ch.Client.JWTAuth(ch.User.JWTToken, func(ack string) error {
-		if ack != "ACK" {
-			ch.testing.Fatalf("server did not ACK our auth.jwt request: %v", ack)
+	if err := ch.Client.GoogleAuth(oauthToken, func(jwtToken string) error {
+		if jwtToken == "" {
+			ch.testing.Fatalf("auth.google request failed with error: %v", "") // todo: retrieve error
 		}
+		ch.User.JWTToken = jwtToken
 		gotRes <- true
 		return nil
 	}); err != nil {
-		ch.testing.Fatalf("authentication request failed: %v", err)
+		ch.testing.Fatalf("google authentication request failed: %v", err)
 	}
 
 	select {
@@ -96,8 +97,31 @@ func (ch *ClientHelper) JWTAuth() *ClientHelper {
 	return ch
 }
 
-// EchoSafeSync is the error safe and synchronous version of Client.Echo method.
-func (ch *ClientHelper) EchoSafeSync(message string) *ClientHelper {
+// JWTAuthSync does JWT authentication with the token belonging the the user assigned with AsUser method.
+// This method runs synchronously and blocks until authentication response is received (or connection is closed by server).
+func (ch *ClientHelper) JWTAuthSync() *ClientHelper {
+	gotRes := make(chan bool)
+
+	if err := ch.Client.JWTAuth(ch.User.JWTToken, func(ack string) error {
+		if ack != client.ACK {
+			ch.testing.Fatalf("server did not ACK our auth.jwt request: %v", ack)
+		}
+		gotRes <- true
+		return nil
+	}); err != nil {
+		ch.testing.Fatalf("jwt authentication request failed: %v", err)
+	}
+
+	select {
+	case <-gotRes:
+	case <-time.After(time.Second * 3):
+		ch.testing.Fatal("did not get an auth.jwt response in time")
+	}
+	return ch
+}
+
+// EchoSync is synchronous version of Client.Echo method.
+func (ch *ClientHelper) EchoSync(message string) *ClientHelper {
 	gotRes := make(chan bool)
 
 	if err := ch.Client.Echo(client.Message{Message: message}, func(msg *client.Message) error {
@@ -118,12 +142,12 @@ func (ch *ClientHelper) EchoSafeSync(message string) *ClientHelper {
 	return ch
 }
 
-// SendMessagesSafeSync is the error safe and synchronous version of Client.SendMessages method.
-func (ch *ClientHelper) SendMessagesSafeSync(messages []client.Message) *ClientHelper {
+// SendMessagesSync is synchronous version of Client.SendMessages method.
+func (ch *ClientHelper) SendMessagesSync(messages []client.Message) *ClientHelper {
 	gotRes := make(chan bool)
 
 	if err := ch.Client.SendMessages(messages, func(ack string) error {
-		if ack != "ACK" {
+		if ack != client.ACK {
 			ch.testing.Fatalf("failed to send hello message to user %v: %v", messages[0].To, ack)
 		}
 		gotRes <- true
@@ -158,9 +182,11 @@ func (ch *ClientHelper) CloseWait() {
 	if err := ch.Client.Close(); err != nil {
 		ch.testing.Fatal("Failed to close the client connection:", err)
 	}
-	time.Sleep(time.Millisecond * 5)
-	if os.Getenv("TRAVIS") != "" || os.Getenv("CI") == "" {
+
+	if os.Getenv("TRAVIS") != "" || os.Getenv("CI") != "" {
 		time.Sleep(time.Millisecond * 50)
+	} else {
+		time.Sleep(time.Millisecond * 5)
 	}
 }
 
