@@ -21,7 +21,6 @@ type ReqCtx struct {
 	params  json.RawMessage // request parameters
 	mw      []func(ctx *ReqCtx) error
 	mwIndex int
-	resSent bool
 }
 
 func newReqCtx(conn *Conn, id, method string, params json.RawMessage, mw []func(ctx *ReqCtx) error) *ReqCtx {
@@ -58,18 +57,7 @@ func (ctx *ReqCtx) Next() error {
 		return ctx.mw[ctx.mwIndex-1](ctx)
 	}
 
-	// protect against multiple sends
-	if ctx.resSent {
-		return nil
-	}
-
-	// send the response, if any
-	if ctx.Res != nil || ctx.Err != nil {
-		ctx.resSent = true
-		return ctx.Conn.sendResponse(ctx.ID, ctx.Res, ctx.Err)
-	}
-
-	return fmt.Errorf("ctx: no response provided for incoming request: %v: %v", ctx.Method, ctx.ID)
+	return nil
 }
 
 // ResCtx is the response context.

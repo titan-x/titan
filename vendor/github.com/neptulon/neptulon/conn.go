@@ -216,9 +216,16 @@ func (c *Conn) startReceive() {
 			c.wg.Add(1)
 			go func() {
 				defer recoverAndLog(c, &c.wg)
-				if err := newReqCtx(c, m.ID, m.Method, m.Params, c.middleware).Next(); err != nil {
-					log.Printf("ctx: request handler/middleware returned error: %v", err)
+				ctx := newReqCtx(c, m.ID, m.Method, m.Params, c.middleware)
+				if err := ctx.Next(); err != nil {
+					log.Printf("ctx: request middleware returned error: %v", err)
 					c.Close()
+				}
+				if ctx.Res != nil || ctx.Err != nil {
+					if err := ctx.Conn.sendResponse(ctx.ID, ctx.Res, ctx.Err); err != nil {
+						log.Printf("ctx: error sending response: %v", err)
+						c.Close()
+					}
 				}
 			}()
 

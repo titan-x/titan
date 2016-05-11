@@ -19,14 +19,12 @@ func HMAC(password string) func(ctx *neptulon.ReqCtx) error {
 	pass := []byte(password)
 
 	return func(ctx *neptulon.ReqCtx) error {
+		// if user is already authenticated
 		if _, ok := ctx.Conn.Session.GetOk("userid"); ok {
 			return ctx.Next()
 		}
 
-		if ctx.Res != nil {
-			return ctx.Next()
-		}
-
+		// if user is not authenticated.. check the JWT token
 		var t token
 		if err := ctx.Params(&t); err != nil {
 			ctx.Conn.Close()
