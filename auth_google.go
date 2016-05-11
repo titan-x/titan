@@ -84,18 +84,21 @@ func getGProfile(token string) (profile *gProfile, profilePic []byte, err error)
 	// retrieve profile info from Google
 	uri := fmt.Sprintf("https://www.googleapis.com/plus/v1/people/me?access_token=%s", token)
 	res, err := http.Get(uri)
-	if err != nil {
+	if err != nil || res.StatusCode >= 400 {
+		err = fmt.Errorf("failed to call google+ api with error: %v, and response: %+v", err, res)
 		return
 	}
 
 	resBody, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
+		err = fmt.Errorf("failed to read response from google+ api with error: %v", err)
 		return
 	}
 
 	var p gProfile
 	if err = json.Unmarshal(resBody, &p); err != nil {
+		err = fmt.Errorf("failed to deserialize google+ api response with error: %v", err)
 		return
 	}
 	profile = &p
@@ -104,12 +107,14 @@ func getGProfile(token string) (profile *gProfile, profilePic []byte, err error)
 	uri = profile.Image.URL
 	res, err = http.Get(uri)
 	if err != nil {
+		err = fmt.Errorf("failed to call google+ api to get user image with error: %v", err)
 		return
 	}
 
 	profilePic, err = ioutil.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
+		err = fmt.Errorf("failed to read google+ api user profile pic response with error: %v", err)
 		return
 	}
 
