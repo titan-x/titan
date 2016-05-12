@@ -42,7 +42,7 @@ var (
 )
 
 func TestGoogleAuth(t *testing.T) {
-	var profile gProfile
+	var profile gPlusProfile
 	if err := json.Unmarshal(googleAuthResStr, &profile); err != nil {
 		t.Fatal(err)
 	}
