@@ -11,26 +11,6 @@ import (
 	"github.com/neptulon/neptulon"
 )
 
-// Response from GET https://www.googleapis.com/plus/v1/people/me?access_token=... (with scope 'profile' and 'email')
-// has the following structure with denoted fields of interest (rest is left out):
-type gProfile struct {
-	Emails      []gEmail
-	DisplayName string
-	Image       gImage
-}
-
-type gEmail struct {
-	Value string
-}
-
-type gImage struct {
-	URL string
-}
-
-type tokenContainer struct {
-	Token string `json:"token"`
-}
-
 // googleAuth authenticates a user with Google+ using provided OAuth 2.0 access token.
 // If authenticated successfully, user profile is retrieved from Google+ and user is given a JWT token in return.
 func googleAuth(ctx *neptulon.ReqCtx, db DB, pass string) error {
@@ -76,7 +56,42 @@ func googleAuth(ctx *neptulon.ReqCtx, db DB, pass string) error {
 	return nil
 }
 
-// todo: use google api sdk
+// ################ Google OAuth2 TokenInfo API Call ################
+
+// verifyIDToken verifies and returns ID token info as described in:
+// https://developers.google.com/identity/sign-in/android/backend-auth#send-the-id-token-to-your-server
+func getTokenInfo(idToken string) (profile *gProfile, profilePic []byte, err error) {
+	uri := fmt.Sprintf("https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=%s", idToken)
+	res, err := http.Get(uri)
+	if err != nil || res.StatusCode >= 400 {
+		err = fmt.Errorf("failed to call google+ api with error: %v, and response: %+v", err, res)
+		return
+	}
+
+	return
+}
+
+// ################ Google+ API Call ################
+
+// Response from GET https://www.googleapis.com/plus/v1/people/me?access_token=... (with scope 'profile' and 'email')
+// has the following structure with denoted fields of interest (rest is left out):
+type gProfile struct {
+	Emails      []gEmail
+	DisplayName string
+	Image       gImage
+}
+
+type gEmail struct {
+	Value string
+}
+
+type gImage struct {
+	URL string
+}
+
+type tokenContainer struct {
+	Token string `json:"token"`
+}
 
 // getGProfile retrieves user info (display name, e-mail, profile pic) using an access token that has 'profile' and 'email' scopes.
 // Also retrieves user profile image via profile image URL provided the response.
