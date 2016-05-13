@@ -30,7 +30,7 @@ func googleAuth(ctx *neptulon.ReqCtx, db DB, pass string) error {
 		return fmt.Errorf("middleware: auth: google: malformed or null Google oauth token '%v' was provided: %v", r.Token, err)
 	}
 
-	p, err := getGProfile(r.Token)
+	p, err := getTokenInfo(r.Token)
 	if err != nil {
 		ctx.Err = &neptulon.ResError{Code: 666, Message: "Failed to authenticated with the given Google oauth access token."}
 		return fmt.Errorf("middleware: auth: google: error during Google+ profile call using provided access token: %v with error: %v", r.Token, err)
@@ -137,9 +137,9 @@ type gTokenInfo struct {
 
 // ################ Google+ API Call ################
 
-// getGProfile retrieves user info (display name, e-mail, profile pic) using an oauth2 access token that has 'profile' and 'email' scopes.
+// getGPProfile retrieves user info (display name, e-mail, profile pic) using an oauth2 access token that has 'profile' and 'email' scopes.
 // Also retrieves user profile image via profile image URL provided the response.
-func getGProfile(oauthToken string) (profile *gProfile, err error) {
+func getGPProfile(oauthToken string) (profile *gProfile, err error) {
 	// retrieve profile info from Google
 	uri := fmt.Sprintf("https://www.googleapis.com/plus/v1/people/me?access_token=%s", oauthToken)
 	res, err := http.Get(uri)
