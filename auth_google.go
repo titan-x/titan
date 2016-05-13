@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"time"
 
@@ -33,7 +34,7 @@ func googleAuth(ctx *neptulon.ReqCtx, db DB, pass string) error {
 	p, err := getTokenInfo(r.Token)
 	if err != nil {
 		ctx.Err = &neptulon.ResError{Code: 666, Message: "Failed to authenticated with the given Google oauth access token."}
-		return fmt.Errorf("middleware: auth: google: error during Google+ profile call using provided access token: %v with error: %v", r.Token, err)
+		return fmt.Errorf("middleware: auth: google: error during Google API call using provided token: %v with error: %v", r.Token, err)
 	}
 
 	// retrieve user information
@@ -63,6 +64,7 @@ func googleAuth(ctx *neptulon.ReqCtx, db DB, pass string) error {
 	}
 
 	ctx.Res = tokenContainer{Token: user.JWTToken}
+	log.Printf("auth: google: logged in: %v, %v", p.Name, p.Email)
 	return nil
 }
 
@@ -127,7 +129,7 @@ type gTokenInfo struct {
 	EXP string
 
 	Email         string
-	EmailVerified bool `json:"email_verified"`
+	EmailVerified string `json:"email_verified"`
 	Name          string
 	Picture       string // profile pic URL
 	GivenName     string `json:"given_name"`
