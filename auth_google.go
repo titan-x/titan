@@ -73,31 +73,69 @@ func googleAuth(ctx *neptulon.ReqCtx, db DB, pass string) error {
 func getTokenInfo(idToken string) (profile *gProfile, err error) {
 	uri := fmt.Sprintf("https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=%s", idToken)
 	res, err := http.Get(uri)
-	if err != nil || res.StatusCode >= 400 {
+	if err != nil || res.StatusCode >= http.StatusBadRequest {
 		err = fmt.Errorf("failed to call google oauth2 api with error: %v, and response: %+v", err, res)
 		return
 	}
 
+	resBody, err := ioutil.ReadAll(res.Body)
+	res.Body.Close()
+	if err != nil {
+		err = fmt.Errorf("failed to read response from google oauth2 api with error: %v", err)
+		return
+	}
+
+	var ti gTokenInfo
+	if err = json.Unmarshal(resBody, &ti); err != nil {
+		err = fmt.Errorf("failed to deserialize google oauth2 api response with error: %v", err)
+		return
+	}
+
+	// check that 'aud' claim contains our client id
+	if ti.AUD != gServerClient {
+		err = fmt.Errorf("given google oauth2 id token belongs to another app id: %v", ti.AUD)
+		return
+	}
+
+	// retrieve profile image
+	uri = ti.Picture
+	res, err = http.Get(uri)
+	if err != nil {
+		err = fmt.Errorf("failed to call google oauth2 api to get user image with error: %v", err)
+		return
+	}
+
+	profilePic, err := ioutil.ReadAll(res.Body)
+	res.Body.Close()
+	if err != nil {
+		err = fmt.Errorf("failed to read google oauth2 api user profile pic response with error: %v", err)
+		return
+	}
+
+	profile = &gProfile{Name: ti.GivenName + " " + ti.FamilyName, Email: ti.Email, Picture: profilePic}
 	return
 }
 
+var gServerClient = "218602439235-6g09g0ap6i8v25v3rel49rtqjcu9ppj0.apps.googleusercontent.com"
+
+type gTokenInfo struct {
+	ISS string
+	SUB string
+	AZP string
+	AUD string
+	IAT string
+	EXP string
+
+	Email         string
+	EmailVerified bool `json:"email_verified"`
+	Name          string
+	Picture       string // profile pic URL
+	GivenName     string `json:"given_name"`
+	FamilyName    string `json:"family_name"`
+	Locale        string
+}
+
 // ################ Google+ API Call ################
-
-// Response from GET https://www.googleapis.com/plus/v1/people/me?access_token=... (with scope 'profile' and 'email')
-// has the following structure with denoted fields of interest (rest is left out):
-type gPlusProfile struct {
-	Emails      []gPlusEmail
-	DisplayName string
-	Image       gPlusImage
-}
-
-type gPlusEmail struct {
-	Value string
-}
-
-type gPlusImage struct {
-	URL string
-}
 
 // getGProfile retrieves user info (display name, e-mail, profile pic) using an oauth2 access token that has 'profile' and 'email' scopes.
 // Also retrieves user profile image via profile image URL provided the response.
@@ -105,7 +143,7 @@ func getGProfile(oauthToken string) (profile *gProfile, err error) {
 	// retrieve profile info from Google
 	uri := fmt.Sprintf("https://www.googleapis.com/plus/v1/people/me?access_token=%s", oauthToken)
 	res, err := http.Get(uri)
-	if err != nil || res.StatusCode >= 400 {
+	if err != nil || res.StatusCode >= http.StatusBadRequest {
 		err = fmt.Errorf("failed to call google+ api with error: %v, and response: %+v", err, res)
 		return
 	}
@@ -140,4 +178,20 @@ func getGProfile(oauthToken string) (profile *gProfile, err error) {
 
 	profile = &gProfile{Name: p.DisplayName, Email: p.Emails[0].Value, Picture: profilePic}
 	return
+}
+
+// Response from GET https://www.googleapis.com/plus/v1/people/me?access_token=... (with scope 'profile' and 'email')
+// has the following structure with denoted fields of interest (rest is left out):
+type gPlusProfile struct {
+	Emails      []gPlusEmail
+	DisplayName string
+	Image       gPlusImage
+}
+
+type gPlusEmail struct {
+	Value string
+}
+
+type gPlusImage struct {
+	URL string
 }
