@@ -66,6 +66,9 @@ func TestGoogleAuth(t *testing.T) {
 
 	// authenticate with Google OAuth token and get JWT token
 	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect().GoogleAuthSync(token)
+
+	// send an echo message to validate that we are authenticated properly
+	ch.EchoSync("testing echo message after google auth")
 	ch.CloseWait()
 
 	// now connect to server with our new JWT token auto assigned by Google auth helper function
