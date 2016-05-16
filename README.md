@@ -97,6 +97,8 @@ go install ./...
 titan
 ```
 
+Or you can simply use `go run cmd/titan/main.go` without installing.
+
 ## License
 
 [MIT](LICENSE)
