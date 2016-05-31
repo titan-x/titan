@@ -10,6 +10,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/neptulon/neptulon"
+	"github.com/neptulon/neptulon/middleware"
 )
 
 type gProfile struct {
@@ -75,6 +76,7 @@ func googleAuth(ctx *neptulon.ReqCtx, db DB, pass string) error {
 	}
 
 	ctx.Res = gAuthRes{ID: user.ID, Token: user.JWTToken, Name: user.Name, Email: user.Email, Picture: user.Picture}
+	ctx.Session.Set(middleware.CustResLogDataKey, gAuthRes{ID: user.ID, Token: user.JWTToken, Name: user.Name, Email: user.Email})
 	log.Printf("auth: google: logged in: %v, %v", p.Name, p.Email)
 	return nil
 }
