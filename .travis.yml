@@ -24,7 +24,7 @@ script:
 deploy:
   provider: heroku
   api_key:
-    secure: InXlYdM0dt5rONzta3kUoc0E9T1L72Znw20V3IcnsCJ2e0cFcHqy/vF7CYJrVh2UEDFpiqDlJVZSjCdcFUrAHM7JeU6tvUqpbcM2vBGuO0Ow7MENrZxxeJXs5pMCmvuBmfxcoRyU1VZBfrGsXN3FvTQmns1IAPQtc5avbYTjOpM=
+    secure: VLVLL9kEQxp1XX74qeTfFNCd3Wx2HeeKoVpUIVxNCx54FySkl1/JcKsCTHVHvJ1q0fwbh6t5gw1RMB+lE+IybGCYnDyKmWTUGFi4YYGDxmsY5EsE6Ph8ZBOloU9XsNZPpXvwPptoIw6I/pR7pl1re9RhuhX/7wi4KE8ooUsOfMo=
   app: titan-x
   skip_cleanup: true
   on:
