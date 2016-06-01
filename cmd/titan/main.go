@@ -15,8 +15,9 @@ const (
 )
 
 var (
-	run = flag.Bool("run", false, "Start a Titan server at address: "+addr)
-	ext = flag.Bool("ext", false, "Run external client test case. Titan server will run at address: "+testAddr)
+	run   = flag.Bool("run", false, "Start the Titan server.")
+	caddr = flag.String("addr", addr, "Specifies a network address to start the server on. If not specific, default address will be used: "+addr)
+	ext   = flag.Bool("ext", false, "Run external client test case. Titan server will run at address: "+testAddr)
 )
 
 func main() {
@@ -24,7 +25,7 @@ func main() {
 
 	switch {
 	case *run:
-		startServer(addr)
+		startServer(*caddr)
 	case *ext:
 		startExtTest(testAddr)
 	default:
