@@ -14,7 +14,7 @@ s, _ := titan.NewServer(":80")
 s.ListenAndServe()
 ```
 
-An example is deployed at [wss://titan-x.herokuapp.com](wss://titan-x.herokuapp.com). You can use the provided Titan [client](/client) and start experimenting right away.
+An example is deployed at `wss://titan-x.herokuapp.com`. You can use the provided Titan [client](/client) and start experimenting right away.
 
 You can also use the provided command line tool to start a Titan server:
 
@@ -138,7 +138,7 @@ docker rmi -f $(docker images -q)
 
 `Procfile` and `app.json` are ready making this repo readily available for Heroku deployment. You can start by clicking the above button.
 
-A sample deployment is at [wss://titan-x.herokuapp.com](wss://titan-x.herokuapp.com) where you can connect with any Titan client.
+A sample deployment is at `wss://titan-x.herokuapp.com` where you can connect with any Titan client.
 
 
 ## Users
