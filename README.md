@@ -118,9 +118,9 @@ You can pull prebuilt Titan Docker image via:
 docker pull titanx/titan
 ```
 
-You can find all the published tags at [Docker Hub: titan-x/titan](https://hub.docker.com/r/titan-x/titan/tags/)
+You can find all the published tags at [Docker Hub: titanx/titan](https://hub.docker.com/r/titanx/titan/tags/)
 
-You can also reference the repo by URL using docker.io/titan-x/titan
+You can also reference the repo by URL using docker.io/titanx/titan
 
 If something goes wrong and you want to stop all containers and delete all containers & images:
 
