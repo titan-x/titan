@@ -78,31 +78,6 @@ Client-server communication sequence is pretty similar to that of XMPP, except w
 
 Any message that was not acknowledged by the client will be delivered again (hence at-least-once delivery principle). Client implementations will be ready to handle occasional duplicate deliveries of messages by the server. Message IDs will remain the same for duplicates.
 
-## Users
-
-[NBusy](https://github.com/nbusy/nbusy) server is running on top of Titan server. You can visit its repo to see a complete use case of Titan server.
-
-## Testing
-
-All the tests can be executed with `GORACE="halt_on_error=1" go test -race -cover ./...` command. Optionally you can add `-v` flag to observe all connection logs. Integration tests require environment variables defined in the next section. If they are missing, integration tests are skipped.
-
-## Environment Variables
-
-Following environment variables needs to be present on any dev or production environment:
-
-```bash
-export GOOGLE_API_KEY=
-export GOOGLE_PREPROD_API_KEY=
-```
-
-## Logging and Metrics
-
-Only actionable events are logged (i.e. server started, client connected on IP ..., client disconnected, etc.). You can use logs as event sources. Anything else is considered telemetry and exposed with `expvar`. Queue lengths, active connection/request counts, performance metrics, etc. Metrics are exposed via HTTP at /debug/vars in JSON format.
-
-## Performance Notes
-
-The messaging server is designed to make max usage of available CPU resources. However exceeding 100% CPU usage will cause a memory usage spike as marshalled/unmarshalled messages and other allocated byte buffers will have to reside in memory much longer. Ideally, 95% CPU usage should trigger the clustering mechanism which should spawn more server instances. Currently there is no clustering support built-in, but it is a priority.
-
 ## Command Line Tool
 
 You can install `titan` command to `$GOPATH/bin` directory to be universally available from your shell using following:
@@ -113,7 +88,6 @@ titan
 ```
 
 Or you can simply use `go run cmd/titan/main.go` without installing.
-
 
 ## Docker Build and Deployment
 
@@ -165,6 +139,32 @@ docker rmi -f $(docker images -q)
 `Procfile` and `app.json` are ready making this repo readily available for Heroku deployment. You can start by clicking the above button.
 
 A sample deployment is at [wss://titan-x.herokuapp.com](wss://titan-x.herokuapp.com) where you can connect with any Titan client.
+
+
+## Users
+
+[NBusy](https://github.com/nbusy/nbusy) server is running on top of Titan server. You can visit its repo to see a complete use case of Titan server.
+
+## Testing
+
+All the tests can be executed with `GORACE="halt_on_error=1" go test -race -cover ./...` command. Optionally you can add `-v` flag to observe all connection logs. Integration tests require environment variables defined in the next section. If they are missing, integration tests are skipped.
+
+## Environment Variables
+
+Following environment variables needs to be present on any dev or production environment:
+
+```bash
+export GOOGLE_API_KEY=
+export GOOGLE_PREPROD_API_KEY=
+```
+
+## Logging and Metrics
+
+Only actionable events are logged (i.e. server started, client connected on IP ..., client disconnected, etc.). You can use logs as event sources. Anything else is considered telemetry and exposed with `expvar`. Queue lengths, active connection/request counts, performance metrics, etc. Metrics are exposed via HTTP at /debug/vars in JSON format.
+
+## Performance Notes
+
+The messaging server is designed to make max usage of available CPU resources. However exceeding 100% CPU usage will cause a memory usage spike as marshalled/unmarshalled messages and other allocated byte buffers will have to reside in memory much longer. Ideally, 95% CPU usage should trigger the clustering mechanism which should spawn more server instances. Currently there is no clustering support built-in, but it is a priority.
 
 ## License
 
