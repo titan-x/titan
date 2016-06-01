@@ -1,7 +1,7 @@
 {
 	"ImportPath": "github.com/titan-x/titan",
 	"GoVersion": "go1.6",
-	"GodepVersion": "v63",
+	"GodepVersion": "v72",
 	"Packages": [
 		"./..."
 	],
@@ -18,18 +18,18 @@
 		},
 		{
 			"ImportPath": "github.com/neptulon/neptulon",
-			"Comment": "v0.9",
-			"Rev": "2498fb5164fe7b05d49caa25f4bfa4c586eed084"
+			"Comment": "v0.10",
+			"Rev": "f8cbd44377eb59d52033b4824b9bb3fcaae48c23"
 		},
 		{
 			"ImportPath": "github.com/neptulon/neptulon/middleware",
-			"Comment": "v0.9",
-			"Rev": "2498fb5164fe7b05d49caa25f4bfa4c586eed084"
+			"Comment": "v0.10",
+			"Rev": "f8cbd44377eb59d52033b4824b9bb3fcaae48c23"
 		},
 		{
 			"ImportPath": "github.com/neptulon/neptulon/middleware/jwt",
-			"Comment": "v0.9",
-			"Rev": "2498fb5164fe7b05d49caa25f4bfa4c586eed084"
+			"Comment": "v0.10",
+			"Rev": "f8cbd44377eb59d52033b4824b9bb3fcaae48c23"
 		},
 		{
 			"ImportPath": "github.com/neptulon/shortid",
