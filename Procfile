@@ -1,1 +1,1 @@
-web: titan -run -addr :$PORT
+web: titan -addr :$PORT

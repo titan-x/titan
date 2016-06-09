@@ -18,7 +18,7 @@ RUN GORACE="halt_on_error=1" go test -v -race -cover ${titan_path}
 RUN go install -v ${titan_path}/cmd/titan
 
 # Run the titan command by default when the container starts.
-ENTRYPOINT /go/bin/titan -run -addr :80
+ENTRYPOINT /go/bin/titan -addr :80
 
 # Document that the service listens on port 80.
 EXPOSE 80
