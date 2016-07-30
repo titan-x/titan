@@ -7,6 +7,12 @@ type InMemDB struct {
 	InMemUserDB
 }
 
+// InMemUserDB is in-memory user database.
+type InMemUserDB struct {
+	ids    map[string]*User
+	emails map[string]*User
+}
+
 // NewInMemDB creates a new in-memory database.
 func NewInMemDB() InMemDB {
 	return InMemDB{
@@ -17,10 +23,9 @@ func NewInMemDB() InMemDB {
 	}
 }
 
-// InMemUserDB is in-memory user database.
-type InMemUserDB struct {
-	ids    map[string]*User
-	emails map[string]*User
+// Seed seeds database with essential data.
+func (db InMemUserDB) Seed() error {
+	return nil
 }
 
 // GetByID retrieves a user by ID.
