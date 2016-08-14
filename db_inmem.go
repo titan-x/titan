@@ -24,7 +24,7 @@ func NewInMemDB() InMemDB {
 }
 
 // Seed seeds database with essential data.
-func (db InMemUserDB) Seed() error {
+func (db InMemUserDB) Seed(overwrite bool) error {
 	return nil
 }
 

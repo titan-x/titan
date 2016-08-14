@@ -7,7 +7,7 @@ type DB interface {
 
 // UserDB presists user information in database.
 type UserDB interface {
-	Seed() error
+	Seed(overwrite bool) error
 	GetByID(id string) (*User, bool)
 	GetByMail(mail string) (*User, bool)
 	SaveUser(u *User) error
