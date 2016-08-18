@@ -41,13 +41,18 @@ func NewDynamoDB(region string, endpoint string) *DynamoDB {
 }
 
 // ListTables lists all tables.
-func (db *DynamoDB) ListTables() ([]*string, error) {
+func (db *DynamoDB) ListTables() ([]string, error) {
 	res, err := db.db.ListTables(&dynamodb.ListTablesInput{Limit: aws.Int64(100)})
 	if err != nil {
 		return nil, err
 	}
 
-	return res.TableNames, nil
+	names := []string{}
+	for _, name := range res.TableNames {
+		names = append(names, *name)
+	}
+
+	return names, nil
 }
 
 // Seed creates and populates the database, overwriting existing data if specified.
@@ -55,15 +60,15 @@ func (db *DynamoDB) Seed(overwrite bool) error {
 	params := &dynamodb.CreateTableInput{
 		AttributeDefinitions: []*dynamodb.AttributeDefinition{ // Required
 			{ // Required
-				AttributeName: aws.String("KeySchemaAttributeName"), // Required
-				AttributeType: aws.String("ScalarAttributeType"),    // Required
+				AttributeName: aws.String("user"), // Required
+				AttributeType: aws.String("S"),    // Required
 			},
 			// More values...
 		},
 		KeySchema: []*dynamodb.KeySchemaElement{ // Required
 			{ // Required
-				AttributeName: aws.String("KeySchemaAttributeName"), // Required
-				KeyType:       aws.String("KeyType"),                // Required
+				AttributeName: aws.String("user"), // Required
+				KeyType:       aws.String("HASH"), // Required
 			},
 			// More values...
 		},
@@ -71,55 +76,55 @@ func (db *DynamoDB) Seed(overwrite bool) error {
 			ReadCapacityUnits:  aws.Int64(1), // Required
 			WriteCapacityUnits: aws.Int64(1), // Required
 		},
-		TableName: aws.String("TableName"), // Required
-		GlobalSecondaryIndexes: []*dynamodb.GlobalSecondaryIndex{
-			{ // Required
-				IndexName: aws.String("IndexName"), // Required
-				KeySchema: []*dynamodb.KeySchemaElement{ // Required
-					{ // Required
-						AttributeName: aws.String("KeySchemaAttributeName"), // Required
-						KeyType:       aws.String("KeyType"),                // Required
-					},
-					// More values...
-				},
-				Projection: &dynamodb.Projection{ // Required
-					NonKeyAttributes: []*string{
-						aws.String("NonKeyAttributeName"), // Required
-						// More values...
-					},
-					ProjectionType: aws.String("ProjectionType"),
-				},
-				ProvisionedThroughput: &dynamodb.ProvisionedThroughput{ // Required
-					ReadCapacityUnits:  aws.Int64(1), // Required
-					WriteCapacityUnits: aws.Int64(1), // Required
-				},
-			},
-			// More values...
-		},
-		LocalSecondaryIndexes: []*dynamodb.LocalSecondaryIndex{
-			{ // Required
-				IndexName: aws.String("IndexName"), // Required
-				KeySchema: []*dynamodb.KeySchemaElement{ // Required
-					{ // Required
-						AttributeName: aws.String("KeySchemaAttributeName"), // Required
-						KeyType:       aws.String("KeyType"),                // Required
-					},
-					// More values...
-				},
-				Projection: &dynamodb.Projection{ // Required
-					NonKeyAttributes: []*string{
-						aws.String("NonKeyAttributeName"), // Required
-						// More values...
-					},
-					ProjectionType: aws.String("ProjectionType"),
-				},
-			},
-			// More values...
-		},
-		StreamSpecification: &dynamodb.StreamSpecification{
-			StreamEnabled:  aws.Bool(true),
-			StreamViewType: aws.String("StreamViewType"),
-		},
+		TableName: aws.String("users"), // Required
+		// GlobalSecondaryIndexes: []*dynamodb.GlobalSecondaryIndex{
+		// 	{ // Required
+		// 		IndexName: aws.String("IndexName"), // Required
+		// 		KeySchema: []*dynamodb.KeySchemaElement{ // Required
+		// 			{ // Required
+		// 				AttributeName: aws.String("KeySchemaAttributeName"), // Required
+		// 				KeyType:       aws.String("KeyType"),                // Required
+		// 			},
+		// 			// More values...
+		// 		},
+		// 		Projection: &dynamodb.Projection{ // Required
+		// 			NonKeyAttributes: []*string{
+		// 				aws.String("NonKeyAttributeName"), // Required
+		// 				// More values...
+		// 			},
+		// 			ProjectionType: aws.String("ProjectionType"),
+		// 		},
+		// 		ProvisionedThroughput: &dynamodb.ProvisionedThroughput{ // Required
+		// 			ReadCapacityUnits:  aws.Int64(1), // Required
+		// 			WriteCapacityUnits: aws.Int64(1), // Required
+		// 		},
+		// 	},
+		// 	// More values...
+		// },
+		// LocalSecondaryIndexes: []*dynamodb.LocalSecondaryIndex{
+		// 	{ // Required
+		// 		IndexName: aws.String("IndexName"), // Required
+		// 		KeySchema: []*dynamodb.KeySchemaElement{ // Required
+		// 			{ // Required
+		// 				AttributeName: aws.String("KeySchemaAttributeName"), // Required
+		// 				KeyType:       aws.String("KeyType"),                // Required
+		// 			},
+		// 			// More values...
+		// 		},
+		// 		Projection: &dynamodb.Projection{ // Required
+		// 			NonKeyAttributes: []*string{
+		// 				aws.String("NonKeyAttributeName"), // Required
+		// 				// More values...
+		// 			},
+		// 			ProjectionType: aws.String("ProjectionType"),
+		// 		},
+		// 	},
+		// 	// More values...
+		// },
+		// StreamSpecification: &dynamodb.StreamSpecification{
+		// 	StreamEnabled:  aws.Bool(true),
+		// 	StreamViewType: aws.String("StreamViewType"),
+		// },
 	}
 
 	_, err := db.db.CreateTable(params)
