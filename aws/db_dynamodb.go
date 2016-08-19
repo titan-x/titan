@@ -8,9 +8,10 @@ import (
 
 // DynamoDB implementation for DB interface.
 type DynamoDB struct {
-	config  *aws.Config
-	session *session.Session
-	db      *dynamodb.DynamoDB
+	DB      *dynamodb.DynamoDB
+	Tables  []string
+	Config  *aws.Config
+	Session *session.Session
 }
 
 // NewDynamoDB creates a new AWS DynamoDB instance.
@@ -18,30 +19,31 @@ type DynamoDB struct {
 // endpoint = Optional endpoint URL setting. Useful for specifying local/development service URL.
 func NewDynamoDB(region string, endpoint string) *DynamoDB {
 	db := DynamoDB{}
+	db.Tables = []string{"users"}
 
 	// carefully crafting config elements not to mess with the defaults
 	if region != "" || endpoint != "" {
-		db.config = aws.NewConfig()
+		db.Config = aws.NewConfig()
 
 		if region != "" {
-			db.config.WithRegion(region)
+			db.Config.WithRegion(region)
 		}
 		if endpoint != "" {
-			db.config.WithEndpoint(endpoint)
+			db.Config.WithEndpoint(endpoint)
 		}
 
-		db.session = session.New(db.config)
+		db.Session = session.New(db.Config)
 	} else {
-		db.session = session.New()
+		db.Session = session.New()
 	}
 
-	db.db = dynamodb.New(db.session)
+	db.DB = dynamodb.New(db.Session)
 
 	return &db
 }
 
 func (db *DynamoDB) listTables() ([]string, error) {
-	res, err := db.db.ListTables(&dynamodb.ListTablesInput{Limit: aws.Int64(100)})
+	res, err := db.DB.ListTables(&dynamodb.ListTablesInput{Limit: aws.Int64(100)})
 	if err != nil {
 		return nil, err
 	}
@@ -61,13 +63,13 @@ func (db *DynamoDB) deleteTables() error {
 	}
 
 	for _, tbl := range tables {
-		if _, err := db.db.DeleteTable(&dynamodb.DeleteTableInput{TableName: aws.String(tbl)}); err != nil {
+		if _, err := db.DB.DeleteTable(&dynamodb.DeleteTableInput{TableName: aws.String(tbl)}); err != nil {
 			return err
 		}
 	}
 
 	for _, tbl := range tables {
-		if err := db.db.WaitUntilTableNotExists(&dynamodb.DescribeTableInput{TableName: aws.String(tbl)}); err != nil {
+		if err := db.DB.WaitUntilTableNotExists(&dynamodb.DescribeTableInput{TableName: aws.String(tbl)}); err != nil {
 			return err
 		}
 	}
@@ -77,15 +79,13 @@ func (db *DynamoDB) deleteTables() error {
 
 // Seed creates and populates the database, overwriting existing data if specified.
 func (db *DynamoDB) Seed(overwrite bool) error {
-	tables := []string{"users"}
-
 	if overwrite {
 		if err := db.deleteTables(); err != nil {
 			return err
 		}
 	}
 
-	for _, tbl := range tables {
+	for _, tbl := range db.Tables {
 		tableParams := &dynamodb.CreateTableInput{
 			TableName: aws.String(tbl),
 			AttributeDefinitions: []*dynamodb.AttributeDefinition{
@@ -154,13 +154,13 @@ func (db *DynamoDB) Seed(overwrite bool) error {
 			// },
 		}
 
-		_, err := db.db.CreateTable(tableParams)
+		_, err := db.DB.CreateTable(tableParams)
 		if err != nil {
 			return err
 		}
 
 		// tables with secondary indexes need to be created sequentially so wait till table is ready
-		if err := db.db.WaitUntilTableExists(&dynamodb.DescribeTableInput{TableName: aws.String(tbl)}); err != nil {
+		if err := db.DB.WaitUntilTableExists(&dynamodb.DescribeTableInput{TableName: aws.String(tbl)}); err != nil {
 			return err
 		}
 	}
