@@ -40,8 +40,7 @@ func NewDynamoDB(region string, endpoint string) *DynamoDB {
 	return &db
 }
 
-// ListTables lists all tables.
-func (db *DynamoDB) ListTables() ([]string, error) {
+func (db *DynamoDB) listTables() ([]string, error) {
 	res, err := db.db.ListTables(&dynamodb.ListTablesInput{Limit: aws.Int64(100)})
 	if err != nil {
 		return nil, err
@@ -55,9 +54,36 @@ func (db *DynamoDB) ListTables() ([]string, error) {
 	return names, nil
 }
 
+func (db *DynamoDB) deleteTables() error {
+	tables, err := db.listTables()
+	if err != nil {
+		return err
+	}
+
+	for _, tbl := range tables {
+		if _, err := db.db.DeleteTable(&dynamodb.DeleteTableInput{TableName: aws.String(tbl)}); err != nil {
+			return err
+		}
+	}
+
+	for _, tbl := range tables {
+		if err := db.db.WaitUntilTableNotExists(&dynamodb.DescribeTableInput{TableName: aws.String(tbl)}); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // Seed creates and populates the database, overwriting existing data if specified.
 func (db *DynamoDB) Seed(overwrite bool) error {
-	params := &dynamodb.CreateTableInput{
+	if overwrite {
+		if err := db.deleteTables(); err != nil {
+			return err
+		}
+	}
+
+	userTableParams := &dynamodb.CreateTableInput{
 		AttributeDefinitions: []*dynamodb.AttributeDefinition{ // Required
 			{ // Required
 				AttributeName: aws.String("user"), // Required
@@ -127,7 +153,7 @@ func (db *DynamoDB) Seed(overwrite bool) error {
 		// },
 	}
 
-	_, err := db.db.CreateTable(params)
+	_, err := db.db.CreateTable(userTableParams)
 	if err != nil {
 		return err
 	}

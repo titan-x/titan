@@ -9,7 +9,7 @@ const (
 
 func TestListTables(t *testing.T) {
 	db := NewDynamoDB(region, endpoint)
-	tbl, err := db.ListTables()
+	tbl, err := db.listTables()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -24,5 +24,12 @@ func TestSeed(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// todo: list table names and verify
+	tbl, err := db.listTables()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(tbl) < 1 {
+		t.Fatal("tables not created")
+	}
 }
