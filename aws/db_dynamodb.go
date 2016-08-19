@@ -1,3 +1,9 @@
+// Package aws provides AWS implementation of data interfaces.
+//
+// AWS Go SDK: https://github.com/aws/aws-sdk-go
+// Go SDK API Ref: https://docs.aws.amazon.com/sdk-for-go/api/service/dynamodb/
+// Dev Guide: http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.Modifying.html
+// REST API Ref: http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_CreateTable.html
 package aws
 
 import (
@@ -126,7 +132,6 @@ func (db *DynamoDB) Seed(overwrite bool) error {
 			// 			WriteCapacityUnits: aws.Int64(1),
 			// 		},
 			// 	},
-			// 	// More values...
 			// },
 			// LocalSecondaryIndexes: []*dynamodb.LocalSecondaryIndex{
 			// 	{
@@ -146,7 +151,6 @@ func (db *DynamoDB) Seed(overwrite bool) error {
 			// 			ProjectionType: aws.String("ProjectionType"),
 			// 		},
 			// 	},
-			// 	// More values...
 			// },
 			// StreamSpecification: &dynamodb.StreamSpecification{
 			// 	StreamEnabled:  aws.Bool(true),
