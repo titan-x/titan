@@ -18,6 +18,7 @@ var (
 	defaultFlag = flag.Bool("default", false, "Start Titan server at default address: "+addr)
 	addrFlag    = flag.String("addr", "", "Start Titan server with specified address parameter.")
 	testFlag    = flag.Bool("test", false, "Start Titan server for external client integration test at address: "+testAddr)
+	awsFlag     = flag.Bool("aws", false, "Enable Amazon Web Services support.")
 )
 
 func main() {
@@ -39,6 +40,10 @@ func startServer(addr string) {
 	s, err := titan.NewServer(addr)
 	if err != nil {
 		log.Fatalf("error creating server: %v", err)
+	}
+
+	if *awsFlag {
+		// todo: plug in aws implementations
 	}
 
 	defer func() {

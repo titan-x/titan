@@ -33,3 +33,15 @@ func TestSeed(t *testing.T) {
 		t.Fatal("tables not created")
 	}
 }
+
+func TestGetByID(t *testing.T) {
+
+}
+
+func TestGetByMail(t *testing.T) {
+
+}
+
+func TestSaveUser(t *testing.T) {
+	// create then update
+}
