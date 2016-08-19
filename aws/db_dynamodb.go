@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/titan-x/titan"
 )
 
 // DynamoDB implementation for DB interface.
@@ -85,10 +86,16 @@ func (db *DynamoDB) deleteTables() error {
 
 // Seed creates and populates the database, overwriting existing data if specified.
 func (db *DynamoDB) Seed(overwrite bool) error {
-	if overwrite {
-		if err := db.deleteTables(); err != nil {
+	if !overwrite {
+		if tbls, err := db.listTables(); err != nil {
 			return err
+		} else if len(tbls) != 0 {
+			return nil
 		}
+	}
+
+	if err := db.deleteTables(); err != nil {
+		return err
 	}
 
 	for _, tbl := range db.Tables {
@@ -169,5 +176,20 @@ func (db *DynamoDB) Seed(overwrite bool) error {
 		}
 	}
 
+	return nil
+}
+
+// GetByID retrieves a user by ID with OK indicator.
+func (db *DynamoDB) GetByID(id string) (u *titan.User, ok bool) {
+	return nil, false
+}
+
+// GetByMail retrieves a user by e-mail with OK indicator.
+func (db *DynamoDB) GetByMail(email string) (u *titan.User, ok bool) {
+	return nil, false
+}
+
+// SaveUser creates or updates a user. Upon creation, users are assigned a unique ID.
+func (db *DynamoDB) SaveUser(u *titan.User) error {
 	return nil
 }

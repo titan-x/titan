@@ -13,7 +13,7 @@ type Queue struct {
 	conns   *cmap.CMap       // user ID -> conn ID
 	server  *neptulon.Server // server instance to send and receive messages through
 	reqs    *cmap.CMap       // user ID -> []queuedRequest
-	mutexes *cmap.CMap       // user ID -> sync.RWMutex
+	mutexes *cmap.CMap       // user ID -> *sync.RWMutex
 }
 
 // NewQueue creates a new queue object.
@@ -44,7 +44,7 @@ func (q *Queue) SetServer(s *neptulon.Server) {
 func (q *Queue) SetConn(userID, connID string) {
 	if _, ok := q.conns.GetOk(userID); !ok {
 		q.conns.Set(userID, connID)
-		q.mutexes.Set(userID, sync.RWMutex{})
+		q.mutexes.Set(userID, &sync.RWMutex{})
 		go q.processQueue(userID)
 	}
 }
@@ -91,7 +91,7 @@ func (q *Queue) processQueue(userID string) {
 		return
 	}
 
-	mutex := q.mutexes.Get(userID).(sync.RWMutex)
+	mutex := q.mutexes.Get(userID).(*sync.RWMutex)
 	mutex.Lock()
 	if ireqs, ok := q.reqs.GetOk(userID); ok {
 		reqs := ireqs.([]queuedRequest)
