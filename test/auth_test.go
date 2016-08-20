@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/titan-x/titan/client"
+	"github.com/titan-x/titan/models"
 )
 
 func TestAuth(t *testing.T) {
@@ -35,7 +36,7 @@ func TestInvalidToken(t *testing.T) {
 	ch.Client.DisconnHandler(func(c *client.Client) {
 		closed <- true
 	})
-	ch.Client.Echo(map[string]string{"message": "Lorem ip sum", "token": "abc-invalid-token-!"}, func(m *client.Message) error {
+	ch.Client.Echo(map[string]string{"message": "Lorem ip sum", "token": "abc-invalid-token-!"}, func(m *models.Message) error {
 		gotMsg <- true
 		return nil
 	})
@@ -73,7 +74,7 @@ func TestGoogleAuth(t *testing.T) {
 
 	// now connect to server with our new JWT token auto assigned by Google auth helper function
 	ch.Connect().JWTAuthSync()
-	ch.SendMessagesSync([]client.Message{client.Message{To: "2", Message: "Hi!"}})
+	ch.SendMessagesSync([]models.Message{models.Message{To: "2", Message: "Hi!"}})
 
 	ch.CloseWait()
 }

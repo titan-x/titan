@@ -7,7 +7,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/titan-x/titan"
-	"github.com/titan-x/titan/aws"
+	"github.com/titan-x/titan/data/aws"
 )
 
 const (

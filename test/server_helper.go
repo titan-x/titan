@@ -7,6 +7,9 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/titan-x/titan"
+	"github.com/titan-x/titan/data"
+	"github.com/titan-x/titan/data/inmem"
+	"github.com/titan-x/titan/models"
 )
 
 // ServerHelper is a titan.Server wrapper for testing.
@@ -17,7 +20,7 @@ type ServerHelper struct {
 	testing      *testing.T
 	server       *titan.Server
 	serverClosed chan bool
-	db           titan.InMemDB
+	db           data.DB
 }
 
 // NewServerHelper creates a new server helper object.
@@ -37,7 +40,7 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 		t.Fatal("Failed to create server:", err)
 	}
 
-	db := titan.NewInMemDB()
+	db := inmem.NewDB()
 	if err := s.SetDB(db); err != nil {
 		t.Fatal("Failed to attach InMemDB to server instance:", err)
 	}
@@ -54,8 +57,8 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 
 // SeedData is the data user for seeding the database.
 type SeedData struct {
-	User1 titan.User
-	User2 titan.User
+	User1 models.User
+	User2 models.User
 }
 
 // SeedDB populates the database with the seed data.
@@ -74,8 +77,8 @@ func (sh *ServerHelper) SeedDB() *ServerHelper {
 	}
 
 	sd := SeedData{
-		User1: titan.User{ID: "1", JWTToken: ts1},
-		User2: titan.User{ID: "2", JWTToken: ts2},
+		User1: models.User{ID: "1", JWTToken: ts1},
+		User2: models.User{ID: "2", JWTToken: ts2},
 	}
 
 	sh.db.SaveUser(&sd.User1)

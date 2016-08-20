@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/titan-x/titan"
+	"github.com/titan-x/titan/models"
 )
 
 // DynamoDB implementation for DB interface.
@@ -180,16 +180,16 @@ func (db *DynamoDB) Seed(overwrite bool) error {
 }
 
 // GetByID retrieves a user by ID with OK indicator.
-func (db *DynamoDB) GetByID(id string) (u *titan.User, ok bool) {
+func (db *DynamoDB) GetByID(id string) (u *models.User, ok bool) {
 	return nil, false
 }
 
 // GetByMail retrieves a user by e-mail with OK indicator.
-func (db *DynamoDB) GetByMail(email string) (u *titan.User, ok bool) {
+func (db *DynamoDB) GetByMail(email string) (u *models.User, ok bool) {
 	return nil, false
 }
 
 // SaveUser creates or updates a user. Upon creation, users are assigned a unique ID.
-func (db *DynamoDB) SaveUser(u *titan.User) error {
+func (db *DynamoDB) SaveUser(u *models.User) error {
 	return nil
 }

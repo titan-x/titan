@@ -1,4 +1,4 @@
-package titan
+package models
 
 import "time"
 

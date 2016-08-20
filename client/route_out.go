@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/neptulon/neptulon"
+	"github.com/titan-x/titan/models"
 )
 
 // ------ Outgoing Requests ---------- //
@@ -45,7 +46,7 @@ func (c *Client) JWTAuth(jwtToken string, handler func(ack string) error) error 
 }
 
 // SendMessages sends a batch of messages to the server.
-func (c *Client) SendMessages(m []Message, handler func(ack string) error) error {
+func (c *Client) SendMessages(m []models.Message, handler func(ack string) error) error {
 	_, err := c.conn.SendRequest("msg.send", m, func(ctx *neptulon.ResCtx) error {
 		var ack string
 		if err := ctx.Result(&ack); err != nil {
@@ -63,9 +64,9 @@ func (c *Client) SendMessages(m []Message, handler func(ack string) error) error
 
 // Echo sends a message to server echo endpoint.
 // This is meant to be used for testing connectivity.
-func (c *Client) Echo(m interface{}, msgHandler func(msg *Message) error) error {
+func (c *Client) Echo(m interface{}, msgHandler func(msg *models.Message) error) error {
 	_, err := c.conn.SendRequest("echo", m, func(ctx *neptulon.ResCtx) error {
-		var msg Message
+		var msg models.Message
 		if err := ctx.Result(&msg); err != nil {
 			return fmt.Errorf("client: echo: error reading response: %v", err)
 		}

@@ -4,6 +4,8 @@ import (
 	"github.com/neptulon/neptulon"
 	"github.com/neptulon/neptulon/middleware"
 	"github.com/neptulon/neptulon/middleware/jwt"
+	"github.com/titan-x/titan/data"
+	"github.com/titan-x/titan/data/inmem"
 )
 
 // Server wraps a listener instance and registers default connection and message handlers with the listener.
@@ -14,7 +16,7 @@ type Server struct {
 	privRoutes *middleware.Router
 
 	// titan server components
-	db    DB
+	db    data.DB
 	queue Queue
 }
 
@@ -26,7 +28,7 @@ func NewServer(addr string) (*Server, error) {
 
 	s := Server{
 		server: neptulon.NewServer(addr),
-		db:     NewInMemDB(),
+		db:     inmem.NewDB(),
 		queue:  NewQueue(),
 	}
 
@@ -59,7 +61,7 @@ func NewServer(addr string) (*Server, error) {
 }
 
 // SetDB sets the database to be used by the server. If not supplied, in-memory database implementation is used.
-func (s *Server) SetDB(db DB) error {
+func (s *Server) SetDB(db data.DB) error {
 	s.db = db
 	return nil
 }
