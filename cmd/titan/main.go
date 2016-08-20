@@ -7,6 +7,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/titan-x/titan"
+	"github.com/titan-x/titan/aws"
 )
 
 const (
@@ -43,7 +44,7 @@ func startServer(addr string) {
 	}
 
 	if *awsFlag {
-		// todo: plug in aws implementations
+		s.SetDB(aws.NewDynamoDB("", ""))
 	}
 
 	defer func() {
