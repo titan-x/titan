@@ -7,8 +7,12 @@ const (
 	region   = "us-west-2"
 )
 
+func NewTestDynamoDB() *DynamoDB {
+	return NewDynamoDB(region, endpoint)
+}
+
 func TestListTables(t *testing.T) {
-	db := NewDynamoDB(region, endpoint)
+	db := NewTestDynamoDB()
 	tbl, err := db.listTables()
 	if err != nil {
 		t.Fatal(err)
@@ -18,7 +22,7 @@ func TestListTables(t *testing.T) {
 }
 
 func TestSeed(t *testing.T) {
-	db := NewDynamoDB(region, endpoint)
+	db := NewTestDynamoDB()
 	err := db.Seed(true)
 	if err != nil {
 		t.Fatal(err)
@@ -35,7 +39,8 @@ func TestSeed(t *testing.T) {
 }
 
 func TestGetByID(t *testing.T) {
-
+	db := NewTestDynamoDB()
+	db.GetByID(id)
 }
 
 func TestGetByMail(t *testing.T) {

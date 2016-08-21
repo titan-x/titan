@@ -7,7 +7,7 @@ type User struct {
 	ID              string
 	Registered      time.Time
 	Email           string
-	PhoneNumber     uint64
+	PhoneNumber     string
 	GCMRegID        string
 	APNSDeviceToken string
 	Name            string
