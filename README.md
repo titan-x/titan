@@ -140,6 +140,9 @@ docker rmi -f $(docker images -q)
 
 A sample deployment is at `wss://titan-x.herokuapp.com` where you can connect with any Titan client.
 
+## AWS Deployment
+
+[data/aws](/data/aws) module adds support for Amazon Web Services using AWS SDK for Go. Consult [Configuration](https://docs.aws.amazon.com/sdk-for-go/latest/v1/developerguide/configuring-sdk.title.html) section of the SDK guide for configuration options. In most cases, all info will be read from the deployed EC2 instance and you won't have to do anything.
 
 ## Users
 
