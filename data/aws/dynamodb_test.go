@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/titan-x/titan/data"
+	"github.com/titan-x/titan/models"
 )
 
 const (
@@ -45,24 +46,25 @@ func TestSeed(t *testing.T) {
 
 func TestGetByID(t *testing.T) {
 	db := NewTestDynamoDB()
-	su1 := data.User1
+	users := []models.User{data.User1, data.User2}
 
-	// todo: for/range loop for a number of users
-	u1, ok := db.GetByID(su1.ID)
-	if !ok {
-		t.Fatal("coulnd't get user")
-	}
+	for _, user := range users {
+		u, ok := db.GetByID(user.ID)
+		if !ok {
+			t.Fatal("coulnd't get user")
+		}
 
-	if u1.ID != su1.ID ||
-		u1.Registered != su1.Registered ||
-		u1.Email != su1.Email ||
-		u1.PhoneNumber != su1.PhoneNumber ||
-		u1.GCMRegID != su1.GCMRegID ||
-		u1.APNSDeviceToken != su1.APNSDeviceToken ||
-		u1.Name != su1.Name ||
-		!reflect.DeepEqual(u1.Picture, su1.Picture) ||
-		u1.JWTToken != su1.JWTToken {
-		t.Fatal("user fields are invalid")
+		if u.ID != user.ID ||
+			u.Registered != user.Registered ||
+			u.Email != user.Email ||
+			u.PhoneNumber != user.PhoneNumber ||
+			u.GCMRegID != user.GCMRegID ||
+			u.APNSDeviceToken != user.APNSDeviceToken ||
+			u.Name != user.Name ||
+			!reflect.DeepEqual(u.Picture, user.Picture) ||
+			u.JWTToken != user.JWTToken {
+			t.Fatal("user fields are invalid")
+		}
 	}
 }
 
