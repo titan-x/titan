@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/titan-x/titan/models"
 )
 
@@ -185,13 +186,19 @@ func (db *DynamoDB) Seed(overwrite bool) error {
 func (db *DynamoDB) GetByID(id string) (u *models.User, ok bool) {
 	res, err := db.DB.GetItem(nil)
 	if err != nil {
-		log.Printf("dynamodb: %v", err)
+		log.Printf("dynamodb: error: %v", err)
 		return nil, false
 	}
 
 	log.Printf("dynamodb: getbyid: consumed capacity: %v", res.ConsumedCapacity)
 
-	return nil, false
+	var user models.User
+	if err := dynamodbattribute.UnmarshalMap(res.Item, &user); err != nil {
+		log.Printf("dynamodb: error: %v", err)
+		return nil, false
+	}
+
+	return &user, true
 }
 
 // GetByEmail retrieves a user by e-mail with OK indicator.

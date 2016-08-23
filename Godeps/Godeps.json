@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/titan-x/titan",
-	"GoVersion": "go1.6",
+	"GoVersion": "go1.7",
 	"GodepVersion": "v74",
 	"Packages": [
 		"./..."
@@ -128,6 +128,11 @@
 		},
 		{
 			"ImportPath": "github.com/aws/aws-sdk-go/service/dynamodb",
+			"Comment": "v1.4.1",
+			"Rev": "f80e7d0182a463dff0c0da6bbed57f21369d4346"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute",
 			"Comment": "v1.4.1",
 			"Rev": "f80e7d0182a463dff0c0da6bbed57f21369d4346"
 		},
