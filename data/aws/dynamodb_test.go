@@ -13,12 +13,19 @@ const (
 	region   = "us-west-2"
 )
 
-func newTestDynamoDB() *DynamoDB {
+func newTestDynamoDB(t *testing.T) *DynamoDB {
+	db := NewDynamoDB(region, endpoint)
 
-	// todo: skip tests if dynamodb local does not exist
-	// todo2: seed database
+	_, err := db.listTables()
+	if err != nil {
+		t.Skipf("skipping DynamoDB test: %v", err)
+	}
 
-	return NewDynamoDB(region, endpoint)
+	if err := db.Seed(true); err != nil {
+		t.Fatal(err)
+	}
+
+	return db
 }
 
 func compareUsersForEquality(t *testing.T, u1 *models.User, u2 *models.User) {
@@ -36,7 +43,7 @@ func compareUsersForEquality(t *testing.T, u1 *models.User, u2 *models.User) {
 }
 
 func TestListTables(t *testing.T) {
-	db := newTestDynamoDB()
+	db := newTestDynamoDB(t)
 	tbl, err := db.listTables()
 	if err != nil {
 		t.Fatal(err)
@@ -46,9 +53,8 @@ func TestListTables(t *testing.T) {
 }
 
 func TestSeed(t *testing.T) {
-	db := newTestDynamoDB()
-	err := db.Seed(true)
-	if err != nil {
+	db := newTestDynamoDB(t)
+	if err := db.Seed(true); err != nil {
 		t.Fatal(err)
 	}
 
@@ -63,7 +69,7 @@ func TestSeed(t *testing.T) {
 }
 
 func TestGetByID(t *testing.T) {
-	db := newTestDynamoDB()
+	db := newTestDynamoDB(t)
 
 	for _, user := range data.SeedUsers {
 		u, ok := db.GetByID(user.ID)
@@ -76,7 +82,7 @@ func TestGetByID(t *testing.T) {
 }
 
 func TestGetByMail(t *testing.T) {
-	db := newTestDynamoDB()
+	db := newTestDynamoDB(t)
 
 	for _, user := range data.SeedUsers {
 		u, ok := db.GetByEmail(user.ID)
@@ -89,7 +95,7 @@ func TestGetByMail(t *testing.T) {
 }
 
 func TestSaveUser(t *testing.T) {
-	db := newTestDynamoDB()
+	db := newTestDynamoDB(t)
 
 	// create a user
 	u := models.User{

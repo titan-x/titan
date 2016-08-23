@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/titan-x/titan/data"
 	"github.com/titan-x/titan/models"
 )
 
@@ -101,6 +102,7 @@ func (db *DynamoDB) Seed(overwrite bool) error {
 		return err
 	}
 
+	// create the tables
 	for _, tbl := range db.Tables {
 		tableParams := &dynamodb.CreateTableInput{
 			TableName: aws.String(tbl),
@@ -168,8 +170,7 @@ func (db *DynamoDB) Seed(overwrite bool) error {
 			// },
 		}
 
-		_, err := db.DB.CreateTable(tableParams)
-		if err != nil {
+		if _, err := db.DB.CreateTable(tableParams); err != nil {
 			return err
 		}
 
@@ -179,12 +180,27 @@ func (db *DynamoDB) Seed(overwrite bool) error {
 		}
 	}
 
+	// insert the seed data
+	for _, u := range data.SeedUsers {
+		if err := db.SaveUser(&u); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 // GetByID retrieves a user by ID with OK indicator.
 func (db *DynamoDB) GetByID(id string) (u *models.User, ok bool) {
-	res, err := db.DB.GetItem(nil)
+	res, err := db.DB.GetItem(&dynamodb.GetItemInput{
+		TableName: aws.String("users"),
+		Key: map[string]*dynamodb.AttributeValue{
+			"id": {
+				S: aws.String("1"),
+			},
+		},
+		ConsistentRead: aws.Bool(true),
+	})
 	if err != nil {
 		log.Printf("dynamodb: error: %v", err)
 		return nil, false
