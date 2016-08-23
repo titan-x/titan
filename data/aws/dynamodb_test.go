@@ -14,6 +14,10 @@ const (
 )
 
 func newTestDynamoDB() *DynamoDB {
+
+	// todo: skip tests if dynamodb local does not exist
+	// todo2: seed database
+
 	return NewDynamoDB(region, endpoint)
 }
 
