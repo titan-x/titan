@@ -7,6 +7,8 @@
 package aws
 
 import (
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -181,11 +183,20 @@ func (db *DynamoDB) Seed(overwrite bool) error {
 
 // GetByID retrieves a user by ID with OK indicator.
 func (db *DynamoDB) GetByID(id string) (u *models.User, ok bool) {
+	res, err := db.DB.GetItem(nil)
+	if err != nil {
+		log.Printf("dynamodb: %v", err)
+		return nil, false
+	}
+
+	log.Printf("dynamodb: getbyid: consumed capacity: %v", res.ConsumedCapacity)
+
 	return nil, false
 }
 
 // GetByEmail retrieves a user by e-mail with OK indicator.
 func (db *DynamoDB) GetByEmail(email string) (u *models.User, ok bool) {
+	// db.DB.Query(nil)
 	return nil, false
 }
 
