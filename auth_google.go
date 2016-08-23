@@ -49,7 +49,7 @@ func googleAuth(ctx *neptulon.ReqCtx, db data.DB, pass string) error {
 	}
 
 	// retrieve user information
-	user, ok := db.GetByMail(p.Email)
+	user, ok := db.GetByEmail(p.Email)
 	if !ok {
 		// this is a first-time registration so create user profile via Google+ profile info
 		user = &models.User{Email: p.Email, Name: p.Name, Picture: p.Picture, Registered: time.Now()}

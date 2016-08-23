@@ -38,8 +38,8 @@ func (db UserDB) GetByID(id string) (u *models.User, ok bool) {
 	return
 }
 
-// GetByMail retrieves a user by e-mail address.
-func (db UserDB) GetByMail(email string) (u *models.User, ok bool) {
+// GetByEmail retrieves a user by e-mail address.
+func (db UserDB) GetByEmail(email string) (u *models.User, ok bool) {
 	u, ok = db.emails[email]
 	return
 }

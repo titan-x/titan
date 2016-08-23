@@ -11,6 +11,6 @@ type DB interface {
 type UserDB interface {
 	Seed(overwrite bool) error
 	GetByID(id string) (u *models.User, ok bool)
-	GetByMail(email string) (u *models.User, ok bool)
+	GetByEmail(email string) (u *models.User, ok bool)
 	SaveUser(u *models.User) error
 }

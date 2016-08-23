@@ -184,8 +184,8 @@ func (db *DynamoDB) GetByID(id string) (u *models.User, ok bool) {
 	return nil, false
 }
 
-// GetByMail retrieves a user by e-mail with OK indicator.
-func (db *DynamoDB) GetByMail(email string) (u *models.User, ok bool) {
+// GetByEmail retrieves a user by e-mail with OK indicator.
+func (db *DynamoDB) GetByEmail(email string) (u *models.User, ok bool) {
 	return nil, false
 }
 
