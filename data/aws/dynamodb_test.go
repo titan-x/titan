@@ -30,7 +30,7 @@ func newTestDynamoDB(t *testing.T) *DynamoDB {
 
 func compareUsersForEquality(t *testing.T, u1 *models.User, u2 *models.User) {
 	if u1.ID != u2.ID ||
-		u1.Registered != u2.Registered ||
+		!u1.Registered.Equal(u2.Registered) ||
 		u1.Email != u2.Email ||
 		u1.PhoneNumber != u2.PhoneNumber ||
 		u1.GCMRegID != u2.GCMRegID ||

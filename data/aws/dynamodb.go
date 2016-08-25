@@ -210,8 +210,6 @@ func (db *DynamoDB) GetByID(id string) (u *models.User, ok bool) {
 		return nil, false
 	}
 
-	log.Printf("dynamodb: getbyid: consumed capacity: %v", res.ConsumedCapacity)
-
 	var user models.User
 	if err := dynamodbattribute.UnmarshalMap(res.Item, &user); err != nil {
 		log.Printf("dynamodb: error: %v", err)
@@ -243,15 +241,13 @@ func (db *DynamoDB) SaveUser(u *models.User) error {
 		return err
 	}
 
-	res, err := db.DB.PutItem(&dynamodb.PutItemInput{
+	_, err = db.DB.PutItem(&dynamodb.PutItemInput{
 		TableName: aws.String("users"),
 		Item:      item,
 	})
 	if err != nil {
 		return err
 	}
-
-	log.Printf("dynamodb: saveuser: consumed capacity: %v", res.ConsumedCapacity)
 
 	return nil
 }
