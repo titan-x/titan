@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/neptulon/shortid"
 	"github.com/titan-x/titan/data"
 	"github.com/titan-x/titan/models"
 )
@@ -205,6 +206,9 @@ func (db *DynamoDB) GetByID(id string) (u *models.User, ok bool) {
 		log.Printf("dynamodb: error: %v", err)
 		return nil, false
 	}
+	if len(res.Item) == 0 {
+		return nil, false
+	}
 
 	log.Printf("dynamodb: getbyid: consumed capacity: %v", res.ConsumedCapacity)
 
@@ -225,5 +229,29 @@ func (db *DynamoDB) GetByEmail(email string) (u *models.User, ok bool) {
 
 // SaveUser creates or updates a user. Upon creation, users are assigned a unique ID.
 func (db *DynamoDB) SaveUser(u *models.User) error {
+	if u.ID == "" {
+		id, err := shortid.ID(64)
+		if err != nil {
+			return err
+		}
+
+		u.ID = id
+	}
+
+	res, err := db.DB.UpdateItem(&dynamodb.UpdateItemInput{
+		TableName: aws.String("users"),
+		Key: map[string]*dynamodb.AttributeValue{
+			"id": {
+				S: aws.String(u.ID),
+			},
+		},
+		// UpdateExpression: aws.String("SET a=:value1, b=:value2"),
+	})
+	if err != nil {
+		return err
+	}
+
+	log.Printf("dynamodb: saveuser: consumed capacity: %v", res.ConsumedCapacity)
+
 	return nil
 }
