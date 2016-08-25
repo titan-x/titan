@@ -2,6 +2,7 @@ package data
 
 import (
 	"encoding/base64"
+	"time"
 
 	"github.com/titan-x/titan/models"
 )
@@ -21,6 +22,7 @@ func init() {
 
 	SeedUser1 = models.User{
 		ID:          "1",
+		Registered:  time.Now(),
 		Email:       "chuck@titan",
 		PhoneNumber: "+46123456789",
 		GCMRegID:    "gcm-reg-id-xcjf846sgjlf09gdc",
@@ -31,6 +33,7 @@ func init() {
 
 	SeedUser2 = models.User{
 		ID:          "2",
+		Registered:  time.Now(),
 		Email:       "morgan@titan",
 		PhoneNumber: "+46987654321",
 		GCMRegID:    "gcm-reg-id-mrgc97s6cjk9s7xhx109d",

@@ -3,7 +3,7 @@
 // AWS Go SDK: https://github.com/aws/aws-sdk-go
 // Go SDK API Ref: https://docs.aws.amazon.com/sdk-for-go/api/service/dynamodb/
 // Dev Guide: http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.Modifying.html
-// REST API Ref: http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_CreateTable.html
+// REST API Ref: http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Operations.html
 package aws
 
 import (
@@ -197,7 +197,7 @@ func (db *DynamoDB) GetByID(id string) (u *models.User, ok bool) {
 		TableName: aws.String("users"),
 		Key: map[string]*dynamodb.AttributeValue{
 			"id": {
-				S: aws.String("1"),
+				S: aws.String(id),
 			},
 		},
 		ConsistentRead: aws.Bool(true),
@@ -245,7 +245,30 @@ func (db *DynamoDB) SaveUser(u *models.User) error {
 				S: aws.String(u.ID),
 			},
 		},
-		// UpdateExpression: aws.String("SET a=:value1, b=:value2"),
+		UpdateExpression: aws.String("SET Registered=:Registered, Email=:Email, PhoneNumber=:PhoneNumber, GCMRegID=:GCMRegID, xName=:Name, Picture=:Picture, JWTToken=:JWTToken"),
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":Registered": {
+				B: nil,
+			},
+			":Email": {
+				S: aws.String(u.Email),
+			},
+			":PhoneNumber": {
+				S: aws.String(u.PhoneNumber),
+			},
+			":GCMRegID": {
+				S: aws.String(u.GCMRegID),
+			},
+			":Name": {
+				S: aws.String(u.Name),
+			},
+			":Picture": {
+				B: u.Picture,
+			},
+			":JWTToken": {
+				S: aws.String(u.JWTToken),
+			},
+		},
 	})
 	if err != nil {
 		return err
