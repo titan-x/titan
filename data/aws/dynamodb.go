@@ -109,13 +109,13 @@ func (db *DynamoDB) Seed(overwrite bool) error {
 			TableName: aws.String(tbl),
 			AttributeDefinitions: []*dynamodb.AttributeDefinition{
 				{
-					AttributeName: aws.String("id"),
+					AttributeName: aws.String("ID"),
 					AttributeType: aws.String("S"),
 				},
 			},
 			KeySchema: []*dynamodb.KeySchemaElement{
 				{
-					AttributeName: aws.String("id"),
+					AttributeName: aws.String("ID"),
 					KeyType:       aws.String("HASH"),
 				},
 			},
@@ -196,7 +196,7 @@ func (db *DynamoDB) GetByID(id string) (u *models.User, ok bool) {
 	res, err := db.DB.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String("users"),
 		Key: map[string]*dynamodb.AttributeValue{
-			"id": {
+			"ID": {
 				S: aws.String(id),
 			},
 		},
@@ -238,37 +238,14 @@ func (db *DynamoDB) SaveUser(u *models.User) error {
 		u.ID = id
 	}
 
-	res, err := db.DB.UpdateItem(&dynamodb.UpdateItemInput{
+	item, err := dynamodbattribute.MarshalMap(u)
+	if err != nil {
+		return err
+	}
+
+	res, err := db.DB.PutItem(&dynamodb.PutItemInput{
 		TableName: aws.String("users"),
-		Key: map[string]*dynamodb.AttributeValue{
-			"id": {
-				S: aws.String(u.ID),
-			},
-		},
-		UpdateExpression: aws.String("SET Registered=:Registered, Email=:Email, PhoneNumber=:PhoneNumber, GCMRegID=:GCMRegID, xName=:Name, Picture=:Picture, JWTToken=:JWTToken"),
-		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
-			":Registered": {
-				B: nil,
-			},
-			":Email": {
-				S: aws.String(u.Email),
-			},
-			":PhoneNumber": {
-				S: aws.String(u.PhoneNumber),
-			},
-			":GCMRegID": {
-				S: aws.String(u.GCMRegID),
-			},
-			":Name": {
-				S: aws.String(u.Name),
-			},
-			":Picture": {
-				B: u.Picture,
-			},
-			":JWTToken": {
-				S: aws.String(u.JWTToken),
-			},
-		},
+		Item:      item,
 	})
 	if err != nil {
 		return err
