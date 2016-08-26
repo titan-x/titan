@@ -85,7 +85,7 @@ func TestGetByMail(t *testing.T) {
 	db := newTestDynamoDB(t)
 
 	for _, user := range data.SeedUsers {
-		u, ok := db.GetByEmail(user.ID)
+		u, ok := db.GetByEmail(user.Email)
 		if !ok {
 			t.Fatal("coulnd't get user")
 		}

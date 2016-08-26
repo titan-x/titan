@@ -107,9 +107,17 @@ func (db *DynamoDB) Seed(overwrite bool) error {
 	for _, tbl := range db.Tables {
 		tableParams := &dynamodb.CreateTableInput{
 			TableName: aws.String(tbl),
+			ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
+				ReadCapacityUnits:  aws.Int64(1),
+				WriteCapacityUnits: aws.Int64(1),
+			},
 			AttributeDefinitions: []*dynamodb.AttributeDefinition{
 				{
 					AttributeName: aws.String("ID"),
+					AttributeType: aws.String("S"),
+				},
+				{
+					AttributeName: aws.String("Email"),
 					AttributeType: aws.String("S"),
 				},
 			},
@@ -119,33 +127,27 @@ func (db *DynamoDB) Seed(overwrite bool) error {
 					KeyType:       aws.String("HASH"),
 				},
 			},
-			ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
-				ReadCapacityUnits:  aws.Int64(1),
-				WriteCapacityUnits: aws.Int64(1),
+			GlobalSecondaryIndexes: []*dynamodb.GlobalSecondaryIndex{
+				{
+					IndexName: aws.String("Email"),
+					KeySchema: []*dynamodb.KeySchemaElement{
+						{
+							AttributeName: aws.String("Email"),
+							KeyType:       aws.String("HASH"),
+						},
+					},
+					Projection: &dynamodb.Projection{
+						NonKeyAttributes: []*string{
+							aws.String("Email"),
+						},
+						ProjectionType: aws.String("INCLUDE"),
+					},
+					ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
+						ReadCapacityUnits:  aws.Int64(1),
+						WriteCapacityUnits: aws.Int64(1),
+					},
+				},
 			},
-			// GlobalSecondaryIndexes: []*dynamodb.GlobalSecondaryIndex{
-			// 	{
-			// 		IndexName: aws.String("IndexName"),
-			// 		KeySchema: []*dynamodb.KeySchemaElement{
-			// 			{
-			// 				AttributeName: aws.String("KeySchemaAttributeName"),
-			// 				KeyType:       aws.String("KeyType"),
-			// 			},
-			//
-			// 		},
-			// 		Projection: &dynamodb.Projection{
-			// 			NonKeyAttributes: []*string{
-			// 				aws.String("NonKeyAttributeName"),
-			//
-			// 			},
-			// 			ProjectionType: aws.String("ProjectionType"),
-			// 		},
-			// 		ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
-			// 			ReadCapacityUnits:  aws.Int64(1),
-			// 			WriteCapacityUnits: aws.Int64(1),
-			// 		},
-			// 	},
-			// },
 			// LocalSecondaryIndexes: []*dynamodb.LocalSecondaryIndex{
 			// 	{
 			// 		IndexName: aws.String("IndexName"),
@@ -194,13 +196,13 @@ func (db *DynamoDB) Seed(overwrite bool) error {
 // GetByID retrieves a user by ID with OK indicator.
 func (db *DynamoDB) GetByID(id string) (u *models.User, ok bool) {
 	res, err := db.DB.GetItem(&dynamodb.GetItemInput{
-		TableName: aws.String("users"),
+		ConsistentRead: aws.Bool(true),
+		TableName:      aws.String("users"),
 		Key: map[string]*dynamodb.AttributeValue{
 			"ID": {
 				S: aws.String(id),
 			},
 		},
-		ConsistentRead: aws.Bool(true),
 	})
 	if err != nil {
 		log.Printf("dynamodb: error: %v", err)
@@ -212,7 +214,7 @@ func (db *DynamoDB) GetByID(id string) (u *models.User, ok bool) {
 
 	var user models.User
 	if err := dynamodbattribute.UnmarshalMap(res.Item, &user); err != nil {
-		log.Printf("dynamodb: error: %v", err)
+		log.Printf("dynamodb: getbyid error: %v", err)
 		return nil, false
 	}
 
@@ -221,8 +223,30 @@ func (db *DynamoDB) GetByID(id string) (u *models.User, ok bool) {
 
 // GetByEmail retrieves a user by e-mail with OK indicator.
 func (db *DynamoDB) GetByEmail(email string) (u *models.User, ok bool) {
-	// db.DB.Query(nil)
-	return nil, false
+	res, err := db.DB.Query(&dynamodb.QueryInput{
+		// ConsistentRead: aws.Bool(true),
+		TableName:              aws.String("users"),
+		IndexName:              aws.String("Email"),
+		Select:                 aws.String("ALL_ATTRIBUTES"),
+		KeyConditionExpression: aws.String("Email = :Email"),
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":Email": {
+				S: aws.String(email),
+			},
+		},
+	})
+	if err != nil {
+		log.Printf("dynamodb: getbymail error: %v", err)
+		return nil, false
+	}
+
+	var user models.User
+	if err := dynamodbattribute.UnmarshalMap(res.Items[0], &user); err != nil {
+		log.Printf("dynamodb: getbyid error: %v", err)
+		return nil, false
+	}
+
+	return &user, true
 }
 
 // SaveUser creates or updates a user. Upon creation, users are assigned a unique ID.
