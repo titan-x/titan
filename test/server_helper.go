@@ -1,6 +1,7 @@
 package test
 
 import (
+	"flag"
 	"os"
 	"testing"
 	"time"
@@ -8,9 +9,12 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/titan-x/titan"
 	"github.com/titan-x/titan/data"
+	"github.com/titan-x/titan/data/aws"
 	"github.com/titan-x/titan/data/inmem"
 	"github.com/titan-x/titan/models"
 )
+
+var awsFlag = flag.Bool("aws", false, "Enable Amazon Web Services support. See AWS SDK docs for configuration options.")
 
 // ServerHelper is a titan.Server wrapper for testing.
 // All the functions are wrapped with proper test runner error logging.
@@ -40,7 +44,12 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 		t.Fatal("Failed to create server:", err)
 	}
 
-	db := inmem.NewDB()
+	var db data.DB
+	if *awsFlag {
+		db = aws.NewDynamoDB("", "")
+	} else {
+		db = inmem.NewDB()
+	}
 	if err := s.SetDB(db); err != nil {
 		t.Fatal("Failed to attach InMemDB to server instance:", err)
 	}
