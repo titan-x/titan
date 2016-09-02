@@ -10,7 +10,7 @@ import (
 
 const (
 	endpoint = "http://localhost:8000"
-	region   = ""
+	region   = "us-west-2"
 )
 
 func newTestDynamoDB(t *testing.T) *DynamoDB {
@@ -50,7 +50,11 @@ func TestConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	t.Log(*db.DB.Config.Region, *db.DB.Config.Endpoint, cred.AccessKeyID)
+	if *db.DB.Config.Region != region || *db.DB.Config.Endpoint != endpoint {
+		t.Fatal("unexpected config param")
+	}
+
+	t.Log(*db.DB.Config.Region, cred.AccessKeyID, *db.DB.Config.Endpoint)
 }
 
 func TestListTables(t *testing.T) {
