@@ -10,7 +10,7 @@ import (
 
 const (
 	endpoint = "http://localhost:8000"
-	region   = "us-west-2"
+	region   = ""
 )
 
 func newTestDynamoDB(t *testing.T) *DynamoDB {
@@ -40,6 +40,17 @@ func compareUsersForEquality(t *testing.T, u1 *models.User, u2 *models.User) {
 		u1.JWTToken != u2.JWTToken {
 		t.Fatal("user fields are invalid")
 	}
+}
+
+func TestConfig(t *testing.T) {
+	db := newTestDynamoDB(t)
+
+	cred, err := db.DB.Config.Credentials.Get()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(*db.DB.Config.Region, *db.DB.Config.Endpoint, cred.AccessKeyID)
 }
 
 func TestListTables(t *testing.T) {

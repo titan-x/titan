@@ -14,7 +14,7 @@ import (
 	"github.com/titan-x/titan/models"
 )
 
-var awsFlag = flag.Bool("aws", false, "Enable Amazon Web Services support. See AWS SDK docs for configuration options.")
+var awsFlag = flag.Bool("aws", false, "Run tests with AWS support.")
 
 // ServerHelper is a titan.Server wrapper for testing.
 // All the functions are wrapped with proper test runner error logging.
