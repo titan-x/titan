@@ -90,8 +90,9 @@ func (sh *ServerHelper) SeedDB() *ServerHelper {
 		User2: models.User{ID: "2", JWTToken: ts2},
 	}
 
-	sh.db.SaveUser(&sd.User1)
-	sh.db.SaveUser(&sd.User2)
+	if e1, e2 := sh.db.SaveUser(&sd.User1), sh.db.SaveUser(&sd.User2); e1 != nil || e2 != nil {
+		sh.testing.Fatal("server-helper: failed to seed the database:", e1, e2)
+	}
 
 	sh.SeedData = sd
 
