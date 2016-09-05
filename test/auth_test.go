@@ -16,7 +16,7 @@ func TestAuth(t *testing.T) {
 }
 
 func TestValidToken(t *testing.T) {
-	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	sh := NewServerHelper(t).ListenAndServe()
 	defer sh.CloseWait()
 
 	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect().JWTAuthSync()
@@ -26,7 +26,7 @@ func TestValidToken(t *testing.T) {
 }
 
 func TestInvalidToken(t *testing.T) {
-	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	sh := NewServerHelper(t).ListenAndServe()
 	defer sh.CloseWait()
 
 	ch := sh.GetClientHelper().Connect()
@@ -62,7 +62,7 @@ func TestGoogleAuth(t *testing.T) {
 		t.Skip("Missing 'GOOGLE_ACCESS_TOKEN' environment variable. Skipping Google sign-in testing.")
 	}
 
-	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	sh := NewServerHelper(t).ListenAndServe()
 	defer sh.CloseWait()
 
 	// authenticate with Google OAuth token and get JWT token
@@ -80,7 +80,7 @@ func TestGoogleAuth(t *testing.T) {
 }
 
 func TestInvalidGoogleAuth(t *testing.T) {
-	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	sh := NewServerHelper(t).ListenAndServe()
 	defer sh.CloseWait()
 
 	// authenticate with Google OAuth token and get JWT token

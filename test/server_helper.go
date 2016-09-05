@@ -6,12 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/titan-x/titan"
 	"github.com/titan-x/titan/data"
 	"github.com/titan-x/titan/data/aws"
 	"github.com/titan-x/titan/data/inmem"
-	"github.com/titan-x/titan/models"
 )
 
 var awsFlag = flag.Bool("aws", false, "Run tests with AWS support.")
@@ -19,8 +17,6 @@ var awsFlag = flag.Bool("aws", false, "Run tests with AWS support.")
 // ServerHelper is a titan.Server wrapper for testing.
 // All the functions are wrapped with proper test runner error logging.
 type ServerHelper struct {
-	SeedData SeedData // Populated only when SeedDB() method is called.
-
 	testing      *testing.T
 	server       *titan.Server
 	serverClosed chan bool
@@ -62,41 +58,6 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 	}
 
 	return &h
-}
-
-// SeedData is the data user for seeding the database.
-type SeedData struct {
-	User1 models.User
-	User2 models.User
-}
-
-// SeedDB populates the database with the seed data.
-func (sh *ServerHelper) SeedDB() *ServerHelper {
-	now := time.Now().Unix()
-	t := jwt.New(jwt.SigningMethodHS256)
-	t.Claims["userid"] = data.SeedUser1.ID
-	t.Claims["created"] = now
-	ts1, err := t.SignedString([]byte(titan.Conf.App.JWTPass()))
-	t2 := jwt.New(jwt.SigningMethodHS256)
-	t2.Claims["userid"] = data.SeedUser2.ID
-	t2.Claims["created"] = now
-	ts2, err := t2.SignedString([]byte(titan.Conf.App.JWTPass()))
-	if err != nil {
-		sh.testing.Fatalf("server-helper: failed to sign JWT token: %v", err)
-	}
-
-	sd := SeedData{
-		User1: models.User{ID: "1", JWTToken: ts1},
-		User2: models.User{ID: "2", JWTToken: ts2},
-	}
-
-	if e1, e2 := sh.db.SaveUser(&sd.User1), sh.db.SaveUser(&sd.User2); e1 != nil || e2 != nil {
-		sh.testing.Fatal("server-helper: failed to seed the database:", e1, e2)
-	}
-
-	sh.SeedData = sd
-
-	return sh
 }
 
 // ListenAndServe starts the server.

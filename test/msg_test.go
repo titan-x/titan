@@ -8,7 +8,7 @@ import (
 )
 
 func TestSendEcho(t *testing.T) {
-	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	sh := NewServerHelper(t).ListenAndServe()
 	defer sh.CloseWait()
 
 	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect()
@@ -42,7 +42,7 @@ func TestSendEcho(t *testing.T) {
 }
 
 func TestSendMsgOnline(t *testing.T) {
-	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	sh := NewServerHelper(t).ListenAndServe()
 	defer sh.CloseWait()
 
 	// get both user 1 and user 2 online
@@ -89,7 +89,7 @@ func TestSendMsgOnline(t *testing.T) {
 }
 
 func TestSendMsgOffline(t *testing.T) {
-	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	sh := NewServerHelper(t).ListenAndServe()
 	defer sh.CloseWait()
 
 	// get only user 1 online
