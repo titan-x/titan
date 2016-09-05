@@ -14,7 +14,7 @@ var ext = flag.Bool("ext", false, "Run external client test case.")
 // * Echo any incoming request message body as is within a response message.
 // * Repeat ad infinitum, until {"method":"close", "params":"{"message": "..."}"} is received. Close message body is logged.
 func TestExternalClient(t *testing.T) {
-	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	sh := NewServerHelper(t).ListenAndServe()
 	defer sh.CloseWait()
 	// m := "Hello from Neptulon server!"
 

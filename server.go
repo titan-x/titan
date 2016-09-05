@@ -68,7 +68,7 @@ func (s *Server) SetDB(db data.DB) error {
 
 // ListenAndServe starts the Titan server. This function blocks until server is closed.
 func (s *Server) ListenAndServe() error {
-	if err := s.db.Seed(false); err != nil {
+	if err := s.db.Seed(false, Conf.App.JWTPass()); err != nil {
 		return err
 	}
 

@@ -97,7 +97,7 @@ func (db *DynamoDB) deleteTables() error {
 }
 
 // Seed creates and populates the database, overwriting existing data if specified.
-func (db *DynamoDB) Seed(overwrite bool) error {
+func (db *DynamoDB) Seed(overwrite bool, jwtPass string) error {
 	if !overwrite {
 		if tbls, err := db.listTables(); err != nil {
 			return err
@@ -191,7 +191,7 @@ func (db *DynamoDB) Seed(overwrite bool) error {
 	}
 
 	// insert the seed data
-	if err := data.SeedInit(); err != nil {
+	if err := data.SeedInit(jwtPass); err != nil {
 		return err
 	}
 

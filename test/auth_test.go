@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/titan-x/titan/client"
+	"github.com/titan-x/titan/data"
 	"github.com/titan-x/titan/models"
 )
 
@@ -19,7 +20,7 @@ func TestValidToken(t *testing.T) {
 	sh := NewServerHelper(t).ListenAndServe()
 	defer sh.CloseWait()
 
-	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect().JWTAuthSync()
+	ch := sh.GetClientHelper().AsUser(&data.SeedUser1).Connect().JWTAuthSync()
 	defer ch.CloseWait()
 
 	ch.EchoSync("Ola!")
@@ -66,7 +67,7 @@ func TestGoogleAuth(t *testing.T) {
 	defer sh.CloseWait()
 
 	// authenticate with Google OAuth token and get JWT token
-	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect().GoogleAuthSync(token)
+	ch := sh.GetClientHelper().AsUser(&data.SeedUser1).Connect().GoogleAuthSync(token)
 
 	// send an echo message to validate that we are authenticated properly
 	ch.EchoSync("testing echo message after google auth")

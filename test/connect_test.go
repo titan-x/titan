@@ -3,11 +3,13 @@ package test
 import (
 	"testing"
 	"time"
+
+	"github.com/titan-x/titan/data"
 )
 
 func TestClientDisconnect(t *testing.T) {
 	sh := NewServerHelper(t).ListenAndServe()
-	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect()
+	ch := sh.GetClientHelper().AsUser(&data.SeedUser1).Connect()
 
 	time.Sleep(time.Millisecond * 10)
 
@@ -19,7 +21,7 @@ func TestClientDisconnect(t *testing.T) {
 
 func TestServerDisconnect(t *testing.T) {
 	sh := NewServerHelper(t).ListenAndServe()
-	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect()
+	ch := sh.GetClientHelper().AsUser(&data.SeedUser1).Connect()
 
 	time.Sleep(time.Millisecond * 10)
 
@@ -33,7 +35,7 @@ func TestClientClose(t *testing.T) {
 	sh := NewServerHelper(t).ListenAndServe()
 	defer sh.CloseWait()
 
-	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect()
+	ch := sh.GetClientHelper().AsUser(&data.SeedUser1).Connect()
 	defer ch.CloseWait()
 
 	// c.WriteNotification("conn.close", nil)

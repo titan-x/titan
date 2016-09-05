@@ -29,16 +29,18 @@ func NewDB() DB {
 }
 
 // Seed seeds database with essential data.
-func (db UserDB) Seed(overwrite bool) error {
-	if err := data.SeedInit(); err != nil {
+func (db UserDB) Seed(overwrite bool, jwtPass string) error {
+	if err := data.SeedInit(jwtPass); err != nil {
 		return err
 	}
 
-	for u := range seed.SeedUsers {
-		if err := db.SaveUser(u); err != nil {
+	for _, u := range data.SeedUsers {
+		if err := db.SaveUser(&u); err != nil {
 			return err
 		}
 	}
+
+	return nil
 }
 
 // GetByID retrieves a user by ID.

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/titan-x/titan"
 	"github.com/titan-x/titan/models"
 )
 
@@ -20,7 +19,7 @@ var (
 )
 
 // SeedInit initializes the seed data. This function needs to be called before accessing the seed data for the first time.
-func SeedInit() error {
+func SeedInit(jwtPass string) error {
 	if SeedUsers != nil {
 		return nil
 	}
@@ -60,14 +59,15 @@ func SeedInit() error {
 	t1 := jwt.New(jwt.SigningMethodHS256)
 	t1.Claims["userid"] = SeedUser1.ID
 	t1.Claims["created"] = now.Unix()
-	SeedUser1.JWTToken, err1 = t1.SignedString([]byte(titan.Conf.App.JWTPass()))
+	SeedUser1.JWTToken, err1 = t1.SignedString([]byte(jwtPass))
 	t2 := jwt.New(jwt.SigningMethodHS256)
 	t2.Claims["userid"] = SeedUser2.ID
 	t2.Claims["created"] = now.Unix()
-	SeedUser2.JWTToken, err2 = t2.SignedString([]byte(titan.Conf.App.JWTPass()))
+	SeedUser2.JWTToken, err2 = t2.SignedString([]byte(jwtPass))
 	if err1 != nil || err2 != nil {
 		return fmt.Errorf("data: seed: failed to sign user JWT tokens: %v, %v", err1, err2)
 	}
 
 	SeedUsers = []models.User{SeedUser1, SeedUser2}
+	return nil
 }

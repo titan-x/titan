@@ -9,7 +9,7 @@ type DB interface {
 
 // UserDB presists user information in database.
 type UserDB interface {
-	Seed(overwrite bool) error
+	Seed(overwrite bool, jwtPass string) error
 	GetByID(id string) (u *models.User, ok bool)
 	GetByEmail(email string) (u *models.User, ok bool)
 	SaveUser(u *models.User) error

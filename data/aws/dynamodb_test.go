@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/titan-x/titan"
 	"github.com/titan-x/titan/data"
 	"github.com/titan-x/titan/models"
 )
@@ -21,7 +22,7 @@ func newTestDynamoDB(t *testing.T) *DynamoDB {
 		t.Skipf("skipping DynamoDB test: %v", err)
 	}
 
-	if err := db.Seed(true); err != nil {
+	if err := db.Seed(true, titan.Conf.App.JWTPass()); err != nil {
 		t.Fatal(err)
 	}
 
@@ -69,7 +70,7 @@ func TestListTables(t *testing.T) {
 
 func TestSeed(t *testing.T) {
 	db := newTestDynamoDB(t)
-	if err := db.Seed(true); err != nil {
+	if err := db.Seed(true, titan.Conf.App.JWTPass()); err != nil {
 		t.Fatal(err)
 	}
 
