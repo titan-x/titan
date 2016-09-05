@@ -43,11 +43,14 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 	var db data.DB
 	if *awsFlag {
 		db = aws.NewDynamoDB("", "")
+		if err := db.Seed(true, titan.Conf.App.JWTPass()); err != nil {
+			t.Fatal("Failed to set seed DynamoDB:", err)
+		}
 	} else {
 		db = inmem.NewDB()
 	}
 	if err := s.SetDB(db); err != nil {
-		t.Fatal("Failed to attach InMemDB to server instance:", err)
+		t.Fatal("Failed to set server database instance:", err)
 	}
 
 	h := ServerHelper{
