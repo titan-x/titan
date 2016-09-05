@@ -7,6 +7,7 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -50,14 +51,6 @@ func NewDynamoDB(region string, endpoint string) *DynamoDB {
 	}
 
 	db.DB = dynamodb.New(db.Session)
-
-	cred, err := db.DB.Config.Credentials.Get()
-	if err != nil {
-		log.Print("dynamodb: failed to initialize")
-	} else {
-		log.Printf("dynamodb: initialized with region: %v, access key ID: %v, endpoint: %v", *(db.DB.Config.Region), cred.AccessKeyID, db.DB.Config.Endpoint)
-	}
-
 	return &db
 }
 
@@ -98,6 +91,13 @@ func (db *DynamoDB) deleteTables() error {
 
 // Seed creates and populates the database, overwriting existing data if specified.
 func (db *DynamoDB) Seed(overwrite bool, jwtPass string) error {
+	cred, err := db.DB.Config.Credentials.Get()
+	if err != nil {
+		return fmt.Errorf("dynamodb: failed to initialize: %v", err)
+	}
+
+	log.Printf("dynamodb: initialized with region: %v, access key ID: %v, endpoint: %v", *(db.DB.Config.Region), cred.AccessKeyID, db.DB.Config.Endpoint)
+
 	if !overwrite {
 		if tbls, err := db.listTables(); err != nil {
 			return err
