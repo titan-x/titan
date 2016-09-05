@@ -3,6 +3,7 @@ package inmem
 import (
 	"strconv"
 
+	"github.com/titan-x/titan/data"
 	"github.com/titan-x/titan/models"
 )
 
@@ -29,7 +30,15 @@ func NewDB() DB {
 
 // Seed seeds database with essential data.
 func (db UserDB) Seed(overwrite bool) error {
-	return nil
+	if err := data.SeedInit(); err != nil {
+		return err
+	}
+
+	for u := range seed.SeedUsers {
+		if err := db.SaveUser(u); err != nil {
+			return err
+		}
+	}
 }
 
 // GetByID retrieves a user by ID.

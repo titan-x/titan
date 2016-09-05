@@ -191,6 +191,10 @@ func (db *DynamoDB) Seed(overwrite bool) error {
 	}
 
 	// insert the seed data
+	if err := data.SeedInit(); err != nil {
+		return err
+	}
+
 	for _, u := range data.SeedUsers {
 		if err := db.SaveUser(&u); err != nil {
 			return err
