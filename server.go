@@ -28,8 +28,11 @@ func NewServer(addr string) (*Server, error) {
 
 	s := Server{
 		server: neptulon.NewServer(addr),
-		db:     inmem.NewDB(),
 		queue:  NewQueue(),
+	}
+
+	if err := s.SetDB(inmem.NewDB()); err != nil {
+		return nil, err
 	}
 
 	s.server.MiddlewareFunc(middleware.Logger)
@@ -62,16 +65,16 @@ func NewServer(addr string) (*Server, error) {
 
 // SetDB sets the database to be used by the server. If not supplied, in-memory database implementation is used.
 func (s *Server) SetDB(db data.DB) error {
+	if err := db.Seed(false, Conf.App.JWTPass()); err != nil {
+		return err
+	}
+
 	s.db = db
 	return nil
 }
 
 // ListenAndServe starts the Titan server. This function blocks until server is closed.
 func (s *Server) ListenAndServe() error {
-	if err := s.db.Seed(false, Conf.App.JWTPass()); err != nil {
-		return err
-	}
-
 	return s.server.ListenAndServe()
 }
 
