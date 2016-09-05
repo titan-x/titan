@@ -21,14 +21,14 @@ type Queue struct {
 }
 
 // NewQueue creates a new queue object.
-func NewQueue() Queue {
+func NewQueue() *Queue {
 	q := Queue{
 		conns:   cmap.New(),
 		reqs:    cmap.New(),
 		mutexes: cmap.New(),
 	}
 
-	return q
+	return &q
 }
 
 // Middleware registers a queue middleware to register user/connection IDs

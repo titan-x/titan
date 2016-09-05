@@ -19,8 +19,8 @@ type UserDB struct {
 }
 
 // NewDB creates a new in-memory database.
-func NewDB() DB {
-	return DB{
+func NewDB() *DB {
+	return &DB{
 		UserDB: UserDB{
 			ids:    make(map[string]*models.User),
 			emails: make(map[string]*models.User),

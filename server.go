@@ -17,7 +17,7 @@ type Server struct {
 
 	// titan server components
 	db    data.DB
-	queue Queue
+	queue *Queue
 }
 
 // NewServer creates a new server.
@@ -42,10 +42,10 @@ func NewServer(addr string) (*Server, error) {
 
 	//all communication below this point is authenticated
 	s.server.MiddlewareFunc(jwt.HMAC(Conf.App.JWTPass()))
-	s.server.Middleware(&s.queue)
+	s.server.Middleware(s.queue)
 	s.privRoutes = middleware.NewRouter()
 	s.server.Middleware(s.privRoutes)
-	initPrivRoutes(s.privRoutes, &s.queue)
+	initPrivRoutes(s.privRoutes, s.queue)
 	// r.Middleware(NotFoundHandler()) - 404-like handler
 
 	// todo: research a better way to handle inner-circular dependencies so remove these lines back into Server contructor
