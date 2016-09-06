@@ -1,23 +1,26 @@
 package test
 
 import (
+	"flag"
 	"os"
 	"testing"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/titan-x/titan"
+	"github.com/titan-x/titan/data"
+	"github.com/titan-x/titan/data/aws"
+	"github.com/titan-x/titan/data/inmem"
 )
+
+var awsFlag = flag.Bool("aws", false, "Run tests with AWS support.")
 
 // ServerHelper is a titan.Server wrapper for testing.
 // All the functions are wrapped with proper test runner error logging.
 type ServerHelper struct {
-	SeedData SeedData // Populated only when SeedDB() method is called.
-
 	testing      *testing.T
 	server       *titan.Server
 	serverClosed chan bool
-	db           titan.InMemDB
+	db           data.DB
 }
 
 // NewServerHelper creates a new server helper object.
@@ -37,9 +40,17 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 		t.Fatal("Failed to create server:", err)
 	}
 
-	db := titan.NewInMemDB()
+	var db data.DB
+	if *awsFlag {
+		db = aws.NewDynamoDB("", "")
+		if err := db.Seed(true, titan.Conf.App.JWTPass()); err != nil {
+			t.Fatal("Failed to set seed DynamoDB:", err)
+		}
+	} else {
+		db = inmem.NewDB()
+	}
 	if err := s.SetDB(db); err != nil {
-		t.Fatal("Failed to attach InMemDB to server instance:", err)
+		t.Fatal("Failed to set server database instance:", err)
 	}
 
 	h := ServerHelper{
@@ -50,40 +61,6 @@ func NewServerHelper(t *testing.T) *ServerHelper {
 	}
 
 	return &h
-}
-
-// SeedData is the data user for seeding the database.
-type SeedData struct {
-	User1 titan.User
-	User2 titan.User
-}
-
-// SeedDB populates the database with the seed data.
-func (sh *ServerHelper) SeedDB() *ServerHelper {
-	now := time.Now().Unix()
-	t := jwt.New(jwt.SigningMethodHS256)
-	t.Claims["userid"] = "1"
-	t.Claims["created"] = now
-	ts1, err := t.SignedString([]byte(titan.Conf.App.JWTPass()))
-	t2 := jwt.New(jwt.SigningMethodHS256)
-	t2.Claims["userid"] = "2"
-	t2.Claims["created"] = now
-	ts2, err := t2.SignedString([]byte(titan.Conf.App.JWTPass()))
-	if err != nil {
-		sh.testing.Fatalf("server-helper: failed to sign JWT token: %v", err)
-	}
-
-	sd := SeedData{
-		User1: titan.User{ID: "1", JWTToken: ts1},
-		User2: titan.User{ID: "2", JWTToken: ts2},
-	}
-
-	sh.db.SaveUser(&sd.User1)
-	sh.db.SaveUser(&sd.User2)
-
-	sh.SeedData = sd
-
-	return sh
 }
 
 // ListenAndServe starts the server.

@@ -4,20 +4,21 @@ import (
 	"testing"
 	"time"
 
-	"github.com/titan-x/titan/client"
+	"github.com/titan-x/titan/data"
+	"github.com/titan-x/titan/models"
 )
 
 func TestSendEcho(t *testing.T) {
-	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	sh := NewServerHelper(t).ListenAndServe()
 	defer sh.CloseWait()
 
-	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect()
+	ch := sh.GetClientHelper().AsUser(&data.SeedUser1).Connect()
 	defer ch.CloseWait()
 
 	// not using ClientHelper.EchoSafeSync to differentiate this test from auth_test.TestValidToken
 	gotRes := make(chan bool)
 	m := "Ola!"
-	if err := ch.Client.Echo(map[string]string{"message": m, "token": sh.SeedData.User1.JWTToken}, func(msg *client.Message) error {
+	if err := ch.Client.Echo(map[string]string{"message": m, "token": data.SeedUser1.JWTToken}, func(msg *models.Message) error {
 		if msg.Message != m {
 			t.Fatalf("expected: %v, got: %v", m, msg.Message)
 		}
@@ -42,18 +43,18 @@ func TestSendEcho(t *testing.T) {
 }
 
 func TestSendMsgOnline(t *testing.T) {
-	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	sh := NewServerHelper(t).ListenAndServe()
 	defer sh.CloseWait()
 
 	// get both user 1 and user 2 online
-	ch1 := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect().JWTAuthSync()
+	ch1 := sh.GetClientHelper().AsUser(&data.SeedUser1).Connect().JWTAuthSync()
 	defer ch1.CloseWait()
-	ch2 := sh.GetClientHelper().AsUser(&sh.SeedData.User2).Connect().JWTAuthSync()
+	ch2 := sh.GetClientHelper().AsUser(&data.SeedUser2).Connect().JWTAuthSync()
 	defer ch2.CloseWait()
 
 	// send a hello message from user 1
 	m := "Hello, how are you?"
-	ch1.SendMessagesSync([]client.Message{client.Message{To: "2", Message: m}})
+	ch1.SendMessagesSync([]models.Message{models.Message{To: "2", Message: m}})
 
 	// receive the hello message as user 2
 	msgs := ch2.GetMessagesWait()
@@ -70,7 +71,7 @@ func TestSendMsgOnline(t *testing.T) {
 
 	// send back a hello response from user 2
 	m = "I'm fine, thank you."
-	ch2.SendMessagesSync([]client.Message{client.Message{To: "1", Message: m}})
+	ch2.SendMessagesSync([]models.Message{models.Message{To: "1", Message: m}})
 
 	// receive the hello response as user 1
 	msgs = ch1.GetMessagesWait()
@@ -89,17 +90,17 @@ func TestSendMsgOnline(t *testing.T) {
 }
 
 func TestSendMsgOffline(t *testing.T) {
-	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	sh := NewServerHelper(t).ListenAndServe()
 	defer sh.CloseWait()
 
 	// get only user 1 online
-	ch1 := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect().JWTAuthSync()
+	ch1 := sh.GetClientHelper().AsUser(&data.SeedUser1).Connect().JWTAuthSync()
 	defer ch1.CloseWait()
-	ch2 := sh.GetClientHelper().AsUser(&sh.SeedData.User2)
+	ch2 := sh.GetClientHelper().AsUser(&data.SeedUser2)
 
 	// send a hello message from user 1
 	m := "Hello, how are you?"
-	ch1.SendMessagesSync([]client.Message{client.Message{To: "2", Message: m}})
+	ch1.SendMessagesSync([]models.Message{models.Message{To: "2", Message: m}})
 
 	// get user 2 online receive the pending hello message
 	ch2.Connect().JWTAuthSync()

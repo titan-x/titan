@@ -7,6 +7,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/titan-x/titan"
+	"github.com/titan-x/titan/data/aws"
 )
 
 const (
@@ -17,6 +18,7 @@ const (
 var (
 	defaultFlag = flag.Bool("default", false, "Start Titan server at default address: "+addr)
 	addrFlag    = flag.String("addr", "", "Start Titan server with specified address parameter.")
+	awsFlag     = flag.Bool("aws", false, "Enable Amazon Web Services support. See AWS SDK docs for configuration options.")
 	testFlag    = flag.Bool("test", false, "Start Titan server for external client integration test at address: "+testAddr)
 )
 
@@ -39,6 +41,10 @@ func startServer(addr string) {
 	s, err := titan.NewServer(addr)
 	if err != nil {
 		log.Fatalf("error creating server: %v", err)
+	}
+
+	if *awsFlag {
+		s.SetDB(aws.NewDynamoDB("", ""))
 	}
 
 	defer func() {

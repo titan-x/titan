@@ -6,19 +6,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/titan-x/titan"
 	"github.com/titan-x/titan/client"
+	"github.com/titan-x/titan/models"
 )
 
 // ClientHelper is a Titan Client wrapper for testing.
 // All the functions are wrapped with proper test runner error logging.
 type ClientHelper struct {
 	Client *client.Client
-	User   *titan.User
+	User   *models.User
 
 	testing    *testing.T
 	serverAddr string
-	inMsgsChan chan []client.Message
+	inMsgsChan chan []models.Message
 }
 
 // NewClientHelper creates a new client helper object.
@@ -37,7 +37,7 @@ func NewClientHelper(t *testing.T, addr string) *ClientHelper {
 		Client:     c,
 		testing:    t,
 		serverAddr: addr,
-		inMsgsChan: make(chan []client.Message),
+		inMsgsChan: make(chan []models.Message),
 	}
 	c.InMsgHandler(ch.inMsgHandler)
 	return ch
@@ -68,7 +68,7 @@ func (ch *ClientHelper) Connect() *ClientHelper {
 }
 
 // AsUser attaches given user's client certificate and private key to the connection.
-func (ch *ClientHelper) AsUser(u *titan.User) *ClientHelper {
+func (ch *ClientHelper) AsUser(u *models.User) *ClientHelper {
 	ch.User = u
 	return ch
 }
@@ -124,7 +124,7 @@ func (ch *ClientHelper) JWTAuthSync() *ClientHelper {
 func (ch *ClientHelper) EchoSync(message string) *ClientHelper {
 	gotRes := make(chan bool)
 
-	if err := ch.Client.Echo(client.Message{Message: message}, func(msg *client.Message) error {
+	if err := ch.Client.Echo(models.Message{Message: message}, func(msg *models.Message) error {
 		if msg.Message != message {
 			ch.testing.Fatalf("expected: %v, got: %v", message, msg.Message)
 		}
@@ -143,7 +143,7 @@ func (ch *ClientHelper) EchoSync(message string) *ClientHelper {
 }
 
 // SendMessagesSync is synchronous version of Client.SendMessages method.
-func (ch *ClientHelper) SendMessagesSync(messages []client.Message) *ClientHelper {
+func (ch *ClientHelper) SendMessagesSync(messages []models.Message) *ClientHelper {
 	gotRes := make(chan bool)
 
 	if err := ch.Client.SendMessages(messages, func(ack string) error {
@@ -166,7 +166,7 @@ func (ch *ClientHelper) SendMessagesSync(messages []client.Message) *ClientHelpe
 
 // GetMessagesWait waits for and returns incoming messages.
 // If no message arrives within the timeout, test fails.
-func (ch *ClientHelper) GetMessagesWait() []client.Message {
+func (ch *ClientHelper) GetMessagesWait() []models.Message {
 	select {
 	case m := <-ch.inMsgsChan:
 		return m
@@ -190,7 +190,7 @@ func (ch *ClientHelper) CloseWait() {
 	}
 }
 
-func (ch *ClientHelper) inMsgHandler(m []client.Message) error {
+func (ch *ClientHelper) inMsgHandler(m []models.Message) error {
 	ch.inMsgsChan <- m
 	return nil
 }

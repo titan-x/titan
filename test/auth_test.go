@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/titan-x/titan/client"
+	"github.com/titan-x/titan/data"
+	"github.com/titan-x/titan/models"
 )
 
 func TestAuth(t *testing.T) {
@@ -15,17 +17,17 @@ func TestAuth(t *testing.T) {
 }
 
 func TestValidToken(t *testing.T) {
-	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	sh := NewServerHelper(t).ListenAndServe()
 	defer sh.CloseWait()
 
-	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect().JWTAuthSync()
+	ch := sh.GetClientHelper().AsUser(&data.SeedUser1).Connect().JWTAuthSync()
 	defer ch.CloseWait()
 
 	ch.EchoSync("Ola!")
 }
 
 func TestInvalidToken(t *testing.T) {
-	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	sh := NewServerHelper(t).ListenAndServe()
 	defer sh.CloseWait()
 
 	ch := sh.GetClientHelper().Connect()
@@ -35,7 +37,7 @@ func TestInvalidToken(t *testing.T) {
 	ch.Client.DisconnHandler(func(c *client.Client) {
 		closed <- true
 	})
-	ch.Client.Echo(map[string]string{"message": "Lorem ip sum", "token": "abc-invalid-token-!"}, func(m *client.Message) error {
+	ch.Client.Echo(map[string]string{"message": "Lorem ip sum", "token": "abc-invalid-token-!"}, func(m *models.Message) error {
 		gotMsg <- true
 		return nil
 	})
@@ -61,11 +63,11 @@ func TestGoogleAuth(t *testing.T) {
 		t.Skip("Missing 'GOOGLE_ACCESS_TOKEN' environment variable. Skipping Google sign-in testing.")
 	}
 
-	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	sh := NewServerHelper(t).ListenAndServe()
 	defer sh.CloseWait()
 
 	// authenticate with Google OAuth token and get JWT token
-	ch := sh.GetClientHelper().AsUser(&sh.SeedData.User1).Connect().GoogleAuthSync(token)
+	ch := sh.GetClientHelper().AsUser(&data.SeedUser1).Connect().GoogleAuthSync(token)
 
 	// send an echo message to validate that we are authenticated properly
 	ch.EchoSync("testing echo message after google auth")
@@ -73,13 +75,13 @@ func TestGoogleAuth(t *testing.T) {
 
 	// now connect to server with our new JWT token auto assigned by Google auth helper function
 	ch.Connect().JWTAuthSync()
-	ch.SendMessagesSync([]client.Message{client.Message{To: "2", Message: "Hi!"}})
+	ch.SendMessagesSync([]models.Message{models.Message{To: "2", Message: "Hi!"}})
 
 	ch.CloseWait()
 }
 
 func TestInvalidGoogleAuth(t *testing.T) {
-	sh := NewServerHelper(t).SeedDB().ListenAndServe()
+	sh := NewServerHelper(t).ListenAndServe()
 	defer sh.CloseWait()
 
 	// authenticate with Google OAuth token and get JWT token

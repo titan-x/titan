@@ -1,6 +1,7 @@
 package titan
 
 import (
+	"expvar"
 	"log"
 	"sync"
 
@@ -8,23 +9,26 @@ import (
 	"github.com/neptulon/neptulon"
 )
 
+var queueLength = expvar.NewInt("queue-length")
+var conns = expvar.NewInt("conns")
+
 // Queue is a message queue for queueing and sending messages to users.
 type Queue struct {
 	conns   *cmap.CMap       // user ID -> conn ID
 	server  *neptulon.Server // server instance to send and receive messages through
 	reqs    *cmap.CMap       // user ID -> []queuedRequest
-	mutexes *cmap.CMap       // user ID -> sync.RWMutex
+	mutexes *cmap.CMap       // user ID -> *sync.RWMutex
 }
 
 // NewQueue creates a new queue object.
-func NewQueue() Queue {
+func NewQueue() *Queue {
 	q := Queue{
 		conns:   cmap.New(),
 		reqs:    cmap.New(),
 		mutexes: cmap.New(),
 	}
 
-	return q
+	return &q
 }
 
 // Middleware registers a queue middleware to register user/connection IDs
@@ -44,8 +48,9 @@ func (q *Queue) SetServer(s *neptulon.Server) {
 func (q *Queue) SetConn(userID, connID string) {
 	if _, ok := q.conns.GetOk(userID); !ok {
 		q.conns.Set(userID, connID)
-		q.mutexes.Set(userID, sync.RWMutex{})
+		q.mutexes.Set(userID, &sync.RWMutex{})
 		go q.processQueue(userID)
+		conns.Add(1)
 	}
 }
 
@@ -53,6 +58,7 @@ func (q *Queue) SetConn(userID, connID string) {
 func (q *Queue) RemoveConn(userID string) {
 	q.conns.Delete(userID)
 	q.mutexes.Delete(userID)
+	conns.Add(-1)
 }
 
 // AddRequest queues a request message to be sent to the given user.
@@ -91,7 +97,7 @@ func (q *Queue) processQueue(userID string) {
 		return
 	}
 
-	mutex := q.mutexes.Get(userID).(sync.RWMutex)
+	mutex := q.mutexes.Get(userID).(*sync.RWMutex)
 	mutex.Lock()
 	if ireqs, ok := q.reqs.GetOk(userID); ok {
 		reqs := ireqs.([]queuedRequest)

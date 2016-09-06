@@ -6,6 +6,7 @@ import (
 	"github.com/neptulon/neptulon"
 	"github.com/neptulon/neptulon/middleware"
 	"github.com/titan-x/titan/client"
+	"github.com/titan-x/titan/models"
 )
 
 func initPrivRoutes(r *middleware.Router, q *Queue) {
@@ -27,14 +28,14 @@ func initJWTAuthHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
 // Allows clients to send messages to each other, online or offline.
 func initSendMsgHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
 	return func(ctx *neptulon.ReqCtx) error {
-		var sMsgs []client.Message
+		var sMsgs []models.Message
 		if err := ctx.Params(&sMsgs); err != nil {
 			return err
 		}
 
 		for _, sMsg := range sMsgs {
 			uid := ctx.Conn.Session.Get("userid").(string)
-			rMsgs := []client.Message{client.Message{From: uid, Message: sMsg.Message}}
+			rMsgs := []models.Message{models.Message{From: uid, Message: sMsg.Message}}
 			err := q.AddRequest(sMsg.To, "msg.recv", rMsgs, func(ctx *neptulon.ResCtx) error {
 				var res string
 				ctx.Result(&res)

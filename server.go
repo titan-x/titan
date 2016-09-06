@@ -4,6 +4,8 @@ import (
 	"github.com/neptulon/neptulon"
 	"github.com/neptulon/neptulon/middleware"
 	"github.com/neptulon/neptulon/middleware/jwt"
+	"github.com/titan-x/titan/data"
+	"github.com/titan-x/titan/data/inmem"
 )
 
 // Server wraps a listener instance and registers default connection and message handlers with the listener.
@@ -14,8 +16,8 @@ type Server struct {
 	privRoutes *middleware.Router
 
 	// titan server components
-	db    DB
-	queue Queue
+	db    data.DB
+	queue *Queue
 }
 
 // NewServer creates a new server.
@@ -26,21 +28,24 @@ func NewServer(addr string) (*Server, error) {
 
 	s := Server{
 		server: neptulon.NewServer(addr),
-		db:     NewInMemDB(),
 		queue:  NewQueue(),
+	}
+
+	if err := s.SetDB(inmem.NewDB()); err != nil {
+		return nil, err
 	}
 
 	s.server.MiddlewareFunc(middleware.Logger)
 	s.pubRoutes = middleware.NewRouter()
 	s.server.Middleware(s.pubRoutes)
-	initPubRoutes(s.pubRoutes, s.db, Conf.App.JWTPass())
+	initPubRoutes(s.pubRoutes, &s.db, Conf.App.JWTPass())
 
 	//all communication below this point is authenticated
 	s.server.MiddlewareFunc(jwt.HMAC(Conf.App.JWTPass()))
-	s.server.Middleware(&s.queue)
+	s.server.Middleware(s.queue)
 	s.privRoutes = middleware.NewRouter()
 	s.server.Middleware(s.privRoutes)
-	initPrivRoutes(s.privRoutes, &s.queue)
+	initPrivRoutes(s.privRoutes, s.queue)
 	// r.Middleware(NotFoundHandler()) - 404-like handler
 
 	// todo: research a better way to handle inner-circular dependencies so remove these lines back into Server contructor
@@ -59,7 +64,11 @@ func NewServer(addr string) (*Server, error) {
 }
 
 // SetDB sets the database to be used by the server. If not supplied, in-memory database implementation is used.
-func (s *Server) SetDB(db DB) error {
+func (s *Server) SetDB(db data.DB) error {
+	if err := db.Seed(false, Conf.App.JWTPass()); err != nil {
+		return err
+	}
+
 	s.db = db
 	return nil
 }
