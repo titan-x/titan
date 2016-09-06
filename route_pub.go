@@ -6,6 +6,8 @@ import (
 	"github.com/titan-x/titan/data"
 )
 
+// we need *data.DB (pointer to interface) so that the closure below won't capture the actual value that pointer points to
+// so we can swap databases whenever we want using Server.SetDB(...)
 func initPubRoutes(r *middleware.Router, db *data.DB, pass string) {
 	r.Request("auth.google", initGoogleAuthHandler(db, pass))
 }
