@@ -35,8 +35,17 @@ func initSendMsgHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
 
 		for _, sMsg := range sMsgs {
 			uid := ctx.Conn.Session.Get("userid").(string)
-			rMsgs := []models.Message{models.Message{From: uid, Message: sMsg.Message}}
-			err := q.AddRequest(sMsg.To, "msg.recv", rMsgs, func(ctx *neptulon.ResCtx) error {
+			rMsg := models.Message{From: uid, Message: sMsg.Message}
+			to := sMsg.To
+
+			// handle messages to bots
+			if sMsg.To == "echo" {
+				rMsg.From = "echo"
+				to = uid
+			}
+
+			// submit the messages to send queue
+			err := q.AddRequest(to, "msg.recv", []models.Message{rMsg}, func(ctx *neptulon.ResCtx) error {
 				var res string
 				ctx.Result(&res)
 				if res == client.ACK {
@@ -56,8 +65,4 @@ func initSendMsgHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
 		ctx.Res = client.ACK
 		return ctx.Next()
 	}
-}
-
-func bot(sMsgs []models.Message, q *Queue) {
-	// todo: remove bot messages from the list and return list
 }
