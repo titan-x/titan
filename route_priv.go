@@ -57,3 +57,7 @@ func initSendMsgHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
 		return ctx.Next()
 	}
 }
+
+func bot(sMsgs []models.Message, q *Queue) {
+	// todo: remove bot messages from the list and return list
+}
