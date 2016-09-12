@@ -63,7 +63,7 @@ func TestSendMsgOnline(t *testing.T) {
 	}
 	msg := msgs[0]
 	if msg.From != "1" {
-		t.Fatalf("expected message from: 1, got: %v", msg)
+		t.Fatalf("expected message from: 1, got: %v", msg.From)
 	}
 	if msg.Message != m {
 		t.Fatalf("expected message body: %v, got: %v", m, msg.Message)

@@ -3,6 +3,7 @@ package client
 import (
 	"github.com/neptulon/cmap"
 	"github.com/neptulon/neptulon"
+	"github.com/neptulon/neptulon/middleware"
 )
 
 const (
@@ -18,6 +19,7 @@ type Client struct {
 	ID      string     // Randomly generated unique client connection ID.
 	Session *cmap.CMap // Thread-safe data store for storing arbitrary data for this connection session.
 	conn    *neptulon.Conn
+	router  *middleware.Router
 }
 
 // NewClient creates a new Client object.
@@ -27,10 +29,15 @@ func NewClient() (*Client, error) {
 		return nil, err
 	}
 
+	c.MiddlewareFunc(middleware.Logger)
+	r := middleware.NewRouter()
+	c.Middleware(r)
+
 	return &Client{
 		ID:      c.ID,
 		Session: c.Session,
 		conn:    c,
+		router:  r,
 	}, nil
 }
 
