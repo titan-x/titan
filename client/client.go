@@ -29,7 +29,6 @@ func NewClient() (*Client, error) {
 		return nil, err
 	}
 
-	c.MiddlewareFunc(middleware.Logger)
 	r := middleware.NewRouter()
 	c.Middleware(r)
 
@@ -44,6 +43,16 @@ func NewClient() (*Client, error) {
 // SetDeadline set the read/write deadlines for the connection, in seconds.
 func (c *Client) SetDeadline(seconds int) {
 	c.conn.SetDeadline(seconds)
+}
+
+// Middleware registers middleware to handle incoming request messages.
+func (c *Client) Middleware(middleware ...neptulon.Middleware) {
+	c.conn.Middleware(middleware...)
+}
+
+// MiddlewareFunc registers middleware function to handle incoming request messages.
+func (c *Client) MiddlewareFunc(middleware ...func(ctx *neptulon.ReqCtx) error) {
+	c.conn.MiddlewareFunc(middleware...)
 }
 
 // DisconnHandler registers a function to handle disconnection event.

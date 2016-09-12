@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/neptulon/neptulon/middleware"
 	"github.com/titan-x/titan/client"
 	"github.com/titan-x/titan/models"
 )
@@ -39,6 +40,7 @@ func NewClientHelper(t *testing.T, addr string) *ClientHelper {
 		serverAddr: addr,
 		inMsgsChan: make(chan []models.Message),
 	}
+	c.MiddlewareFunc(middleware.LoggerWithPrefix("client"))
 	c.InMsgHandler(ch.inMsgHandler)
 	return ch
 }

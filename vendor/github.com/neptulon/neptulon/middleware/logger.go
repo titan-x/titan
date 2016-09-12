@@ -9,22 +9,33 @@ import (
 // CustResLogDataKey is the key to be used in session data store to put any custom response log data.
 const CustResLogDataKey = "CustResLogData"
 
-// Logger is an incoming/outgoing message logger.
+// Logger is an incoming/outgoing message logger with an optional prefix.
 func Logger(ctx *neptulon.ReqCtx) error {
-	var v interface{}
-	ctx.Params(&v)
+	return LoggerWithPrefix("")(ctx)
+}
 
-	err := ctx.Next()
-
-	var res interface{}
-	if res = ctx.Session.Get(CustResLogDataKey); res == nil {
-		res = ctx.Res
-		if res == nil {
-			res = ctx.Err
-		}
+// LoggerWithPrefix appends given prefix to log strings.
+func LoggerWithPrefix(prefix string) func(ctx *neptulon.ReqCtx) error {
+	if prefix != "" {
+		prefix = prefix + ": "
 	}
 
-	log.Printf("mw: logger: %v: %v, in: \"%v\", out: \"%#v\"", ctx.ID, ctx.Method, v, res)
+	return func(ctx *neptulon.ReqCtx) error {
+		var v interface{}
+		ctx.Params(&v)
 
-	return err
+		err := ctx.Next()
+
+		var res interface{}
+		if res = ctx.Session.Get(CustResLogDataKey); res == nil {
+			res = ctx.Res
+			if res == nil {
+				res = ctx.Err
+			}
+		}
+
+		log.Printf("%vmw: logger: %v: %v, in: \"%v\", out: \"%#v\"", prefix, ctx.ID, ctx.Method, v, res)
+
+		return err
+	}
 }
