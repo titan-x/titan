@@ -27,7 +27,7 @@ func TestToCaseInsensitive(t *testing.T) {
 	}
 }
 
-func TestMultipleQueuedMessages(t *testing.T) {
+func TestMultipleConcurrentQueuedMessages(t *testing.T) {
 	sh := NewServerHelper(t).ListenAndServe()
 	defer sh.CloseWait()
 
