@@ -34,8 +34,9 @@ func initSendMsgHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
 			return err
 		}
 
+		uid := ctx.Conn.Session.Get("userid").(string)
+
 		for _, sMsg := range sMsgs {
-			uid := ctx.Conn.Session.Get("userid").(string)
 			from := uid
 			to := strings.ToLower(sMsg.To)
 

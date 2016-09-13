@@ -14,7 +14,7 @@ func TestToCaseInsensitive(t *testing.T) {
 	ch := sh.GetClientHelper().AsUser(&data.SeedUser1).Connect().JWTAuthSync()
 	defer ch.CloseWait()
 
-	ch.SendMessagesSync([]models.Message{models.Message{To: "Echo", Message: "Ola!"}})
+	ch.SendMessagesSync([]models.Message{models.Message{To: "Echo", Message: "Ola!"}}) // Echo capital on purpose to test
 
 	msgs := ch.GetMessagesWait()
 
@@ -24,5 +24,26 @@ func TestToCaseInsensitive(t *testing.T) {
 	}
 	if msg.Message != "Ola!" {
 		t.Fatalf("expected message from: Ola!, got: %v", msg.Message)
+	}
+}
+
+func TestMultipleQueuedMessages(t *testing.T) {
+	sh := NewServerHelper(t).ListenAndServe()
+	defer sh.CloseWait()
+
+	ch := sh.GetClientHelper().AsUser(&data.SeedUser1).Connect().JWTAuthSync()
+	defer ch.CloseWait()
+
+	ch.SendMessagesSync([]models.Message{
+		models.Message{To: "echo", Message: "message-1"},
+		models.Message{To: "echo", Message: "message-2"},
+		models.Message{To: "echo", Message: "message-3"},
+		models.Message{To: "echo", Message: "message-4"}})
+
+	// todo: do this in a for loop in a go-routine to be concurrent-realistic
+	msgs := ch.GetMessagesWait()
+
+	if len(msgs) != 4 {
+		t.Fatalf("expected 4 messages, got %v", len(msgs))
 	}
 }
