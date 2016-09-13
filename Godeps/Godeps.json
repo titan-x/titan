@@ -167,18 +167,18 @@
 		},
 		{
 			"ImportPath": "github.com/neptulon/neptulon",
-			"Comment": "v0.10-4-g7b9b605",
-			"Rev": "7b9b6055779c24411947113a7ca30b7445f5c6b2"
+			"Comment": "v0.10-5-gbc6cfca",
+			"Rev": "bc6cfca69c0e5995aec9cd1ee18730068bf5bb18"
 		},
 		{
 			"ImportPath": "github.com/neptulon/neptulon/middleware",
-			"Comment": "v0.10-4-g7b9b605",
-			"Rev": "7b9b6055779c24411947113a7ca30b7445f5c6b2"
+			"Comment": "v0.10-5-gbc6cfca",
+			"Rev": "bc6cfca69c0e5995aec9cd1ee18730068bf5bb18"
 		},
 		{
 			"ImportPath": "github.com/neptulon/neptulon/middleware/jwt",
-			"Comment": "v0.10-4-g7b9b605",
-			"Rev": "7b9b6055779c24411947113a7ca30b7445f5c6b2"
+			"Comment": "v0.10-5-gbc6cfca",
+			"Rev": "bc6cfca69c0e5995aec9cd1ee18730068bf5bb18"
 		},
 		{
 			"ImportPath": "github.com/neptulon/shortid",
