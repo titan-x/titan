@@ -11,7 +11,6 @@ import (
 )
 
 var queueLength = expvar.NewInt("queue-length")
-var conns = expvar.NewInt("conns")
 
 // Queue is a message queue for queueing and sending messages to users.
 type Queue struct {
@@ -51,7 +50,6 @@ func (q *Queue) SetConn(userID, connID string) {
 		q.conns.Set(userID, connID)
 		q.mutexes.Set(userID, &sync.RWMutex{})
 		go q.processQueue(userID)
-		conns.Add(1)
 	}
 }
 
@@ -59,7 +57,6 @@ func (q *Queue) SetConn(userID, connID string) {
 func (q *Queue) RemoveConn(userID string) {
 	q.conns.Delete(userID)
 	q.mutexes.Delete(userID)
-	conns.Add(-1)
 }
 
 // AddRequest queues a request message to be sent to the given user.
