@@ -6,8 +6,10 @@ import (
 	"github.com/titan-x/titan/data"
 )
 
-// we need *data.DB (pointer to interface) so that the closure below won't capture the actual value that pointer points to
+// We need *data.DB (pointer to interface) so that the closure below won't capture the actual value that pointer points to
 // so we can swap databases whenever we want using Server.SetDB(...)
+//
+// Also we don't do `return ctx.Next()` so that request won't reach the private routes.
 func initPubRoutes(r *middleware.Router, db *data.DB, pass string) {
 	r.Request("auth.google", initGoogleAuthHandler(db, pass))
 }
@@ -17,6 +19,7 @@ func initGoogleAuthHandler(db *data.DB, pass string) func(ctx *neptulon.ReqCtx) 
 		if err := googleAuth(ctx, *db, pass); err != nil {
 			return err
 		}
+
 		return nil
 	}
 }

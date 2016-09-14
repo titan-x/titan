@@ -2,6 +2,7 @@ package titan
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/neptulon/neptulon"
 	"github.com/neptulon/neptulon/middleware"
@@ -33,10 +34,20 @@ func initSendMsgHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
 			return err
 		}
 
+		uid := ctx.Conn.Session.Get("userid").(string)
+
 		for _, sMsg := range sMsgs {
-			uid := ctx.Conn.Session.Get("userid").(string)
-			rMsgs := []models.Message{models.Message{From: uid, Message: sMsg.Message}}
-			err := q.AddRequest(sMsg.To, "msg.recv", rMsgs, func(ctx *neptulon.ResCtx) error {
+			from := uid
+			to := strings.ToLower(sMsg.To)
+
+			// handle messages to bots
+			if to == "echo" {
+				from = "echo"
+				to = uid
+			}
+
+			// submit the messages to send queue
+			err := q.AddRequest(to, "msg.recv", []models.Message{models.Message{From: from, Message: sMsg.Message}}, func(ctx *neptulon.ResCtx) error {
 				var res string
 				ctx.Result(&res)
 				if res == client.ACK {

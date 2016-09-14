@@ -1,6 +1,7 @@
 package titan
 
 import (
+	"errors"
 	"expvar"
 	"log"
 	"sync"
@@ -80,8 +81,8 @@ func (q *Queue) AddRequest(userID string, method string, params interface{}, res
 
 // AddBatchRequest add a request that is suitable for batching.
 // Request with the same method name will be batched.
-func (q *Queue) AddBatchRequest() {
-
+func (q *Queue) AddBatchRequest() error {
+	return errors.New("not implemented")
 }
 
 type queuedRequest struct {
