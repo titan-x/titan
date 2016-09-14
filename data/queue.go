@@ -1,12 +1,10 @@
-package titan
+package data
 
-import "expvar"
+// var queueLength = expvar.NewInt("queue-length")
+// var conns = expvar.NewInt("conns")
 
-var queueLength = expvar.NewInt("queue-length")
-var conns = expvar.NewInt("conns")
-
-// Queue2 is a message queue for queueing and sending messages to users.
-type Queue2 struct {
+// Queue is a message queue for queueing and sending messages to users.
+type Queue interface {
 	// todo: buffered channels or basic locks or a concurrent multimap?
 	// todo: at-least-once delivery relaxes things a bit for queueProcessor
 	//
