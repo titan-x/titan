@@ -2,16 +2,12 @@ package titan
 
 import (
 	"errors"
-	"expvar"
 	"log"
 	"sync"
 
 	"github.com/neptulon/cmap"
 	"github.com/neptulon/neptulon"
 )
-
-var queueLength = expvar.NewInt("queue-length")
-var conns = expvar.NewInt("conns")
 
 // Queue is a message queue for queueing and sending messages to users.
 type Queue struct {
