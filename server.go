@@ -30,6 +30,7 @@ func NewServer(addr string) (*Server, error) {
 		server: neptulon.NewServer(addr),
 		queue:  NewQueue(),
 	}
+	s.queue.SetServer(s.server)
 
 	if err := s.SetDB(inmem.NewDB()); err != nil {
 		return nil, err
@@ -47,11 +48,6 @@ func NewServer(addr string) (*Server, error) {
 	s.server.Middleware(s.privRoutes)
 	initPrivRoutes(s.privRoutes, s.queue)
 	// r.Middleware(NotFoundHandler()) - 404-like handler
-
-	// todo: research a better way to handle inner-circular dependencies so remove these lines back into Server contructor
-	// (maybe via dereferencing: http://openmymind.net/Things-I-Wish-Someone-Had-Told-Me-About-Go/, but then initializers
-	// actually using the pointer values would have to be lazy!)
-	s.queue.SetServer(s.server)
 
 	s.server.DisconnHandler(func(c *neptulon.Conn) {
 		// only handle this event for previously authenticated

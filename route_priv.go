@@ -20,8 +20,8 @@ func initPrivRoutes(r *middleware.Router, q *Queue) {
 // If there are any messages meant for this user, they are started to be sent after this call.
 func initJWTAuthHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
 	return func(ctx *neptulon.ReqCtx) error {
-		q.SetConn(ctx.Conn.Session.Get("userid").(string), ctx.Conn.ID)
-		ctx.Res = client.ACK // todo: this could rather send the remaining queue size for the client
+		// todo: this could rather send the remaining queue size for the client so client can disconnect if there is nothing else to do
+		ctx.Res = client.ACK
 		return ctx.Next()
 	}
 }

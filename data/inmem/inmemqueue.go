@@ -1,4 +1,4 @@
-package titan
+package inmem
 
 import (
 	"errors"
@@ -9,6 +9,9 @@ import (
 	"github.com/neptulon/neptulon"
 )
 
+// SenderFunc is a function for sending messages over connections ID.
+type SenderFunc func(connID string, method string, params interface{}, resHandler func(ctx *neptulon.ResCtx) error) (reqID string, err error)
+
 // Queue is a message queue for queueing and sending messages to users.
 type Queue struct {
 	conns   *cmap.CMap       // user ID -> conn ID
@@ -18,7 +21,7 @@ type Queue struct {
 }
 
 // NewQueue creates a new queue object.
-func NewQueue() *Queue {
+func NewQueue(senderFunc SenderFunc) *Queue {
 	q := Queue{
 		conns:   cmap.New(),
 		reqs:    cmap.New(),
