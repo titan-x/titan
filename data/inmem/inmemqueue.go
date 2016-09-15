@@ -14,10 +14,10 @@ type SenderFunc func(connID string, method string, params interface{}, resHandle
 
 // Queue is a message queue for queueing and sending messages to users.
 type Queue struct {
-	conns   *cmap.CMap       // user ID -> conn ID
-	server  *neptulon.Server // server instance to send and receive messages through
-	reqs    *cmap.CMap       // user ID -> []queuedRequest
-	mutexes *cmap.CMap       // user ID -> *sync.RWMutex
+	senderFunc SenderFunc // sender function to send and receive messages through
+	conns      *cmap.CMap // user ID -> conn ID
+	reqs       *cmap.CMap // user ID -> []queuedRequest
+	mutexes    *cmap.CMap // user ID -> *sync.RWMutex
 }
 
 // NewQueue creates a new queue object.
@@ -40,11 +40,6 @@ func (q *Queue) Middleware(ctx *neptulon.ReqCtx) error {
 	}
 
 	return ctx.Next()
-}
-
-// SetServer registers the Neptulon server to be used for sending queued messages and expecting responses through.
-func (q *Queue) SetServer(s *neptulon.Server) {
-	q.server = s
 }
 
 // SetConn associates a user with a connection by ID.
@@ -104,7 +99,7 @@ func (q *Queue) processQueue(userID string) {
 	if ireqs, ok := q.reqs.GetOk(userID); ok {
 		reqs := ireqs.([]queuedRequest)
 		for i, req := range reqs {
-			if _, err := q.server.SendRequest(connID.(string), req.Method, req.Params, req.ResHandler); err != nil {
+			if _, err := q.senderFunc(connID.(string), req.Method, req.Params, req.ResHandler); err != nil {
 				log.Fatal(err) // todo: log fatal only in debug mode
 			} else {
 				reqs, reqs[len(reqs)-1] = append(reqs[:i], reqs[i+1:]...), queuedRequest{} // todo: this might not be needed if function is not a pointer val
