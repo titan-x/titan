@@ -33,7 +33,7 @@ func NewQueue() *Queue {
 func (q *Queue) Middleware(ctx *neptulon.ReqCtx) error {
 	uid := ctx.Conn.Session.Get("userid")
 	if _, ok := q.conns.GetOk(uid); !ok {
-		q.SetConn(uid.(string), ctx.Conn.ID)
+		q.setConn(uid.(string), ctx.Conn.ID)
 	}
 
 	return ctx.Next()
@@ -44,9 +44,9 @@ func (q *Queue) SetServer(s *neptulon.Server) {
 	q.server = s
 }
 
-// SetConn associates a user with a connection by ID.
+// setConn associates a user with a connection by ID.
 // If there are pending messages for the user, they are started to be send immediately.
-func (q *Queue) SetConn(userID, connID string) {
+func (q *Queue) setConn(userID, connID string) {
 	if _, ok := q.conns.GetOk(userID); !ok {
 		q.conns.Set(userID, connID)
 		q.mutexes.Set(userID, &sync.RWMutex{})
