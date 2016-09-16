@@ -12,8 +12,8 @@ import (
 type Server struct {
 	// neptulon framework components
 	neptulon   *neptulon.Server
-	pubRoutes  *middleware.Router
-	privRoutes *middleware.Router
+	pubRouter  *middleware.Router
+	privRouter *middleware.Router
 
 	// titan server components
 	db    data.DB
@@ -31,20 +31,22 @@ func NewServer(addr string) (*Server, error) {
 	if err := s.SetDB(inmem.NewDB()); err != nil {
 		return nil, err
 	}
-	s.SetQueue(inmem.NewQueue(s.neptulon.SendRequest))
+	if err := s.SetQueue(inmem.NewQueue(s.neptulon.SendRequest)); err != nil {
+		return nil, err
+	}
 
 	s.neptulon.MiddlewareFunc(middleware.Logger)
-	s.pubRoutes = middleware.NewRouter()
-	s.neptulon.Middleware(s.pubRoutes)
-	initPubRoutes(s.pubRoutes, &s.db, Conf.App.JWTPass())
+	s.pubRouter = middleware.NewRouter()
+	s.neptulon.Middleware(s.pubRouter)
+	initPubRoutes(s.pubRouter, &s.db, Conf.App.JWTPass())
 
 	//all communication below this point is authenticated
 	s.neptulon.MiddlewareFunc(jwt.HMAC(Conf.App.JWTPass()))
 	s.neptulon.Middleware(s.queue)
-	s.privRoutes = middleware.NewRouter()
-	s.neptulon.Middleware(s.privRoutes)
-	initPrivRoutes(s.privRoutes, &s.queue)
-	// r.Middleware(NotFoundHandler()) - 404-like handler
+	s.privRouter = middleware.NewRouter()
+	s.neptulon.Middleware(s.privRouter)
+	initPrivRoutes(s.privRouter, &s.queue)
+	// todo: r.Middleware(NotFoundHandler()) - 404-like handler, if any request reaches this point without being handled
 
 	s.neptulon.DisconnHandler(func(c *neptulon.Conn) {
 		// only handle this event for previously authenticated
@@ -67,8 +69,9 @@ func (s *Server) SetDB(db data.DB) error {
 }
 
 // SetQueue sets the queue implementation to be used by the server. If not supplied, in-memory queue implementation is used.
-func (s *Server) SetQueue(queue data.Queue) {
+func (s *Server) SetQueue(queue data.Queue) error {
 	s.queue = queue
+	return nil
 }
 
 // ListenAndServe starts the Titan server. This function blocks until server is closed.
