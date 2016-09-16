@@ -38,7 +38,7 @@ func NewClientHelper(t *testing.T, addr string) *ClientHelper {
 		Client:     c,
 		testing:    t,
 		serverAddr: addr,
-		inMsgsChan: make(chan []models.Message),
+		inMsgsChan: make(chan []models.Message, 5000),
 	}
 	c.MiddlewareFunc(middleware.LoggerWithPrefix("client"))
 	c.InMsgHandler(ch.inMsgHandler)

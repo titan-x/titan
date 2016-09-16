@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"expvar"
 	"fmt"
 	"log"
 	"net"
@@ -18,6 +19,8 @@ import (
 
 	"golang.org/x/net/websocket"
 )
+
+var connsCounter = expvar.NewInt("conns")
 
 // Server is a Neptulon server.
 type Server struct {
@@ -128,7 +131,7 @@ func (s *Server) SendRequest(connID string, method string, params interface{}, r
 	if conn, ok := s.conns.GetOk(connID); ok {
 		reqID, err = conn.(*Conn).SendRequest(method, params, resHandler)
 		// todo: only log in debug mode?
-		log.Printf("server: send-request: connID: %v, reqID: %v, method: %v, params: %v, err (if any): %v", connID, reqID, method, params, err)
+		log.Printf("server: send-request: connID: %v, reqID: %v, method: %v, params: %#v, err (if any): %v", connID, reqID, method, params, err)
 		return
 	}
 
@@ -183,8 +186,10 @@ func (s *Server) wsConnHandler(ws *websocket.Conn) {
 	log.Printf("server: client connected %v: %v", c.ID, ws.RemoteAddr())
 
 	s.conns.Set(c.ID, c)
+	connsCounter.Add(1)
 	c.setConn(ws)
 	c.startReceive()
 	s.conns.Delete(c.ID)
+	connsCounter.Add(-1)
 	s.disconnHandler(c)
 }

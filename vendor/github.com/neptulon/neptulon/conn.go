@@ -2,6 +2,7 @@ package neptulon
 
 import (
 	"errors"
+	"expvar"
 	"fmt"
 	"io"
 	"log"
@@ -16,6 +17,10 @@ import (
 
 	"golang.org/x/net/websocket"
 )
+
+var recvCounter = expvar.NewInt("receivers")
+var reqCounter = expvar.NewInt("requests")
+var resCounter = expvar.NewInt("responses")
 
 // Conn is a client connection.
 type Conn struct {
@@ -186,9 +191,11 @@ func (c *Conn) setConn(ws *websocket.Conn) error {
 
 // startReceive starts receiving messages. This method blocks and does not return until the connection is closed.
 func (c *Conn) startReceive() {
+	recvCounter.Add(1)
 	defer func() {
 		c.Close()
 		c.disconnHandler(c)
+		recvCounter.Add(-1)
 	}()
 
 	for {
@@ -213,8 +220,10 @@ func (c *Conn) startReceive() {
 
 		// if the message is a request
 		if m.Method != "" {
+			reqCounter.Add(1)
 			c.wg.Add(1)
 			go func() {
+				defer reqCounter.Add(-1)
 				defer recoverAndLog(c, &c.wg)
 				ctx := newReqCtx(c, m.ID, m.Method, m.Params, c.middleware)
 				if err := ctx.Next(); err != nil {
@@ -240,8 +249,10 @@ func (c *Conn) startReceive() {
 
 		// if the message is a response
 		if resHandler, ok := c.resRoutes.GetOk(m.ID); ok {
+			resCounter.Add(1)
 			c.wg.Add(1)
 			go func() {
+				defer resCounter.Add(-1)
 				defer recoverAndLog(c, &c.wg)
 				err := resHandler.(func(ctx *ResCtx) error)(newResCtx(c, m.ID, m.Result, m.Error))
 				c.resRoutes.Delete(m.ID)

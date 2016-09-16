@@ -1,13 +1,22 @@
 package data
 
-// var queueLength = expvar.NewInt("queue-length")
-// var conns = expvar.NewInt("conns")
+import (
+	"expvar"
+
+	"github.com/neptulon/neptulon"
+)
 
 // Queue is a message queue for queueing and sending messages to users.
 type Queue interface {
-	// todo: buffered channels or basic locks or a concurrent multimap?
-	// todo: at-least-once delivery relaxes things a bit for queueProcessor
-	//
-	// actually queue should not be interacted with directly, just like DB, it should be an interface
-	// and server.send(userID) should use it automatically behind the scenes
+	Middleware(ctx *neptulon.ReqCtx) error
+	RemoveConn(userID string)
+	AddRequest(userID string, method string, params interface{}, resHandler func(ctx *neptulon.ResCtx) error) error
 }
+
+// QueueLength is the total request queue for all users combined.
+// This should be handled by the implementing struct.
+var QueueLength = expvar.NewInt("queue-length")
+
+// UserCount is the total authenticated live user count.
+// This should be handled by the implementing struct.
+var UserCount = expvar.NewInt("users")
