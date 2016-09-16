@@ -90,7 +90,10 @@ func (q *Queue) AddRequest(userID string, method string, params interface{}, res
 }
 
 func (q *Queue) processQueue(userID, connID string) {
+	q.mutex.Lock()
 	qc := q.getQueueChan(userID)
+	q.mutex.Unlock()
+
 	errc := 0 // protect against infinite retry loop
 
 	for {
