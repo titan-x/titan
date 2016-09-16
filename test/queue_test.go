@@ -40,10 +40,13 @@ func TestMultipleConcurrentQueuedMessages(t *testing.T) {
 		models.Message{To: "echo", Message: "message-3"},
 		models.Message{To: "echo", Message: "message-4"}})
 
-	// todo: do this in a for loop in a go-routine to be concurrent-realistic
-	ch.GetMessagesWait()
+	msgs := []models.Message{}
+	for len(msgs) < 4 {
+		im := ch.GetMessagesWait()
+		msgs = append(msgs, im...)
+	}
 
-	// if len(msgs) != 4 {
-	// 	t.Fatalf("expected 4 messages, got %v", len(msgs))
-	// }
+	if len(msgs) != 4 {
+		t.Fatalf("expected 4 messages, got %v", len(msgs))
+	}
 }
