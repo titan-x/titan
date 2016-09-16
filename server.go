@@ -26,15 +26,12 @@ func NewServer(addr string) (*Server, error) {
 		InitConf("")
 	}
 
-	n := neptulon.NewServer(addr)
-	s := Server{
-		neptulon: n,
-		queue:    inmem.NewQueue(n.SendRequest),
-	}
+	s := Server{neptulon: neptulon.NewServer(addr)}
 
 	if err := s.SetDB(inmem.NewDB()); err != nil {
 		return nil, err
 	}
+	s.SetQueue(inmem.NewQueue(s.neptulon.SendRequest))
 
 	s.neptulon.MiddlewareFunc(middleware.Logger)
 	s.pubRoutes = middleware.NewRouter()
@@ -46,7 +43,7 @@ func NewServer(addr string) (*Server, error) {
 	s.neptulon.Middleware(s.queue)
 	s.privRoutes = middleware.NewRouter()
 	s.neptulon.Middleware(s.privRoutes)
-	initPrivRoutes(s.privRoutes, s.queue)
+	initPrivRoutes(s.privRoutes, &s.queue)
 	// r.Middleware(NotFoundHandler()) - 404-like handler
 
 	s.neptulon.DisconnHandler(func(c *neptulon.Conn) {
@@ -59,7 +56,7 @@ func NewServer(addr string) (*Server, error) {
 	return &s, nil
 }
 
-// SetDB sets the database to be used by the server. If not supplied, in-memory database implementation is used.
+// SetDB sets the database implementation to be used by the server. If not supplied, in-memory database implementation is used.
 func (s *Server) SetDB(db data.DB) error {
 	if err := db.Seed(false, Conf.App.JWTPass()); err != nil {
 		return err
@@ -67,6 +64,11 @@ func (s *Server) SetDB(db data.DB) error {
 
 	s.db = db
 	return nil
+}
+
+// SetQueue sets the queue implementation to be used by the server. If not supplied, in-memory queue implementation is used.
+func (s *Server) SetQueue(queue data.Queue) {
+	s.queue = queue
 }
 
 // ListenAndServe starts the Titan server. This function blocks until server is closed.
