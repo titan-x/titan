@@ -1,34 +1,35 @@
 package inmem
 
 import (
-	"errors"
-	"log"
-	"sync"
-
 	"github.com/neptulon/cmap"
 	"github.com/neptulon/neptulon"
+	"github.com/titan-x/titan/data"
 )
-
-// SenderFunc is a function for sending messages over connections ID.
-type SenderFunc func(connID string, method string, params interface{}, resHandler func(ctx *neptulon.ResCtx) error) (reqID string, err error)
 
 // Queue is a message queue for queueing and sending messages to users.
 type Queue struct {
 	senderFunc SenderFunc // sender function to send and receive messages through
 	conns      *cmap.CMap // user ID -> conn ID
-	reqs       *cmap.CMap // user ID -> []queuedRequest
-	mutexes    *cmap.CMap // user ID -> *sync.RWMutex
+	reqChans   *cmap.CMap // user ID -> make(chan *queuedRequest, 100)
 }
 
 // NewQueue creates a new queue object.
 func NewQueue(senderFunc SenderFunc) *Queue {
 	q := Queue{
-		conns:   cmap.New(),
-		reqs:    cmap.New(),
-		mutexes: cmap.New(),
+		conns:    cmap.New(),
+		reqChans: cmap.New(),
 	}
 
 	return &q
+}
+
+// SenderFunc is a function for sending messages over connections ID.
+type SenderFunc func(connID string, method string, params interface{}, resHandler func(ctx *neptulon.ResCtx) error) (reqID string, err error)
+
+type queuedRequest struct {
+	Method     string
+	Params     interface{}
+	ResHandler func(ctx *neptulon.ResCtx) error
 }
 
 // Middleware registers a queue middleware to register user/connection IDs
@@ -47,66 +48,25 @@ func (q *Queue) Middleware(ctx *neptulon.ReqCtx) error {
 func (q *Queue) SetConn(userID, connID string) {
 	if _, ok := q.conns.GetOk(userID); !ok {
 		q.conns.Set(userID, connID)
-		q.mutexes.Set(userID, &sync.RWMutex{})
-		go q.processQueue(userID)
+		data.UserCount.Add(1)
+		go q.processQueue()
 	}
 }
 
 // RemoveConn removes a user's associated connection ID.
 func (q *Queue) RemoveConn(userID string) {
 	q.conns.Delete(userID)
-	q.mutexes.Delete(userID)
+	data.UserCount.Add(-1)
 }
 
 // AddRequest queues a request message to be sent to the given user.
 func (q *Queue) AddRequest(userID string, method string, params interface{}, resHandler func(ctx *neptulon.ResCtx) error) error {
-	r := queuedRequest{Method: method, Params: params, ResHandler: resHandler}
-
-	go func() {
-		if rs, ok := q.reqs.GetOk(userID); ok {
-			q.reqs.Set(userID, append(rs.([]queuedRequest), r))
-		} else {
-			q.reqs.Set(userID, []queuedRequest{{Method: method, Params: params, ResHandler: resHandler}})
-		}
-
-		go q.processQueue(userID)
-	}()
+	data.QueueLength.Add(1)
+	// r := queuedRequest{Method: method, Params: params, ResHandler: resHandler}
 
 	return nil
 }
 
-// AddBatchRequest add a request that is suitable for batching.
-// Request with the same method name will be batched.
-func (q *Queue) AddBatchRequest() error {
-	return errors.New("not implemented")
-}
-
-type queuedRequest struct {
-	Method     string
-	Params     interface{}
-	ResHandler func(ctx *neptulon.ResCtx) error
-}
-
-// todo: prevent concurrent runs of processQueue or make []queuedRequest thread-safe
-func (q *Queue) processQueue(userID string) {
-	connID, ok := q.conns.GetOk(userID)
-	if !ok {
-		return
-	}
-
-	mutex := q.mutexes.Get(userID).(*sync.RWMutex)
-	mutex.Lock()
-	if ireqs, ok := q.reqs.GetOk(userID); ok {
-		reqs := ireqs.([]queuedRequest)
-		for i, req := range reqs {
-			if _, err := q.senderFunc(connID.(string), req.Method, req.Params, req.ResHandler); err != nil {
-				log.Fatal(err) // todo: log fatal only in debug mode
-			} else {
-				reqs, reqs[len(reqs)-1] = append(reqs[:i], reqs[i+1:]...), queuedRequest{} // todo: this might not be needed if function is not a pointer val
-			}
-		}
-
-		q.reqs.Set(userID, reqs)
-	}
-	mutex.Unlock()
+func (q *Queue) processQueue() {
+	// tood: data.QueueLength.Add(-1) per successful request
 }
