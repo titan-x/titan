@@ -7,10 +7,11 @@ import (
 	"github.com/neptulon/neptulon"
 	"github.com/neptulon/neptulon/middleware"
 	"github.com/titan-x/titan/client"
+	"github.com/titan-x/titan/data"
 	"github.com/titan-x/titan/models"
 )
 
-func initPrivRoutes(r *middleware.Router, q *Queue) {
+func initPrivRoutes(r *middleware.Router, q data.Queue) {
 	r.Request("auth.jwt", initJWTAuthHandler(q))
 	r.Request("echo", middleware.Echo)
 	r.Request("msg.send", initSendMsgHandler(q))
@@ -18,7 +19,7 @@ func initPrivRoutes(r *middleware.Router, q *Queue) {
 
 // Used for a client to authenticate and announce its presence.
 // If there are any messages meant for this user, they are started to be sent after this call.
-func initJWTAuthHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
+func initJWTAuthHandler(q data.Queue) func(ctx *neptulon.ReqCtx) error {
 	return func(ctx *neptulon.ReqCtx) error {
 		// todo: this could rather send the remaining queue size for the client so client can disconnect if there is nothing else to do
 		ctx.Res = client.ACK
@@ -27,7 +28,7 @@ func initJWTAuthHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
 }
 
 // Allows clients to send messages to each other, online or offline.
-func initSendMsgHandler(q *Queue) func(ctx *neptulon.ReqCtx) error {
+func initSendMsgHandler(q data.Queue) func(ctx *neptulon.ReqCtx) error {
 	return func(ctx *neptulon.ReqCtx) error {
 		var sMsgs []models.Message
 		if err := ctx.Params(&sMsgs); err != nil {

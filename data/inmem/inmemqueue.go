@@ -18,8 +18,9 @@ type Queue struct {
 // NewQueue creates a new queue object.
 func NewQueue(senderFunc SenderFunc) *Queue {
 	q := Queue{
-		conns:    make(map[string]string),
-		reqChans: make(map[string]queueProcessor),
+		senderFunc: senderFunc,
+		conns:      make(map[string]string),
+		reqChans:   make(map[string]queueProcessor),
 	}
 
 	return &q
@@ -95,6 +96,7 @@ func (q *Queue) processQueue(connID string, processor queueProcessor) {
 		select {
 		case req := <-processor.reqChan:
 			if _, err := q.senderFunc(connID, req.Method, req.Params, req.ResHandler); err != nil {
+				// write the request back to buffered channel and continue until quit
 				processor.reqChan <- req
 				continue
 			}

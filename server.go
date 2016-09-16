@@ -11,13 +11,13 @@ import (
 // Server wraps a listener instance and registers default connection and message handlers with the listener.
 type Server struct {
 	// neptulon framework components
-	server     *neptulon.Server
+	neptulon   *neptulon.Server
 	pubRoutes  *middleware.Router
 	privRoutes *middleware.Router
 
 	// titan server components
 	db    data.DB
-	queue *Queue
+	queue data.Queue
 }
 
 // NewServer creates a new server.
@@ -26,30 +26,30 @@ func NewServer(addr string) (*Server, error) {
 		InitConf("")
 	}
 
+	n := neptulon.NewServer(addr)
 	s := Server{
-		server: neptulon.NewServer(addr),
-		queue:  NewQueue(),
+		neptulon: n,
+		queue:    inmem.NewQueue(n.SendRequest),
 	}
-	s.queue.SetServer(s.server)
 
 	if err := s.SetDB(inmem.NewDB()); err != nil {
 		return nil, err
 	}
 
-	s.server.MiddlewareFunc(middleware.Logger)
+	s.neptulon.MiddlewareFunc(middleware.Logger)
 	s.pubRoutes = middleware.NewRouter()
-	s.server.Middleware(s.pubRoutes)
+	s.neptulon.Middleware(s.pubRoutes)
 	initPubRoutes(s.pubRoutes, &s.db, Conf.App.JWTPass())
 
 	//all communication below this point is authenticated
-	s.server.MiddlewareFunc(jwt.HMAC(Conf.App.JWTPass()))
-	s.server.Middleware(s.queue)
+	s.neptulon.MiddlewareFunc(jwt.HMAC(Conf.App.JWTPass()))
+	s.neptulon.Middleware(s.queue)
 	s.privRoutes = middleware.NewRouter()
-	s.server.Middleware(s.privRoutes)
+	s.neptulon.Middleware(s.privRoutes)
 	initPrivRoutes(s.privRoutes, s.queue)
 	// r.Middleware(NotFoundHandler()) - 404-like handler
 
-	s.server.DisconnHandler(func(c *neptulon.Conn) {
+	s.neptulon.DisconnHandler(func(c *neptulon.Conn) {
 		// only handle this event for previously authenticated
 		if id, ok := c.Session.GetOk("userid"); ok {
 			s.queue.RemoveConn(id.(string))
@@ -71,11 +71,11 @@ func (s *Server) SetDB(db data.DB) error {
 
 // ListenAndServe starts the Titan server. This function blocks until server is closed.
 func (s *Server) ListenAndServe() error {
-	return s.server.ListenAndServe()
+	return s.neptulon.ListenAndServe()
 }
 
 // Close the server and all of the active connections, discarding any read/writes that is going on currently.
 // This is not a problem as we always require an ACK but it will also mean that message deliveries will be at-least-once; to-and-from the server.
 func (s *Server) Close() error {
-	return s.server.Close()
+	return s.neptulon.Close()
 }

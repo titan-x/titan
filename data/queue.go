@@ -9,7 +9,6 @@ import (
 // Queue is a message queue for queueing and sending messages to users.
 type Queue interface {
 	Middleware(ctx *neptulon.ReqCtx) error
-	SetConn(userID, connID string)
 	RemoveConn(userID string)
 	AddRequest(userID string, method string, params interface{}, resHandler func(ctx *neptulon.ResCtx) error) error
 }
