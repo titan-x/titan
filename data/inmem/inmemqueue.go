@@ -9,10 +9,10 @@ import (
 
 // Queue is a message queue for queueing and sending messages to users.
 type Queue struct {
-	senderFunc SenderFunc                // sender function to send and receive messages through
-	conns      map[string]string         // user ID -> conn ID
-	reqChans   map[string]queueProcessor // user ID -> queueProcessor
-	mutex      sync.RWMutex
+	senderFunc SenderFunc           // sender function to send and receive messages through
+	conns      map[string]string    // user ID -> conn ID
+	reqChans   map[string]queueChan // user ID -> queueProcessor
+	mutex      sync.Mutex
 }
 
 // NewQueue creates a new queue object.
@@ -20,7 +20,7 @@ func NewQueue(senderFunc SenderFunc) *Queue {
 	q := Queue{
 		senderFunc: senderFunc,
 		conns:      make(map[string]string),
-		reqChans:   make(map[string]queueProcessor),
+		reqChans:   make(map[string]queueChan),
 	}
 
 	return &q
@@ -29,24 +29,15 @@ func NewQueue(senderFunc SenderFunc) *Queue {
 // SenderFunc is a function for sending messages over connections ID.
 type SenderFunc func(connID string, method string, params interface{}, resHandler func(ctx *neptulon.ResCtx) error) (reqID string, err error)
 
-type queuedRequest struct {
+type queuedReq struct {
 	Method     string
 	Params     interface{}
 	ResHandler func(ctx *neptulon.ResCtx) error
 }
 
-type queueProcessor struct {
-	reqChan  chan queuedRequest
-	quitChan chan bool
-}
-
-func (q *Queue) getQueueProcessor(userID string) queueProcessor {
-	c, ok := q.reqChans[userID]
-	if !ok {
-		c = queueProcessor{reqChan: make(chan queuedRequest, 5000), quitChan: make(chan bool)}
-		q.reqChans[userID] = c
-	}
-	return c
+type queueChan struct {
+	req  chan queuedReq
+	quit chan bool
 }
 
 // Middleware registers a queue middleware to register user/connection IDs
@@ -56,11 +47,11 @@ func (q *Queue) Middleware(ctx *neptulon.ReqCtx) error {
 	userID := ctx.Conn.Session.Get("userid").(string)
 	connID := ctx.Conn.ID
 
-	// start queue gorutine once per connection
+	// start queue gorutine only once per connection
 	if _, ok := q.conns[userID]; !ok {
 		q.conns[userID] = connID
 		data.UserCount.Add(1)
-		go q.processQueue(connID, q.getQueueProcessor(userID))
+		go q.processQueue(userID, connID)
 	}
 	q.mutex.Unlock()
 
@@ -72,10 +63,19 @@ func (q *Queue) RemoveConn(userID string) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 
-	c := q.getQueueProcessor(userID)
-	c.quitChan <- true
+	q.getQueueChan(userID).quit <- true
 	delete(q.conns, userID)
 	data.UserCount.Add(-1)
+}
+
+// this is not thread safe and must be used inside a mutex lock
+func (q *Queue) getQueueChan(userID string) queueChan {
+	c, ok := q.reqChans[userID]
+	if !ok {
+		c = queueChan{req: make(chan queuedReq, 5000), quit: make(chan bool)}
+		q.reqChans[userID] = c
+	}
+	return c
 }
 
 // AddRequest queues a request message to be sent to the given user.
@@ -84,24 +84,33 @@ func (q *Queue) AddRequest(userID string, method string, params interface{}, res
 	defer q.mutex.Unlock()
 
 	data.QueueLength.Add(1)
-	r := queuedRequest{Method: method, Params: params, ResHandler: resHandler}
-	c := q.getQueueProcessor(userID)
-	c.reqChan <- r
+	q.getQueueChan(userID).req <- queuedReq{Method: method, Params: params, ResHandler: resHandler}
 
 	return nil
 }
 
-func (q *Queue) processQueue(connID string, processor queueProcessor) {
+func (q *Queue) processQueue(userID, connID string) {
+	qc := q.getQueueChan(userID)
+	errc := 0 // protect against infinite retry loop
+
 	for {
 		select {
-		case req := <-processor.reqChan:
-			if _, err := q.senderFunc(connID, req.Method, req.Params, req.ResHandler); err != nil {
-				// write the request back to buffered channel and continue until quit
-				processor.reqChan <- req
+		case req := <-qc.req:
+			_, err := q.senderFunc(connID, req.Method, req.Params, req.ResHandler)
+
+			if err != nil {
+				errc++
+				qc.req <- req
+				if errc > 10 {
+					return
+				}
 				continue
 			}
+
 			data.QueueLength.Add(-1)
-		case <-processor.quitChan:
+			errc = 0
+
+		case <-qc.quit:
 			return
 		}
 	}
