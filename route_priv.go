@@ -11,6 +11,8 @@ import (
 	"github.com/titan-x/titan/models"
 )
 
+// We need *data.Queue (pointer to interface) so that the closure below won't capture the actual value that pointer points to
+// so we can swap queues whenever we want using Server.SetQueue(...)
 func initPrivRoutes(r *middleware.Router, q *data.Queue) {
 	r.Request("auth.jwt", initJWTAuthHandler())
 	r.Request("echo", middleware.Echo)
