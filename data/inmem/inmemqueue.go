@@ -63,16 +63,18 @@ func (q *Queue) RemoveConn(userID string) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 
-	q.getQueueChan(userID).quit <- true
-	delete(q.conns, userID)
-	data.UserCount.Add(-1)
+	if _, ok := q.conns[userID]; ok {
+		q.getQueueChan(userID).quit <- true
+		delete(q.conns, userID)
+		data.UserCount.Add(-1)
+	}
 }
 
 // this is not thread safe and must be used inside a mutex lock
 func (q *Queue) getQueueChan(userID string) queueChan {
 	c, ok := q.reqChans[userID]
 	if !ok {
-		c = queueChan{req: make(chan queuedReq, 5000), quit: make(chan bool)}
+		c = queueChan{req: make(chan queuedReq, 5000), quit: make(chan bool, 1)}
 		q.reqChans[userID] = c
 	}
 	return c
@@ -114,6 +116,11 @@ func (q *Queue) processQueue(userID, connID string) {
 			errc = 0
 
 		case <-qc.quit:
+			q.mutex.Lock()
+			if len(qc.req) == 0 {
+				delete(q.reqChans, userID)
+			}
+			q.mutex.Unlock()
 			return
 		}
 	}
