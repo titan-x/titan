@@ -12,10 +12,10 @@ type Queue struct {
 	reqChans   map[string]queueChan // user ID -> queueProcessor
 
 	// worker communication channels
-	midChan      chan midChan
-	remUserChan  chan string
-	addReqChan   chan addReqChan
-	delQueueChan chan string
+	middlewareChan chan middlewareChan
+	remUserChan    chan string
+	addReqChan     chan addReqChan
+	delQueueChan   chan string
 }
 
 // NewQueue creates a new queue object.
@@ -25,10 +25,10 @@ func NewQueue(senderFunc SenderFunc) *Queue {
 		conns:      make(map[string]string),
 		reqChans:   make(map[string]queueChan),
 
-		midChan:      make(chan midChan, 5000),
-		remUserChan:  make(chan string, 5000),
-		addReqChan:   make(chan addReqChan, 5000),
-		delQueueChan: make(chan string, 5000),
+		middlewareChan: make(chan middlewareChan, 5000),
+		remUserChan:    make(chan string, 5000),
+		addReqChan:     make(chan addReqChan, 5000),
+		delQueueChan:   make(chan string, 5000),
 	}
 
 	go q.worker()
@@ -50,44 +50,6 @@ type queueChan struct {
 	quit chan bool
 }
 
-func (q *Queue) worker() {
-	for {
-		select {
-		case mid := <-q.midChan:
-			// start queue gorutine only once per connection
-			if _, ok := q.conns[mid.userID]; !ok {
-				q.conns[mid.userID] = mid.connID
-				data.UserCount.Add(1)
-				go q.processQueue(q.getQueueChan(mid.userID), mid.userID, mid.connID)
-			}
-
-		case userID := <-q.remUserChan:
-			if _, ok := q.conns[userID]; ok {
-				q.getQueueChan(userID).quit <- true
-				delete(q.conns, userID)
-				data.UserCount.Add(-1)
-			}
-
-		case req := <-q.addReqChan:
-			data.QueueLength.Add(1)
-			q.getQueueChan(req.userID).req <- req.queuedReq
-
-		case userID := <-q.delQueueChan:
-			delete(q.reqChans, userID)
-		}
-	}
-}
-
-// worker channel data structs
-type midChan struct {
-	userID, connID string
-}
-
-type addReqChan struct {
-	userID    string
-	queuedReq queuedReq
-}
-
 func (q *Queue) getQueueChan(userID string) queueChan {
 	c, ok := q.reqChans[userID]
 	if !ok {
@@ -100,7 +62,7 @@ func (q *Queue) getQueueChan(userID string) queueChan {
 // Middleware registers a queue middleware to register user/connection IDs
 // for connecting users (upon their first incoming-message).
 func (q *Queue) Middleware(ctx *neptulon.ReqCtx) error {
-	q.midChan <- midChan{userID: ctx.Conn.Session.Get("userid").(string), connID: ctx.Conn.ID}
+	q.middlewareChan <- middlewareChan{userID: ctx.Conn.Session.Get("userid").(string), connID: ctx.Conn.ID}
 	return ctx.Next()
 }
 
